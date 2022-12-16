@@ -8,7 +8,10 @@ export default class BillInfo extends React.Component {
 
   render() {
     return (
-      <p>I'm a bill!</p>
+      <div>
+        <p>I'm a bill!</p>
+        {this.props.children}
+      </div>
     );
   }
 }

@@ -19,7 +19,7 @@ export default class App extends React.Component {
     return (
       <div>
         <BillInfo>
-          <MouseTracker/>
+          <MouseTracker/>  
         </BillInfo>
       </div>
     );
