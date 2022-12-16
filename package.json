@@ -4,7 +4,6 @@
   "description": "Display congressional API data.",
   "main": "index.js",
   "scripts": {
-    "start": "npx babel dist/main.js -- out-file dist/main.js",
     "build": "npx webpack --config webpack.config.js && npx babel dist/main.bundle.js --out-file dist/main.bundle.js"
   },
   "author": "",
