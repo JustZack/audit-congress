@@ -1,15 +1,20 @@
 <?php
 
+function GetRecentBills($limit) {
+    $bills = API_CALL("bill", "limit=$limit&sort=updateDate+desc");
+    return $bills;
+}
+
 function GetBills() {
-    $bills = API_CALL("bill");
+    $bills = API_CALL_BULK("bill", "");
     return $bills;
 }
 function GetBillsByCongress($congress) {
-    $bills = API_CALL("bill/$congress");
+    $bills = API_CALL_BULK("bill", $congress);
     return $bills;
 }
 function GetBillsByCongressByType($congress, $type) {
-    $bills = API_CALL("bill/$congress/$type");
+    $bills = API_CALL_BULK("bill", "$congress/$type");
     return $bills;
 }
 function GetBill($congress, $type, $number) {

@@ -1,4 +1,6 @@
 node_modules/
 dist/
+cache/
 enviroment.config.json
 package-lock.json
+congress.api.key

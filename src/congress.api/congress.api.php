@@ -16,7 +16,7 @@ include_once "api.communications.php";
 include_once "api.nomination.php";
 include_once "api.treaty.php";
 
-$api_key = "U7nxJOrBhrvuzcwSS0jXb8HdyYt44akBr2qYK5no";
+$api_key = file_get_contents("../congress.api.key");
 $api_query_args = "?api_key=$api_key&format=json";
 $api_item_limit = 250;
 $api_base_url = "https://api.congress.gov/v3/";
@@ -25,24 +25,28 @@ $api_url = $api_base_url . "%s" . $api_query_args;
 //Fetch and parse JSON API data
 //The base level of all API functions
 function API_GET($url) {
+    global $api_key;
+    if (!$api_key) print_r("Error: API Key not set");
     $json = file_get_contents($url);
     return json_decode($json, true);
 }
 //Make an API call with the given route and options
 //Defaults to 20 items per request
-function API_CALL($route) {//, $options) {
+function API_CALL($route, $additional_args = null) {//, $options) {
     global $api_url;
     $url = sprintf($api_url, "$route");
+    if ($additional_args !== null) $url .= "&$additional_args";
     $json = API_GET($url);
     return $json;
 }
 //Make an API call with the given route and options
 //Pulls all items for this route via the pagination property
-function API_CALL_BULK($route, $options) {
+function API_CALL_BULK($route, $options, $additional_args = null) {
     global $api_url, $api_item_limit;
-    $full_route_json = []; $json; $data_array_name;
+    $full_route_json = []; 
+    //$json; $data_array_name;
     $url = sprintf($api_url, "$route/$options");
-
+    if ($additional_args !== null) $url .= "&$additional_args";
     //Keep track of the record offset for pagination
     $offset = 0; $doneCalling = false;
     //Fetch API pages while pages exist
