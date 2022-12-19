@@ -22,21 +22,17 @@ function GetBill($congress, $type, $number) {
     return $bill;
 }
 function GetBillActions($congress, $type, $number) {
-    $bill_actions = API_CALL("bill/$congress/$type/$number/actions");
+    $bill_actions = API_CALL_BULK("bill", "$congress/$type/$number/actions");
     return $bill_actions;
 }
 function GetBillAmendments($congress, $type, $number) {
     $bill_amendments = API_CALL("bill/$congress/$type/$number/amendments");
     return $bill_amendments;
 }
-function GetBillComittees($congress, $type, $number) {
+function GetBillCommittees($congress, $type, $number) {
     $bill_comitte_reports = API_CALL("bill/$congress/$type/$number/comittees");
     return $bill_comitte_reports;
-}
-function GetBillComitteeReports($congress, $type, $number) {
-    $bill_comitte_reports = API_CALL("committee-report/$congress/$type/$number");
-    return $bill_comitte_reports;
-}
+} 
 function GetBillCoSponsors($congress, $type, $number) {
     $bill_cosponsors = API_CALL("bill/$congress/$type/$number/cosponsors");
     return $bill_cosponsors;

@@ -5,37 +5,35 @@ export default class BillInfo extends APICallingComponent {
     super(props);
     this.state = { isset: false };
 
-    this.APIFetch("bill", {congress: props.congress, type: props.type, number: props.number}, this.handleBillData);
-
     this.handleBillData = this.handleBillData.bind(this);
     this.handleBackClick = this.handleBackClick.bind(this);
+    this.componentDidMount = this.componentDidMount.bind(this);
   }
+  
+  componentDidMount = () => {
+    var bill = this.props.bill;
+    this.APIFetch("bill", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
+  };
 
   handleBillData = (json) => {
-    var bill = json.bill;
+    var billObj = json.bill;
     this.setState({
-      congress: bill.congress,
-      type: bill.type,
-      number: bill.number,
-      originChamber: null??bill.originChamber,
-      policyArea: bill.policyArea == undefined ? null : bill.policyArea.name,
-      title: bill.title,
-      updated: null??bill.updateDate,
-      lastAction: null??bill.latestAction,
+      bill: billObj,
       isset: true
     });
   }
-
+  
   handleBackClick = () => {
     this.props.setView("bill-listing");
   }
-
+  
   render() {
-    console.log(this.state);
+    console.log(this.state.bill);
     if (this.state.isset) {
       return (
         <div>
-          <h1>{this.state.title}</h1>
+          <h1>{this.state.bill.title}</h1>
+          <h1>{this.state.bill.updateDate}</h1>
           <button onClick={this.handleBackClick}>Back To Listing</button>
         </div>
       );

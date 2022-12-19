@@ -26,7 +26,7 @@ export default class App extends React.Component {
     switch (this.state.view) {
       case "bill-listing": jsx.push(<RecentBills key="recentBills" setView={this.setView}/>);
         break;
-      case "bill-info": jsx.push(<BillInfo key="billInfo" setView={this.setView} congress={options.congress} type={options.type} number={options.number}/>);
+      case "bill-detail": jsx.push(<BillInfo key="billInfo" setView={this.setView} bill={options}/>);
         break;
     }
 

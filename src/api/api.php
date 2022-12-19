@@ -38,60 +38,90 @@
 
 
 
-//require_once "cached.api.php";
-//print_r(CachedAPI::GetAPIData("/bill/hr/4040"));
-
 require_once "../congress.api/congress.api.php";
-
-function API_Success($json) {
-    header('Content-Type: application/json');
-    $json["status"] = "success";
-    print_r(json_encode($json));
+require_once "api.cache.php";
+/*
+    API Entry Point
+    * Determine route and call those handlers
+*/
+$route = $_GET["route"];
+switch($route) {
+    case "bill": handleBillRoute(); break;
+    case "recentBills": handleRecentBillsRoute(); break;
+    case "test": API_Success(APICache::CacheRoute("", "")); break;
 }
 
-function Get_Index_If_Set($index, $array) {
+function API_Return($data) {
+    header('Content-Type: application/json');
+    print_r(json_encode($data));
+}
+function API_NotFound() {
+    $data = array();
+    $data["status"] = "Not Found";
+    API_Return($data);
+}
+function API_Success($data) {
+    $data["status"] = "success";
+    API_Return($data);
+}
+
+function Get_Index_If_Set($array, $index) {
     if (isset($array[$index])) return $array[$index];
     else return null;
 }
 
-$route = $_GET["route"];
-switch($route) {
-    case "bill": handleBillRoute(); break;
-    case "recentBills": handleRecentBills(); break;
+function shouldFetchBillOption($congress, $type, $number, $option) {
+    return isset($congress) && isset($type) && isset($number) && isset($option);
+}
+function shouldFetchBill($congress, $type, $number, $option) {
+    return isset($congress) && isset($type) && isset($number) && !isset($option);
+}
+function shouldFetchBillsByCongressByType($congress, $type, $number, $option) {
+    return isset($congress) && isset($type) && !isset($number) && !isset($option);
+}
+function shouldFetchBillsByCongress($congress, $type, $number, $option) {
+    return isset($congress) && isset($type) && isset($number) && isset($option);
+}
+function GetBillOption($congress, $type, $number, $option) {
+    $data = null;
+    switch ($option) {
+        case "actions": $data = GetBillActions($congress, $type, $number); break;
+        case "amendments": $data = GetBillAmendments($congress, $type, $number); break;
+        case "committees": $data = GetBillCommittees($congress, $type, $number); break;
+        case "cosponsors": $data = GetBillCosponsors($congress, $type, $number); break;
+        case "relatedbills": $data = GetRelatedBills($congress, $type, $number); break;
+        case "subjects": $data = GetBillSubjects($congress, $type, $number); break;
+        case "summaries": $data = GetBillSummaries($congress, $type, $number); break;
+        case "text": $data = GetBillText($congress, $type, $number); break;
+        case "titles": $data = GetBillTitles($congress, $type, $number); break;
+        default: $data = array();
+    }
+    return $data;
 }
 
 function handleBillRoute() {
-    $congress= Get_Index_If_Set("congress", $_GET);
-    $type= Get_Index_If_Set("type", $_GET);
-    $number= Get_Index_If_Set("number", $_GET);
-    $option= Get_Index_If_Set("option", $_GET);
+    $c = Get_Index_If_Set($_GET, "congress");
+    $t = Get_Index_If_Set($_GET, "type");
+    $n = Get_Index_If_Set($_GET, "number");
+    $o = Get_Index_If_Set($_GET, "option");
     
-    //Fetching bills by congress
-    if (isset($congress)) {
-        //Fetching bills by type
-        if (isset($type)) {
-            //Fetching a specifc bill
-            if (isset($number)) {
-                //Fetching specific data of a specific bill
-                if (isset($option)) {
-                } 
-                //Fetching a specific bill
-                else API_Success(GetBill($congress, $type, $number));
-            }
-            //Fetching bills by type
-            else API_Success(GetBillsByCongressByType($congress, $type));
-        }
-        //Fetching bills by congress
-        else API_Success(GetBillsByCongress($congress));
-    } 
-    //Fetching all bills is not allowed
-    else { }
+    $data = 0;
+    if (shouldFetchBillOption($c, $t, $n, $o))  
+        $data = APICache::UseCache("bill", "GetBillOption", $c, $t, $n, $o);
+    else if (shouldFetchBill($c, $t, $n, $o)) 
+        $data = APICache::UseCache("bill", "GetBill", $c, $t, $n);
+    else if (shouldFetchBillsByCongressByType($c, $t, $n, $o))  
+        $data = APICache::UseCache("bill", "GetBillsByCongressByType", $c, $t);
+    else if (shouldFetchBillsByCongress($c, $t, $n, $o))        
+        $data = APICache::UseCache("bill", "GetBillsByCongress", $c);
+
+    if ($data == 0) API_NotFound();
+    else API_Success($data);
 }
 
-function handleRecentBills() {
-    API_Success(GetRecentBills(50));
+function handleRecentBillsRoute() {
+    $data = APICache::UseCache("recent.bills","GetRecentBills", 50);
+    API_Success($data);
 }
-
-//print_r(json_encode($_GET));
 
 ?>
