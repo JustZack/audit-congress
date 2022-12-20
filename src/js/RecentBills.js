@@ -1,5 +1,7 @@
 import APICallingComponent from "./APICallingComponent.js";
 import BillListItem from "./BillListItem.js";
+import "../css/App.scss"
+import "../css/RecentBills.scss"
 
 export default class RecentBills extends APICallingComponent {
   constructor(props) {
@@ -36,7 +38,7 @@ export default class RecentBills extends APICallingComponent {
   render() {
     if (this.state.isset) {
       return (
-        <ul>
+        <ul className="list-view">
           {this.state.jsx}
         </ul>
       );

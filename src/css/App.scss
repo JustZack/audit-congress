@@ -1,0 +1,25 @@
+@use "classes";
+
+body {
+    @extend %reset-spacing;
+}
+
+
+
+#audit-congress-react-root {
+    @extend %full-width;
+    background-color: white;
+    height: 100%;
+}
+
+.site-header {
+    @extend %full-width;
+}
+
+.list-view {
+
+}
+
+.detailed-view {
+
+}

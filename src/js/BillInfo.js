@@ -1,4 +1,5 @@
 import APICallingComponent from "./APICallingComponent.js";
+import "../css/App.scss"
 
 export default class BillInfo extends APICallingComponent {
   constructor(props) {
@@ -31,7 +32,7 @@ export default class BillInfo extends APICallingComponent {
     console.log(this.state.bill);
     if (this.state.isset) {
       return (
-        <div>
+        <div className="detailed-view">
           <h1>{this.state.bill.title}</h1>
           <h1>{this.state.bill.updateDate}</h1>
           <button onClick={this.handleBackClick}>Back To Listing</button>
@@ -39,7 +40,7 @@ export default class BillInfo extends APICallingComponent {
       );
     } else {
       return (
-        <div>
+        <div className="detailed-view">
           <h1>Loading Data...</h1>
           <button onClick={this.handleBackClick}>Back To Listing</button>
         </div>

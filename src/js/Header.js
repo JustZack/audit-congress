@@ -1,3 +1,5 @@
+import "../css/App.scss"
+
 export default class Header extends React.Component {
     constructor(props) {
       super(props);
@@ -6,9 +8,7 @@ export default class Header extends React.Component {
   
     render() {
       return (
-        <div className={'header'}>
-          {this.props.children}
-        </div>
+        <div className="site-header">{this.props.children}</div>
       );
     }
   }

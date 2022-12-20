@@ -13,7 +13,6 @@ export default class BillStatus extends APICallingComponent{
     static determineStatusFromActionText(actionText) {
         var words = actionText.replace(/[^A-Za-z]/g, ' ');
         var words = words.split(/[\s]+/);
-        console.log(words);
     }
 
     constructor(props) {
@@ -22,7 +21,6 @@ export default class BillStatus extends APICallingComponent{
             jsx: [],
         };
         
-        console.log(this.props.latestAction);
         //this.state.jsx = this.generateStatus(this.props.latestAction);
     }
 
@@ -30,7 +28,7 @@ export default class BillStatus extends APICallingComponent{
         var statuses = BillStatus.possibleStatuses;
         var currentStatus = latestAction.text.toLowerCase();
         BillStatus.determineStatusFromActionText(currentStatus)
-        //console.log(currentStatus);
+
         var jsx = [];
         for (var statusIndex in statuses) {
             var status = statuses[statusIndex];

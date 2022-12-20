@@ -119,9 +119,22 @@ function handleBillRoute() {
     else API_Success($data);
 }
 
+function shouldFetchRecentBillsPage($p) {
+    return isset($p);
+}
+
 function handleRecentBillsRoute() {
-    $data = APICache::UseCache("recent.bills","GetRecentBills", 50);
-    API_Success($data);
+    $p = Get_Index_If_Set($_GET, "page");
+
+    $data = 0;
+    if (shouldFetchRecentBillsPage($p)) 
+        $data = APICache::UseCache("recent.bills","GetRecentBills", 25, $p);
+    else {
+        $data = APICache::UseCache("recent.bills","GetRecentBills", 25, 1);
+    }
+
+    if ($data == 0) API_NotFound();
+    else API_Success($data);
 }
 
 ?>

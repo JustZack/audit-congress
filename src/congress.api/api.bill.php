@@ -1,7 +1,9 @@
 <?php
 
-function GetRecentBills($limit) {
-    $bills = API_CALL("bill", "limit=$limit&sort=updateDate+desc");
+function GetRecentBills($limit, $page) {
+    $offset = $limit * ($page - 1);
+    $bills = API_CALL("bill", "limit=$limit&offset=$offset&sort=updateDate+desc");
+    $bills["page"] = $page;
     return $bills;
 }
 

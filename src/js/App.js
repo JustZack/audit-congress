@@ -2,6 +2,7 @@
 import BillInfo from "./BillInfo.js";
 import Header from "./Header.js";
 import RecentBills from "./RecentBills.js";
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -30,10 +31,6 @@ export default class App extends React.Component {
         break;
     }
 
-    return (
-      <div>
-        {jsx}
-      </div>
-    );
+    return (<>{jsx}</>);
   }
 }
