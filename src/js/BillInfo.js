@@ -1,5 +1,4 @@
 import APICallingComponent from "./APICallingComponent.js";
-import "../css/App.scss"
 
 export default class BillInfo extends APICallingComponent {
   constructor(props) {

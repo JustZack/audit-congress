@@ -42,11 +42,11 @@ export default class BillStatus extends APICallingComponent{
     render() {
         return(
             <div className={'bill-status-container full-width'}>
-                <div className={'bill-status'}>
-                    {this.state.jsx}
-                </div>
                 <div className={'bill-status-date'}>
-                    As Of
+                    Latest Action on {this.props.action.actionDate}
+                </div>
+                <div className={'bill-status'}>
+                    {this.props.action.text}
                 </div>
             </div>
         );

@@ -44,13 +44,14 @@ require_once "api.cache.php";
     API Entry Point
     * Determine route and call those handlers
 */
-$route = $_GET["route"];
-switch($route) {
-    case "bill": handleBillRoute(); break;
-    case "recentBills": handleRecentBillsRoute(); break;
-    case "test": API_Success(APICache::CacheRoute("", "")); break;
-}
-
+$route = Get_Index_If_Set($_GET, "route");
+if ($route) {
+    switch($route) {
+        case "bill": handleBillRoute(); break;
+        case "recentBills": handleRecentBillsRoute(); break;
+        case "test": API_Success(APICache::CacheRoute("", "")); break;
+    }
+} else API_NotFound();
 function API_Return($data) {
     header('Content-Type: application/json');
     print_r(json_encode($data));
@@ -81,22 +82,6 @@ function shouldFetchBillsByCongressByType($congress, $type, $number, $option) {
 }
 function shouldFetchBillsByCongress($congress, $type, $number, $option) {
     return isset($congress) && isset($type) && isset($number) && isset($option);
-}
-function GetBillOption($congress, $type, $number, $option) {
-    $data = null;
-    switch ($option) {
-        case "actions": $data = GetBillActions($congress, $type, $number); break;
-        case "amendments": $data = GetBillAmendments($congress, $type, $number); break;
-        case "committees": $data = GetBillCommittees($congress, $type, $number); break;
-        case "cosponsors": $data = GetBillCosponsors($congress, $type, $number); break;
-        case "relatedbills": $data = GetRelatedBills($congress, $type, $number); break;
-        case "subjects": $data = GetBillSubjects($congress, $type, $number); break;
-        case "summaries": $data = GetBillSummaries($congress, $type, $number); break;
-        case "text": $data = GetBillText($congress, $type, $number); break;
-        case "titles": $data = GetBillTitles($congress, $type, $number); break;
-        default: $data = array();
-    }
-    return $data;
 }
 
 function handleBillRoute() {

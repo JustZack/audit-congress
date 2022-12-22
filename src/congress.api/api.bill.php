@@ -4,6 +4,7 @@ function GetRecentBills($limit, $page) {
     $offset = $limit * ($page - 1);
     $bills = API_CALL("bill", "limit=$limit&offset=$offset&sort=updateDate+desc");
     $bills["page"] = $page;
+    $bills["offset"] = $offset;
     return $bills;
 }
 
@@ -19,6 +20,24 @@ function GetBillsByCongressByType($congress, $type) {
     $bills = API_CALL_BULK("bill", "$congress/$type");
     return $bills;
 }
+
+function GetBillOption($congress, $type, $number, $option) {
+    $data = null;
+    switch ($option) {
+        case "actions": $data = GetBillActions($congress, $type, $number); break;
+        case "amendments": $data = GetBillAmendments($congress, $type, $number); break;
+        case "committees": $data = GetBillCommittees($congress, $type, $number); break;
+        case "cosponsors": $data = GetBillCosponsors($congress, $type, $number); break;
+        case "relatedbills": $data = GetRelatedBills($congress, $type, $number); break;
+        case "subjects": $data = GetBillSubjects($congress, $type, $number); break;
+        case "summaries": $data = GetBillSummaries($congress, $type, $number); break;
+        case "text": $data = GetBillText($congress, $type, $number); break;
+        case "titles": $data = GetBillTitles($congress, $type, $number); break;
+        default: $data = array();
+    }
+    return $data;
+}
+
 function GetBill($congress, $type, $number) {
     $bill = API_CALL("bill/$congress/$type/$number");
     return $bill;

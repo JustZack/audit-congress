@@ -1,5 +1,3 @@
-import "../css/App.scss"
-
 export default class Header extends React.Component {
     constructor(props) {
       super(props);

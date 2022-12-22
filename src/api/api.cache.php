@@ -32,22 +32,51 @@ class APICache {
     //Decide how often a given route cache should be invalidated
     private static function DecideCacheInterval($routeString) {
         //Update after a day
-        if (strpos($routeString, "bill")) return 604800;
+        if (strpos($routeString, "bill")>-1) return 604800;
         //Update after 5 minutes
-        else if (strpos($routeString, "recent.bills")) return 300;
+        else if (strpos($routeString, "recent.bills")>-1) return 300;
+    }
+
+    private static function GetStatusFile() {
+        APICache::EnsureCacheIsCreated();
+        $filename = APICache::GetCacheFilePath("status.json");
+        return APICache::GetCacheFile($filename);
     }
 
     private static function UpdateStatusCache($routeString) {
-        $status = APICache::GetIfCached("status");
-        $status["items"][$routeString] = array("created" => time(), "updateEvery" => APICache::DecideCacheInterval($routeString));
+        $status = APICache::GetStatusFile();
+        $status["items"][$routeString] = 
+                array(  "created" => time(), 
+                        "updateEvery" => APICache::DecideCacheInterval($routeString)
+                );
         APICache::StoreCacheFile(APICache::GetCacheFilePath("status.json"), $status);
+    }
+
+    private static function RouteExistsAndIsValid($routeString) {
+        $filename = APICache::GetCacheFilePath($routeString.".json");
+        ///Cache file exists
+        if (file_exists($filename)) {
+            $status = APICache::GetStatusFile();
+            //Status knows of cache
+            if (isset($status["items"][$routeString])) {
+                $route = $status["items"][$routeString];
+                //Cache file isnt too old
+                if (time() < $route["created"]+$route["updateEvery"]) {
+                    return true;
+                } else {
+                    unset($filename);
+                }
+            }
+        }
+        return false;
     }
 
     public static function GetIfCached($routeString) {
         APICache::EnsureCacheIsCreated();
 
         $filename = APICache::GetCacheFilePath($routeString.".json");
-        if (file_exists($filename)) return APICache::GetCacheFile($filename);
+        if (APICache::RouteExistsAndIsValid($routeString))
+             return APICache::GetCacheFile($filename);
         else return false;
     }
 
@@ -61,14 +90,14 @@ class APICache {
         APICache::StoreCacheFile($filename, $data);
     }
 
-    public static function UseCache($route, $callback_fn, ...$options) {
+    public static function UseCache($route, $api_function, ...$options) {
         foreach ($options as $op) $route .= ".$op";
 
         $data = APICache::GetIfCached($route);
         if ($data == false) {
-            $data =  call_user_func_array($callback_fn, $options);
-            $data["means"] = "API CALL";
+            $data =  call_user_func_array($api_function, $options);
             APICache::CacheRoute($route, $data);
+            $data["means"] = "API CALL";
         } else {
             $data["means"] = "CACHE";
         }

@@ -1,7 +1,5 @@
 import APICallingComponent from "./APICallingComponent.js";
 import BillListItem from "./BillListItem.js";
-import "../css/App.scss"
-import "../css/RecentBills.scss"
 
 export default class RecentBills extends APICallingComponent {
   constructor(props) {
