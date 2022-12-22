@@ -31,10 +31,16 @@ class APICache {
 
     //Decide how often a given route cache should be invalidated
     private static function DecideCacheInterval($routeString) {
-        //Update after a day
-        if (strpos($routeString, "bill")>-1) return 604800;
+        $interval = 0;
+
         //Update after 5 minutes
-        else if (strpos($routeString, "recent.bills")>-1) return 300;
+        if (strpos($routeString, "recent.bills") > -1) 
+            $interval = 300;
+        //Update after a day
+        else if (strpos($routeString, "bill") > -1) 
+            $interval = 604800;
+        
+        return $interval;
     }
 
     private static function GetStatusFile() {
