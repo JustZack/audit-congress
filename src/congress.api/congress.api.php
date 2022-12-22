@@ -16,7 +16,7 @@ include_once "api.communications.php";
 include_once "api.nomination.php";
 include_once "api.treaty.php";
 
-$api_key = file_get_contents("congress.api.key");
+$api_key = file_get_contents("api.congress.key");
 $api_query_args = "?api_key=$api_key&format=json";
 $api_item_limit = 250;
 $api_base_url = "https://api.congress.gov/v3/";
