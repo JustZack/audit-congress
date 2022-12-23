@@ -76,7 +76,7 @@ function getParseFunction($route) {
     $function = false;
     switch ($route) {
         case "bill": 
-            $function = "CongressAPITranslator::translateBill"; 
+            //$function = "CongressAPITranslator::translateBill"; 
             break;
         case "recent.bills": 
             $function = "CongressAPITranslator::translateRecentBills"; 
@@ -100,7 +100,7 @@ function shouldFetchBillsByCongressByType($congress, $type, $number, $option) {
     return isset($congress) && isset($type) && !isset($number) && !isset($option);
 }
 function shouldFetchBillsByCongress($congress, $type, $number, $option) {
-    return isset($congress) && isset($type) && isset($number) && isset($option);
+    return isset($congress) && !isset($type) && !isset($number) && !isset($option);
 }
 
 function handleBillRoute() {
@@ -109,16 +109,13 @@ function handleBillRoute() {
     $n = Get_Index_If_Set($_GET, "number");
     $o = Get_Index_If_Set($_GET, "option");
     
-    $data = 0;
-    if (shouldFetchBillOption($c, $t, $n, $o))  
-        $data = getAPIData("bill", "GetBillOption", $c, $t, $n, $o);
-    else if (shouldFetchBill($c, $t, $n, $o)) 
-        $data = getAPIData("bill", "GetBill", $c, $t, $n);
-    else if (shouldFetchBillsByCongressByType($c, $t, $n, $o))  
-        $data = getAPIData("bill", "GetBillsByCongressByType", $c, $t);
-    else if (shouldFetchBillsByCongress($c, $t, $n, $o))        
-        $data = getAPIData("bill", "GetBillsByCongress", $c);
+    $function = ""; $args = [$c, $t, $n, $o];
+    if (shouldFetchBillOption($c, $t, $n, $o)) $function = "GetBillOption";
+    else if (shouldFetchBill($c, $t, $n, $o)) $function = "GetBill";
+    else if (shouldFetchBillsByCongressByType($c, $t, $n, $o)) $function = "GetBillsByCongressByType";
+    else if (shouldFetchBillsByCongress($c, $t, $n, $o)) $function = "GetBillsByCongress";
 
+    $data = getAPIData("bill", $function, ...$args);
     if ($data == 0) API_NotFound();
     else API_Success($data);
 }
@@ -130,13 +127,11 @@ function shouldFetchRecentBillsPage($p) {
 function handleRecentBillsRoute() {
     $p = Get_Index_If_Set($_GET, "page");
 
-    $data = 0;
-    if (shouldFetchRecentBillsPage($p)) 
-        $data = getAPIData("recent.bills", "GetRecentBills", 25, $p);
-    else {
-        $data = getAPIData("recent.bills", "GetRecentBills", 25, 1);
-    }
-
+    $page = 0;
+    if (shouldFetchRecentBillsPage($p)) $page = $p;
+    else $page = 1;
+    
+    $data = getAPIData("recent.bills", "GetRecentBills", 25, $page);
     if ($data == 0) API_NotFound();
     else API_Success($data);
 }
