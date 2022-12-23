@@ -66,6 +66,11 @@ function API_Success($data) {
     $data["status"] = "success";
     API_Return($data);
 }
+function writeAPIData($data) {
+    if ($data == 0) API_NotFound();
+    else API_Success($data);
+}
+
 
 function Get_Index_If_Set($array, $index) {
     if (isset($array[$index])) return $array[$index];
@@ -116,8 +121,7 @@ function handleBillRoute() {
     else if (shouldFetchBillsByCongress($c, $t, $n, $o)) $function = "GetBillsByCongress";
 
     $data = getAPIData("bill", $function, ...$args);
-    if ($data == 0) API_NotFound();
-    else API_Success($data);
+    writeAPIData($data);
 }
 
 function shouldFetchRecentBillsPage($p) {
@@ -132,8 +136,7 @@ function handleRecentBillsRoute() {
     else $page = 1;
     
     $data = getAPIData("recent.bills", "GetRecentBills", 25, $page);
-    if ($data == 0) API_NotFound();
-    else API_Success($data);
+    writeAPIData($data);
 }
 
 ?>
