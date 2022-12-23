@@ -40,6 +40,7 @@
 
 require_once "../congress.api/congress.api.php";
 require_once "api.cache.php";
+require_once "congress.api.translator.php";
 /*
     API Entry Point
     * Determine route and call those handlers
@@ -71,6 +72,24 @@ function Get_Index_If_Set($array, $index) {
     else return null;
 }
 
+function getParseFunction($route) {
+    $function = false;
+    switch ($route) {
+        case "bill": 
+            $function = "CongressAPITranslator::translateBill"; 
+            break;
+        case "recent.bills": 
+            $function = "CongressAPITranslator::translateRecentBills"; 
+            break;
+        default: $function = false;
+    }
+    return $function;
+}
+function getAPIData($route, $api_function, ...$options) {
+    $data = APICache::UseCache($route, getParseFunction($route), $api_function, ...$options);
+    return $data;
+}
+
 function shouldFetchBillOption($congress, $type, $number, $option) {
     return isset($congress) && isset($type) && isset($number) && isset($option);
 }
@@ -92,13 +111,13 @@ function handleBillRoute() {
     
     $data = 0;
     if (shouldFetchBillOption($c, $t, $n, $o))  
-        $data = APICache::UseCache("bill", "GetBillOption", $c, $t, $n, $o);
+        $data = getAPIData("bill", "GetBillOption", $c, $t, $n, $o);
     else if (shouldFetchBill($c, $t, $n, $o)) 
-        $data = APICache::UseCache("bill", "GetBill", $c, $t, $n);
+        $data = getAPIData("bill", "GetBill", $c, $t, $n);
     else if (shouldFetchBillsByCongressByType($c, $t, $n, $o))  
-        $data = APICache::UseCache("bill", "GetBillsByCongressByType", $c, $t);
+        $data = getAPIData("bill", "GetBillsByCongressByType", $c, $t);
     else if (shouldFetchBillsByCongress($c, $t, $n, $o))        
-        $data = APICache::UseCache("bill", "GetBillsByCongress", $c);
+        $data = getAPIData("bill", "GetBillsByCongress", $c);
 
     if ($data == 0) API_NotFound();
     else API_Success($data);
@@ -113,9 +132,9 @@ function handleRecentBillsRoute() {
 
     $data = 0;
     if (shouldFetchRecentBillsPage($p)) 
-        $data = APICache::UseCache("recent.bills","GetRecentBills", 25, $p);
+        $data = getAPIData("recent.bills", "GetRecentBills", 25, $p);
     else {
-        $data = APICache::UseCache("recent.bills","GetRecentBills", 25, 1);
+        $data = getAPIData("recent.bills", "GetRecentBills", 25, 1);
     }
 
     if ($data == 0) API_NotFound();

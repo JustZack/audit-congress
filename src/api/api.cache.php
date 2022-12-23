@@ -96,12 +96,16 @@ class APICache {
         APICache::StoreCacheFile($filename, $data);
     }
 
-    public static function UseCache($route, $api_function, ...$options) {
+    public static function UseCache($route, $filter_function, $api_function, ...$options) {
         foreach ($options as $op) $route .= ".$op";
 
         $data = APICache::GetIfCached($route);
         if ($data == false) {
             $data =  call_user_func_array($api_function, $options);
+            //Filter the data if a function is given
+            if (strlen($filter_function) > 0) 
+                $data = call_user_func($filter_function, $data);
+
             APICache::CacheRoute($route, $data);
             $data["means"] = "API CALL";
         } else {

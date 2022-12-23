@@ -24,7 +24,7 @@ $api_url = $api_base_url . "%s" . $api_query_args;
 
 //Fetch and parse JSON API data
 //The base level of all API functions
-function API_GET($url) {
+function CONGRESS_API_GET($url) {
     global $api_key;
     if (!$api_key) print_r("Error: API Key not set");
     $json = file_get_contents($url);
@@ -32,16 +32,16 @@ function API_GET($url) {
 }
 //Make an API call with the given route and options
 //Defaults to 20 items per request
-function API_CALL($route, $additional_args = null) {//, $options) {
+function CONGRESS_API_CALL($route, $additional_args = null) {//, $options) {
     global $api_url;
     $url = sprintf($api_url, "$route");
     if ($additional_args !== null) $url .= "&$additional_args";
-    $json = API_GET($url);
+    $json = CONGRESS_API_GET($url);
     return $json;
 }
 //Make an API call with the given route and options
 //Pulls all items for this route via the pagination property
-function API_CALL_BULK($route, $options, $additional_args = null) {
+function CONGRESS_API_CALL_BULK($route, $options, $additional_args = null) {
     global $api_url, $api_item_limit;
     $full_route_json = []; 
     //$json; $data_array_name;
@@ -53,7 +53,7 @@ function API_CALL_BULK($route, $options, $additional_args = null) {
     do {
         //Make the API call with offset and limit arguments appended
         $args = "&offset=$offset&limit=$api_item_limit";
-        $json = API_GET($url . $args);
+        $json = CONGRESS_API_GET($url . $args);
           //If this is the first run
          //Determine which key stores the data in this response
         //Based on all requests having at most [pagination, request, $data_array]
