@@ -1,6 +1,20 @@
 <?php
 
-class CongressAPITranslator {    
+class CongressAPITranslator { 
+    public static $routeTranslationFunctions = [
+        "bill" => "CongressAPITranslator::translateBill",
+        "recent.bills" => "CongressAPITranslator::translateRecentBills",
+        "member" => false,
+
+    ];
+    public static function determineTranslateFunction($route) {
+        $function = false;
+        $knownMapping = array_key_exists($route, CongressAPITranslator::$routeTranslationFunctions);
+        if ($route && $knownMapping) $function = CongressAPITranslator::$routeTranslationFunctions[$route];
+        return $function;
+
+    }
+
     private static function pluralizeNumber($number) {
         $relevent = $number%100;
         $tens = $relevent%10;
@@ -48,9 +62,18 @@ class CongressAPITranslator {
         return $data;
     }
     public static function translateBill($data) {
-        $bill = $data["bill"];
-        
-        $data["bill"] = $bill;
+        if (isset($data["bill"])) {
+            $bill = $data["bill"];
+
+            $data["bill"] = $bill;
+        } else {
+            $option = array_values(array_diff(array_keys($data), ["pagination", "request"]))[0];
+            $optionData = $data[$option];
+
+            $data[$option] = $optionData;
+        }
+
+
         return $data;
     }
 }

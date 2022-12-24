@@ -5,6 +5,9 @@ require_once "class.api.route.validator.php";
 require_once "congress.api.translator.php";
 
 class API {
+    /*
+        Generic API functions to complete the response
+    */
     private static function Return($data) {
         header('Content-Type: application/json');
         print_r(json_encode($data));
@@ -27,55 +30,18 @@ class API {
         API::Return($data);
     }
 
+    /*
+        Helper functions
+    */
     //Get a the given query arg fromm $_GET or null
     public static function getQueryArgIfSet($arg) {
         if (isset($_GET[$arg])) return $_GET[$arg];
         else return null;
     }
-    //Determine which translate function to use
-    private static function getParseFunction($route) {
-        $function = false;
-        switch ($route) {
-            case "recent.bills": 
-                $function = "CongressAPITranslator::translateRecentBills"; 
-                break;
-            case "bill": 
-                //$function = "CongressAPITranslator::translateBill"; 
-                break;
-            case "bill.actions": 
-                //$function = "CongressAPITranslator::translateBillActions"; 
-                break;
-            case "bill.amendments": 
-                //$function = "CongressAPITranslator::translateBillAmendments"; 
-                break;
-            case "bill.committees": 
-                //$function = "CongressAPITranslator::translateBillCommittees"; 
-                break;
-            case "bill.cosponsors": 
-                //$function = "CongressAPITranslator::translateBillCosponsors"; 
-                break;
-            case "bill.relatedbills": 
-                //$function = "CongressAPITranslator::translateBillRelatedBills"; 
-                break;
-            case "bill.subjects": 
-                //$function = "CongressAPITranslator::translateBillSubjects"; 
-                break;
-            case "bill.summaries": 
-                //$function = "CongressAPITranslator::translateBillSummaries"; 
-                break;
-            case "bill.text": 
-                //$function = "CongressAPITranslator::translateTextVersions"; 
-                break;
-            case "bill.titles": 
-                //$function = "CongressAPITranslator::translateTitles"; 
-                break;
-            default: $function = false;
-        }
-        return $function;
-    }
     //Get the API data, either via fetch or cache
     private static function getAPIData($route, $api_function, $options) {
-        $data = APICache::UseCache($route, API::getParseFunction($route), $api_function, ...$options);
+        $translationFunction = CongressAPITranslator::determineTranslateFunction($route);
+        $data = APICache::UseCache($route, $translationFunction, $api_function, ...$options);
         return $data;
     }
     //Do a full API response for the given route and function(...$args)
@@ -88,6 +54,9 @@ class API {
         }
     }
 
+    /*
+        BILL ROUTES
+    */
     //Handle all individual bill routes
     //Up to one or no api calls will be made if cached
     public static function HandleBillRoute() {
@@ -105,9 +74,10 @@ class API {
         if ($function == -1) API::NotFound("bill/$congress/$type/$number/$option");
         else API::doAPIResponse("bill", $function, $args);
     }
-
     //Handle the logic for getting all the API data
     private static function getFullBillData($args) {
+        $start = time();
+        
         $data = API::getAPIData("bill", "GetBill", $args);
         $bill = $data["bill"];
 
@@ -125,21 +95,22 @@ class API {
 
             $bill[$optionIndex] = $optionData[$optionIndex];
         }   
+
+        $end = time();
         $data["bill"] = $bill;
         $data["request"]["dataType"] = "full";
+        $data["request"]["time"] = ($end-$start);
         return $data;
     }
     //Handle asking for all bill data in one response
-    //As many api calls as needed to complete the bill will be made
-    //Then compile that information together into a response
     public static function HandleFullBillRoute() {
         $congress = API::getQueryArgIfSet("congress");
         $type = API::getQueryArgIfSet("type");
         $number = API::getQueryArgIfSet("number");
-        $args = [$congress, $type, $number, null];
 
+        $args = [$congress, $type, $number, null];
         //Ensure required args are present
-        if (APIRouteValidator::shouldFetchBill(...$args)) {
+        if (APIRouteValidator::shouldFetchFullBill(...$args)) {
             try {
                 $data = API::getFullBillData($args);
                 API::Success($data);
@@ -151,7 +122,6 @@ class API {
             API::NotFound("fullBill/$congress/$type/$number");
         }
     }
-
     //Handle asking for recent bills
     public static function HandleRecentBillsRoute() {
         $page = API::getQueryArgIfSet("page");
@@ -159,6 +129,68 @@ class API {
         if (!APIRouteValidator::shouldFetchRecentBillsPage($page)) $page = 1;
         
         API::doAPIResponse("recent.bills", "GetRecentBills", [25, $page]);
+    }
+
+
+
+    /*
+        MEMBER ROUTES
+    */
+    //Handle the memeber route and options
+    public static function HandleMemberRoute() {
+        $member = API::getQueryArgIfSet("member");
+        $option = API::getQueryArgIfSet("option");
+
+        $function = -1; $args = [$member, $option];
+        if (APIRouteValidator::shouldFetchMembersList($member)) $function = "GetMembers";
+        if (APIRouteValidator::shouldFetchMember($member)) $function = "GetMember";
+        if (APIRouteValidator::shouldFetchMemberOption($member, $option)) $function = "GetMemberOption";
+
+        if ($function == -1) API::NotFound("member/$member/$option");
+        else API::doAPIResponse("member", $function, $args);
+    }
+    //Handle the logic for getting all the member api data
+    private static function getFullMemberData($args) {
+        $start = time();
+
+        $data = API::getAPIData("member", "GetMember", $args);
+        $member = $data["member"];
+
+        $options = GetMemberOptionsList();
+        
+        //Get data for each option
+        foreach ($options as $option) {
+            $args[1] = $option;
+            $optionData = API::getAPIData("member", "GetMemberOption", $args);
+            
+            //both options have different data keys, this fixes that
+            $optionIndex = $option;
+            if ($option == "sponsored-legislation") $optionIndex = "sponsoredLegislation";
+            if ($option == "cosponsored-legislation") $optionIndex = "cosponsoredLegislation";
+            $member[$optionIndex] = $optionData[$optionIndex];
+        }   
+
+        $end = time();
+        $data["member"] = $member;
+        $data["request"]["dataType"] = "full";
+        $data["request"]["time"] = ($end-$start);
+        return $data;
+    }
+    //Handle asking for all member data in one response
+    public static function HandleFullMemberRoute() {
+        $member = API::getQueryArgIfSet("member");
+
+        $args = [$member, null];
+        if (APIRouteValidator::shouldFetchFullMember(...$args)) {
+            try {
+                $data = API::getFullMemberData($args);
+                API::Success($data);
+            } catch (Exception $e) {
+                API::Error($e->getMessage());
+            }
+        } else {
+            API::NotFound("fullMember/$member");
+        }
     }
 }
 

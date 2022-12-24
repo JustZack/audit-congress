@@ -34,11 +34,11 @@ class APICache {
         $interval = 0;
 
         //Update after 5 minutes
-        if (strpos($routeString, "recent.bills") > -1) 
-            $interval = 300;
+        if (strpos($routeString, "recent.bills") > -1) $interval = 300;
         //Update after a day
-        else if (strpos($routeString, "bill") > -1) 
-            $interval = 604800;
+        else if (strpos($routeString, "bill") > -1) $interval = 604800;
+        //Update after a week
+        else if (strpos($routeString, "member") > -1) $interval = 604800*7;
         
         return $interval;
     }
@@ -100,16 +100,18 @@ class APICache {
         foreach ($options as $op) if (isset($op)) $route .= ".$op";
 
         $data = APICache::GetIfCached($route);
+
         if ($data == false) {
             $data =  call_user_func_array($api_function, $options);
             //Filter the data if a function is given
             if (strlen($filter_function) > 0) 
-                $data = call_user_func($filter_function, $data);
+            $data = call_user_func($filter_function, $data);
             APICache::CacheRoute($route, $data);
             $data["means"] = "API CALL";
         } else {
             $data["means"] = "CACHE";
         }
+        
         return $data;
     }
 }

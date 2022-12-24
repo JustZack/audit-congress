@@ -10,6 +10,10 @@ if ($route !== null) {
     switch($route) {
         case "bill": API::HandleBillRoute(); break;
         case "fullBill": API::HandleFullBillRoute(); break;
+        
+        case "member": API::HandleMemberRoute(); break;
+        case "fullMember": API::HandleFullMemberRoute(); break;
+        
         case "recentBills": API::HandleRecentBillsRoute(); break;
         default: API::NotFound($route); break;
     }

@@ -2,28 +2,41 @@
 
 function GetMembers() {
     //$members = API_CALL("member");
-    $members = API_CALL_BULK("member", "");
+    $members = CONGRESS_API_CALL_BULK("member", "");
     //Member list has imageUrl format problems, so fix that
     $members["members"] = format_MembersData($members["members"]);
     return $members;
 }
 function GetMember($id) {
-    $member = API_CALL("member/$id");
+    $member = CONGRESS_API_CALL("member/$id");
+
      //Single member has correct imageUrl format
     //$member["member"] = format_MemberData($member["member"]);
     return $member;
 }
 function GetMemberSponsoredLegislation($id) {
     //$sponsored = API_CALL("member/$id/sponsored-legislation");
-    $sponsored = API_CALL_BULK("member","$id/sponsored-legislation");
+    $sponsored = CONGRESS_API_CALL_BULK("member","$id/sponsored-legislation");
     return $sponsored;
 }
 function GetMemberCoSponsoredLegislation($id) {
     //$cosponsored = API_CALL("member/$id/cosponsored-legislation");
-    $cosponsored = API_CALL_BULK("member","$id/cosponsored-legislation");
+    $cosponsored = CONGRESS_API_CALL_BULK("member","$id/cosponsored-legislation");
     return $cosponsored;
 }
 
+function GetMemberOptionsList() {
+    return ["sponsored-legislation", "cosponsored-legislation"];
+}
+function GetMemberOption($id, $option) {
+    $data = null;
+    switch ($option) {
+        case "sponsored-legislation": $data = GetMemberSponsoredLegislation($id); break;
+        case "cosponsored-legislation": $data = GetMemberCoSponsoredLegislation($id); break;
+        default: $data = array();
+    }
+    return $data;
+}
 /*
     Format up data returned by the /member/ endpoint
     1. Fix imageUrl to use direct link.
