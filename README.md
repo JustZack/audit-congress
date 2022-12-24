@@ -1,7 +1,7 @@
 # audit-congress
 [![Maintainability](https://api.codeclimate.com/v1/badges/17a5f75a6d1ff92adf90/maintainability)](https://codeclimate.com/github/JustZack/audit-congress/maintainability)
 
-A project aiming to make data available via api.congress.gov easily accessable and readable. 
+A project aiming to make data available via api.congress.gov easily accessable and easy to understand. 
 
 Congress.gov currently exists and uses this api though works like a database of information. 
 You have to know what you want before searching for it.
