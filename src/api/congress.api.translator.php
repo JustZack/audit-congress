@@ -1,11 +1,10 @@
 <?php
 
 class CongressAPITranslator { 
-    public static $routeTranslationFunctions = [
+    private static $routeTranslationFunctions = [
         "bill" => "CongressAPITranslator::translateBill",
         "recent.bills" => "CongressAPITranslator::translateRecentBills",
         "member" => false,
-
     ];
     public static function determineTranslateFunction($route) {
         $function = false;
@@ -15,16 +14,19 @@ class CongressAPITranslator {
 
     }
 
+    private static $pluralizeMapping = [
+        0 => "th",
+        1 => "st",
+        2 => "nd",
+        3 => "rd"
+    ];
     private static function pluralizeNumber($number) {
-        $relevent = $number%100;
-        $tens = $relevent%10;
-        $suffix = "";
-    
-        if ($tens == 0 || ($relevent >= 4 && $relevent <= 20)) 
-                            $suffix = "th";
-        else if ($tens == 1) $suffix = "st";
-        else if ($tens == 2) $suffix = "nd";
-        else if ($tens == 3) $suffix = "rd";
+        $relevent = $number%100; $tens = $relevent%10;
+        $suffix = ""; $isTeens = $relevent >= 4 && $relevent <= 20;
+
+        if ($tens == 0 || $isTeens) CongressAPITranslator::$pluralizeMapping[0];
+        else                        CongressAPITranslator::$pluralizeMapping[$tens];
+
         $suffix = $number.$suffix;
         return $suffix;
     }
@@ -69,7 +71,9 @@ class CongressAPITranslator {
         } else {
             $option = array_values(array_diff(array_keys($data), ["pagination", "request"]))[0];
             $optionData = $data[$option];
-
+            /*switch($option) {
+                case "actions":  break;
+            }*/
             $data[$option] = $optionData;
         }
 

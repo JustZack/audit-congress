@@ -74,7 +74,7 @@ class API {
         if ($function == -1) API::NotFound("bill/$congress/$type/$number/$option");
         else API::doAPIResponse("bill", $function, $args);
     }
-    //Handle the logic for getting all the API data
+    //Handle the logic for getting all bill api data
     private static function getFullBillData($args) {
         $start = time();
         
@@ -95,6 +95,14 @@ class API {
 
             $bill[$optionIndex] = $optionData[$optionIndex];
         }   
+
+        //Also get more detailed sponsor data
+        $sponsors = $bill["sponsors"];
+        for ($i = 0;$i < count($sponsors);$i++) {
+            $member = $sponsors[$i]["bioguideId"];
+            $sponsors[$i] = API::getAPIData("member", "GetMember", [$member, null])["member"];
+        }
+        $bill["sponsors"] = $sponsors;
 
         $end = time();
         $data["bill"] = $bill;

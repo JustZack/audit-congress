@@ -29,17 +29,17 @@ class APICache {
         return file_put_contents($filename, json_encode($data));
     }
 
+    private static $cacheIntervalMapping = [
+        "recent.bills" => 300,
+        "bill" => 604800,
+        "member" => 604800*7,
+    ];
     //Decide how often a given route cache should be invalidated
     private static function DecideCacheInterval($routeString) {
         $interval = 0;
-
-        //Update after 5 minutes
-        if (strpos($routeString, "recent.bills") > -1) $interval = 300;
-        //Update after a day
-        else if (strpos($routeString, "bill") > -1) $interval = 604800;
-        //Update after a week
-        else if (strpos($routeString, "member") > -1) $interval = 604800*7;
-        
+        foreach (APICache::$cacheIntervalMapping as $route=>$value) { 
+            if (strpos($routeString, $route) > -1) $interval = APICache::$cacheIntervalMapping[$route];
+        }
         return $interval;
     }
 
