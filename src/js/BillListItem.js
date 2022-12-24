@@ -9,11 +9,11 @@ export default class BillListItem extends React.Component {
     var bill = this.props.bill;
     
     this.state = {
-      updated: this.buildUpdatedTimeString(bill.updateDateIncludingText)
+      updated: this.buildLocaleDateTimeString(bill.updateDateIncludingText)
     };
 
     this.handleBillInfoClick = this.handleBillInfoClick.bind(this);
-    this.buildUpdatedTimeString = this.buildUpdatedTimeString.bind(this);
+    this.buildLocaleDateTimeString = this.buildLocaleDateTimeString.bind(this);
     this.pluralizeNumber = this.pluralizeNumber.bind(this);
     
   }
@@ -28,16 +28,16 @@ export default class BillListItem extends React.Component {
     else if (tens == 1) suffix = "st";
     else if (tens == 2) suffix = "nd";
     else if (tens == 3) suffix = "rd";
-    suffix = number+suffix;
-    return suffix;
+     number += suffix;
+    return number;
 }
 
-  buildUpdatedTimeString = (datetimestring) => {
+buildLocaleDateTimeString = (datetimestring) => {
     var dt = new Date(datetimestring);
     //EX:            Friday Dec.
     var localTime = `${BillListItem.weekdays[dt.getDay()]} ${BillListItem.months[dt.getMonth()]}`;
     //EX:          4th
-    localTime += ` ${this.pluralizeNumber(dt.getDay())} `;
+    localTime += ` ${this.pluralizeNumber(dt.getDate())} `;
     //EX:         11:30 PM
     localTime += dt.toLocaleTimeString('en-us', { hour: 'numeric', minute: 'numeric', hour12: true });
     //EX:         2022

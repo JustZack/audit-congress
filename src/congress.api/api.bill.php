@@ -21,6 +21,9 @@ function GetBillsByCongressByType($congress, $type) {
     return $bills;
 }
 
+function GetBillOptionsList() {
+    return ["actions", "amendments", "committees", "cosponsors", "relatedbills", "subjects", "summaries", "text", "titles"];
+}
 function GetBillOption($congress, $type, $number, $option) {
     $data = null;
     switch ($option) {
@@ -51,7 +54,7 @@ function GetBillAmendments($congress, $type, $number) {
     return $bill_amendments;
 }
 function GetBillCommittees($congress, $type, $number) {
-    $bill_comitte_reports = CONGRESS_API_CALL("bill/$congress/$type/$number/comittees");
+    $bill_comitte_reports = CONGRESS_API_CALL("bill/$congress/$type/$number/committees");
     return $bill_comitte_reports;
 } 
 function GetBillCoSponsors($congress, $type, $number) {

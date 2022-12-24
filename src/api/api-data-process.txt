@@ -1,0 +1,15 @@
+Everything that needs to happen between fetching from api.congress.gov to the final cache of that data.
+
+1. Determine what data matters for a given route.
+    a. A bill should gather most of its sub-routes immediately
+    b. But a bills sub-route will only need its own data
+    c. Recent bill listing needs to know some sub-routes of the bill they represent
+    d. Overall, need to create functions that handle this 'translation'
+2. In Parallel, ask the cache for each route
+    a. Spawn a thread
+    b. Ask cache for the route, but don't save the return data
+        1. Cache handles fetching, translating, and caching data
+        2. All the data could already be cached before this point
+    c. Join the thread
+3. ask cache for each route cache
+
