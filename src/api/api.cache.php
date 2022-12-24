@@ -107,9 +107,9 @@ class APICache {
             if (strlen($filter_function) > 0) 
             $data = call_user_func($filter_function, $data);
             APICache::CacheRoute($route, $data);
-            $data["means"] = "API CALL";
+            $data["request"]["source"] = "API CALL";
         } else {
-            $data["means"] = "CACHE";
+            $data["request"]["source"] = "CACHE";
         }
         
         return $data;

@@ -27,7 +27,8 @@ $api_url = $api_base_url . "%s" . $api_query_args;
 function CONGRESS_API_GET($url) {
     global $api_key;
     if (!$api_key) print_r("Error: API Key not set");
-    $json = file_get_contents($url);
+    $json = @file_get_contents($url);
+    if ($json === false) throw new Exception("Request failed");
     return json_decode($json, true);
 }
 //Make an API call with the given route and options

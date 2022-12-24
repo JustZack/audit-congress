@@ -13,20 +13,20 @@ class API {
         print_r(json_encode($data));
     }
     public static function Success($data) {
-        $data["status"] = "Success";
+        $data["request"]["status"] = "Success";
         API::Return($data);
     }
     public static function Error($error) {
-        $data = array();
-        $data["status"] = "error";
-        $data["message"] = $error;
+        $data = ["request" => array()];
+        $data["request"]["status"] = "error";
+        $data["request"]["message"] = $error;
         API::Return($data);
     }
     public static function NotFound($route) {
-        $data = array();
-        $data["status"] = "not found";
-        if (strlen($route) > 0) $data["message"] = "Unknown route: $route";
-        else $data["message"] = "No route provided";
+        $data = ["request" => array()];
+        $data["request"]["status"] = "not found";
+        if (strlen($route) > 0) $data["request"]["message"] = "Unknown route: $route";
+        else $data["request"]["message"] = "No route provided";
         API::Return($data);
     }
 
