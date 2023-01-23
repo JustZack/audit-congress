@@ -12,7 +12,7 @@ export default class BillInfo extends APICallingComponent {
   
   componentDidMount = () => {
     var bill = this.props.bill;
-    this.APIFetch("bill", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
+    this.APIFetch("fullBill", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
   };
 
   handleBillData = (json) => {

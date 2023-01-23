@@ -88,7 +88,7 @@ class API {
             $args[3] = $option;
             $optionData = API::getAPIData("bill", "GetBillOption", $args);
             
-            //related bills and text have different data keys, this fixes that
+            //'relatedbills' and 'text' options have different data keys, this fixes that
             $optionIndex = $option;
             if ($option == "relatedbills") $optionIndex = "relatedBills";
             if ($option == "text") $optionIndex = "textVersions";
