@@ -10,9 +10,8 @@ export default class App extends React.Component {
 
     this.setView = this.setView.bind(this);
     this.determineViewJSX = this.determineViewJSX.bind(this);
-
+    const args = new URLSearchParams(window.location.href);
     this.state = {
-      view: "bill-listing",
       options: null,
       jsx: this.determineViewJSX("bill-listing")
     };
@@ -30,9 +29,13 @@ export default class App extends React.Component {
   determineViewJSX(view, options) {
     var jsx = []; var options = options;
     switch (view) {
-      case "bill-listing": jsx.push(<RecentBills key="recentBills" setView={this.setView}/>);
+      case "bill-listing": 
+        jsx.push(<RecentBills key="recentBills" setView={this.setView}/>);
         break;
       case "bill-detail": jsx.push(<BillInfo key="billInfo" setView={this.setView} bill={options}/>);
+        break;
+      //Use this as home for now
+      default: jsx.push(<RecentBills key="recentBills" setView={this.setView}/>);
         break;
     }
     return jsx;

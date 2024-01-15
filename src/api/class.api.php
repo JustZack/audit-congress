@@ -61,11 +61,13 @@ class API {
     //Up to one or no api calls will be made if cached
     public static function HandleBillRoute() {
         $congress = API::getQueryArgIfSet("congress");
+        //These have to be lowercase for the API
         $type = API::getQueryArgIfSet("type");
         $number = API::getQueryArgIfSet("number");
         $option = API::getQueryArgIfSet("option");
 
         $function = -1; $args = [$congress, $type, $number, $option];
+        
         if (APIRouteValidator::shouldFetchBillOption(...$args)) $function = "GetBillOption";
         else if (APIRouteValidator::shouldFetchBill(...$args)) $function = "GetBill";
         else if (APIRouteValidator::shouldFetchBillsByCongressByType(...$args)) $function = "GetBillsByCongressByType";
@@ -77,17 +79,16 @@ class API {
     //Handle the logic for getting all bill api data
     private static function getFullBillData($args) {
         $start = time();
-        
+    
         $data = API::getAPIData("bill", "GetBill", $args);
         $bill = $data["bill"];
 
         $options = GetBillOptionsList();
-        
         //Get data for each option
         foreach ($options as $option) {
             $args[3] = $option;
-            $optionData = API::getAPIData("bill", "GetBillOption", $args);
             
+            $optionData = API::getAPIData("bill", "GetBillOption", $args);      
             //'relatedbills' and 'text' options have different data keys, this fixes that
             $optionIndex = $option;
             if ($option == "relatedbills") $optionIndex = "relatedBills";

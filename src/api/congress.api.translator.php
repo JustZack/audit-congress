@@ -4,10 +4,10 @@ class CongressAPITranslator {
     private static $routeTranslationFunctions = [
         "bill" => "CongressAPITranslator::translateBill",
         "recent.bills" => "CongressAPITranslator::translateRecentBills",
-        "member" => false,
+        //"member" => false,
     ];
     public static function determineTranslateFunction($route) {
-        $function = false;
+        $function = "";
         $knownMapping = array_key_exists($route, CongressAPITranslator::$routeTranslationFunctions);
         if ($route && $knownMapping) $function = CongressAPITranslator::$routeTranslationFunctions[$route];
         return $function;

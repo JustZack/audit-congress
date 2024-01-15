@@ -1,4 +1,5 @@
 import APICallingComponent from "./APICallingComponent.js";
+import DateUtil from "./DateUtil.js";
 
 export default class BillStatus extends APICallingComponent{
     static possibleStatuses = {
@@ -19,6 +20,7 @@ export default class BillStatus extends APICallingComponent{
         super(props);
         this.state = { 
             jsx: [],
+            updated: DateUtil.buildLocaleDateTimeString(this.props.action.actionDate)
         };
         
         //this.state.jsx = this.generateStatus(this.props.latestAction);
@@ -43,7 +45,7 @@ export default class BillStatus extends APICallingComponent{
         return(
             <div className={'bill-status-container full-width'}>
                 <div className={'bill-status-date'}>
-                    Latest Action on {this.props.action.actionDate}
+                    Last Action: {this.state.updated}
                 </div>
                 <div className={'bill-status'}>
                     {this.props.action.text}

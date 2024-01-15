@@ -24,7 +24,7 @@ function GetBillsByCongressByType($congress, $type) {
 function GetBillOptionsList() {
     return ["actions", "amendments", "committees", "cosponsors", "relatedbills", "subjects", "summaries", "text", "titles"];
 }
-function GetBillOption($congress, $type, $number, $option) {
+function GetBillOption($congress, $type, $number, $option) {           
     $data = null;
     switch ($option) {
         case "actions": $data = GetBillActions($congress, $type, $number); break;
