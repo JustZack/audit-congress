@@ -16,7 +16,7 @@ export default class Committees extends React.Component {
           for (var i = 0;i < comms.length;i++) {
               var c = comms[i];
               var key = `${c.chamber}-${c.systemCode}-${i}`;
-              jsx.push(<Committee committee={c} key={key}/>);
+              jsx.push(<Committee committee={c} key={key} setView={this.props.setView}/>);
           }
           this.setState({
             jsx: jsx

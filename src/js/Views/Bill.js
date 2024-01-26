@@ -70,7 +70,7 @@ export default class Bill extends APICallingComponent {
           <CoSponsors cosponsors={bill.cosponsors} setView={this.props.setView}/>
 
           <Actions actions={bill.actions}/>
-          <Committees committees={bill.committees}/>
+          <Committees committees={bill.committees} setView={this.props.setView}/>
           <Titles titles={bill.titles}/>
         </div>
       </div>

@@ -5,6 +5,8 @@ export default class Committee extends React.Component {
         isset: false,
         jsx: null
       };
+
+      this.handleCommitteeInfoClick = this.handleCommitteeInfoClick.bind(this);
     }
     
     componentDidMount = () => {
@@ -21,11 +23,15 @@ export default class Committee extends React.Component {
         });
     };
     
+    handleCommitteeInfoClick = () => {
+      this.props.setView("committee", this.props.committee);
+    }
+
     render() {
       return (
-      <div className="">
+      <strong onClick={this.handleCommitteeInfoClick} className={'link'}>
           {this.state.jsx}
-      </div>
+      </strong>
       );
     }
   }

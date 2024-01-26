@@ -22,8 +22,8 @@ export default class Sponsor extends React.Component {
   render() {
     var p = this.props.person;
     return (
-    <div className="">
-        {p.firstName} {p.lastName} ({p.party}-{p.state}) since {DateUtil.buildSimpleDateString(p.sponsorshipDate)} <button onClick={this.handleMemberInfo}>More...</button>
+    <div onClick={this.handleMemberInfo} className={'link'}>
+        {p.firstName} {p.lastName} ({p.party}-{p.state}) since {DateUtil.buildSimpleDateString(p.sponsorshipDate)}
     </div>
     );
   }

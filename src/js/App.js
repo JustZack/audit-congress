@@ -2,7 +2,10 @@
 import UrlUtil from "./Util/UrlUtil.js";
 import Bill from "./Views/Bill.js";
 import Member from "./Views/Member.js";
+import Committee from "./Views/Committee.js";
+
 import BillListing from "./Views/BillListing.js";
+
 import Header from "./Header.js";
 import "../css/App.scss"
 
@@ -24,6 +27,7 @@ export default class App extends React.Component {
 
   setView(viewType, viewOptions) {
     var viewOptions = {view: viewType, options: viewOptions};
+    console.log(viewOptions)
     this.setState({
       view: viewType,
       options: viewOptions,
@@ -44,6 +48,9 @@ export default class App extends React.Component {
         break;
       case "member": 
         jsx.push(<Member key="memberInfo" setView={this.setView} member={options}/>);
+        break;
+      case "committee": 
+        jsx.push(<Committee key="committeeInfo" setView={this.setView} committee={options}/>);
         break;
       //Use this as home fslaor now
       default: 
