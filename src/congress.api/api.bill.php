@@ -1,8 +1,13 @@
 <?php
 
-function GetRecentBills($limit, $page) {
+function GetRecentBills($limit, $page, $sort) {
     $offset = $limit * ($page - 1);
-    $bills = CONGRESS_API_CALL("bill", "limit=$limit&offset=$offset&sort=updateDate+desc");
+    if (isset($sort)) {
+        if ($sort == "asc") $sort = "updateDate+asc";
+        if ($sort == "desc") $sort = "updateDate+desc";
+    } else $sort = "updateDate+desc";
+    
+    $bills = CONGRESS_API_CALL("bill", "limit=$limit&offset=$offset&sort=$sort");
     $bills["page"] = $page;
     $bills["offset"] = $offset;
     return $bills;

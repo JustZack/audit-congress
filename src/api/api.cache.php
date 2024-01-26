@@ -38,7 +38,10 @@ class APICache {
     private static function DecideCacheInterval($routeString) {
         $interval = 0;
         foreach (APICache::$cacheIntervalMapping as $route=>$value) { 
-            if (strpos($routeString, $route) > -1) $interval = APICache::$cacheIntervalMapping[$route];
+            if (strpos($routeString, $route) > -1) {
+                $interval = APICache::$cacheIntervalMapping[$route];
+                break;
+            }
         }
         return $interval;
     }

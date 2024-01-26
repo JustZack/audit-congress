@@ -137,7 +137,7 @@ class API {
     
         if (!APIRouteValidator::shouldFetchRecentBillsPage($page)) $page = 1;
         
-        API::doAPIResponse("recent.bills", "GetRecentBills", [25, $page]);
+        API::doAPIResponse("recent.bills", "GetRecentBills", [25, $page, "desc"]);
     }
 
 
