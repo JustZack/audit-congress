@@ -45,27 +45,7 @@ export default class App extends React.Component {
       case "member": 
         jsx.push(<Member key="memberInfo" setView={this.setView} member={options}/>);
         break;
-      //Use this as home for now
-      default: 
-        jsx.push(<BillListing key="billListing" setView={this.setView}/>);
-        break;
-    }
-    return jsx;
-  }
-
-  determineViewJSXOld(view, options) {
-    var jsx = []; var options = options;
-    switch (view) {
-      case "bill-listing": 
-        jsx.push(<BillListing key="billListing" setView={this.setView} options={options}/>);
-        break;
-      case "bill": 
-        jsx.push(<Bill key="billInfo" setView={this.setView} bill={options}/>);
-        break;
-      case "member": 
-        jsx.push(<Member key="memberInfo" setView={this.setView} member={options}/>);
-        break;
-      //Use this as home for now
+      //Use this as home fslaor now
       default: 
         jsx.push(<BillListing key="billListing" setView={this.setView}/>);
         break;
