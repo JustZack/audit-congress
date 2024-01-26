@@ -6,14 +6,14 @@ export default class PartyUtil extends ListUtil
                       {"name": "Republican", "abbreviation": "R", "altName": "Republican"}]
               
     static getPartyNameFromAbbr(abbr) {
-        return PartyUtil.getPropertyFromTerm(this.partyDict, abbr, "abbreviation", "name");
+        return PartyUtil.getListFieldFromSearchTerm(this.partyDict, abbr, "abbreviation", "name");
     }
 
     static getPartyNameFromAltName(altName) {
-        return PartyUtil.getPropertyFromTerm(this.partyDict, altName, "altName", "name");
+        return PartyUtil.getListFieldFromSearchTerm(this.partyDict, altName, "altName", "name");
     }
 
     static getPartyAbbrFromName(name) {
-        return PartyUtil.getPropertyFromTerm(this.partyDict, name, "altName", "abbreviation");
+        return PartyUtil.getListFieldFromSearchTerm(this.partyDict, name, "altName", "abbreviation");
     }
 }

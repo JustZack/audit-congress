@@ -24,10 +24,10 @@ export default class StateUtil extends ListUtil {
                         {"name":"Washington","abbreviation":"WA"},{"name":"West Virginia","abbreviation":"WV"},{"name":"Wisconsin","abbreviation":"WI"},{"name":"Wyoming","abbreviation":"WY"}]
     
     static getStateNameFromAbbr(abbr) {
-        return StateUtil.getPropertyFromTerm(this.stateDict, abbr, "abbreviation", "name");
+        return StateUtil.getListFieldFromSearchTerm(this.stateDict, abbr, "abbreviation", "name");
     }
 
     static getStateAbbrFromName(name) {
-        return StateUtil.getPropertyFromTerm(this.stateDict, name, "name", "abbreviation");
+        return StateUtil.getListFieldFromSearchTerm(this.stateDict, name, "name", "abbreviation");
     }
 }
