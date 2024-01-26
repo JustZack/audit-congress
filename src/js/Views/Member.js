@@ -1,6 +1,7 @@
 import APICallingComponent from "../Api/APICallingComponent.js";
 import DateUtil from "../Util/DateUtil.js";
 import UrlUtil from "../Util/UrlUtil.js";
+import PartyUtil from "../Util/PartyUtil.js";
 
 export default class Member extends APICallingComponent {
   constructor(props) {
@@ -37,7 +38,7 @@ export default class Member extends APICallingComponent {
 
   getJSX = (member) => {
     var state = member.state;
-    var party = member.partyHistory[0].partyName;
+    var party = PartyUtil.getPartyNameFromAltName(member.partyHistory[0].partyName);
     return (
       <div>
         {member.firstName} {member.lastName} - {state} {party}

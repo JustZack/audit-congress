@@ -27,7 +27,7 @@ export default class Sponsor extends React.Component {
     var partAbbr = PartyUtil.getPartyAbbrFromName(p.partyHistory[0].partyName);
     return (
     <div className="">
-        {p.firstName} {p.lastName} {p.state} ({stateAbbr}-{partAbbr}) <button onClick={this.handleMemberInfo}>More...</button>
+        {p.firstName} {p.lastName} ({partAbbr}-{stateAbbr}) <button onClick={this.handleMemberInfo}>More...</button>
     </div>
     );
   }

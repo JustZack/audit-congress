@@ -1,4 +1,6 @@
-export default class StateUtil {
+import ListUtil from "./ListUtil";
+
+export default class StateUtil extends ListUtil {
     static stateDict = [{"name":"Alabama","abbreviation":"AL"},{"name":"Alaska","abbreviation":"AK"},{"name":"Arizona","abbreviation":"AZ"},{"name":"Arkansas","abbreviation":"AR"},
                         {"name":"California","abbreviation":"CA"},{"name":"Colorado","abbreviation":"CO"},{"name":"Connecticut","abbreviation":"CT"},
                         {"name":"Delaware","abbreviation":"DE"},
@@ -22,18 +24,10 @@ export default class StateUtil {
                         {"name":"Washington","abbreviation":"WA"},{"name":"West Virginia","abbreviation":"WV"},{"name":"Wisconsin","abbreviation":"WI"},{"name":"Wyoming","abbreviation":"WY"}]
     
     static getStateNameFromAbbr(abbr) {
-        abbr = abbr.toLowerCase();
-        for (var i = 0;i < this.stateDict.length;i++) {
-            var state = this.stateDict[i];
-            if (abbr == state.abbreviation.toLowerCase()) return state.name;
-        }
+        return StateUtil.getPropertyFromTerm(this.stateDict, abbr, "abbreviation", "name");
     }
 
     static getStateAbbrFromName(name) {
-        name = name.toLowerCase();
-        for (var i = 0;i < this.stateDict.length;i++) {
-            var state = this.stateDict[i];
-            if (name == state.name.toLowerCase()) return state.abbreviation;
-        }
+        return StateUtil.getPropertyFromTerm(this.stateDict, name, "name", "abbreviation");
     }
 }

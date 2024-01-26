@@ -1,20 +1,19 @@
-export default class PartyUtil
+import ListUtil from "./ListUtil";
+
+export default class PartyUtil extends ListUtil
  {
-    static parties = [{name: "Democrat", abbreviation: "D", altName: "Democratic"},
-                      {name: "Republican", abbreviation: "R", altName: "Republican"}]
+    static partyDict = [{"name": "Democrat", "abbreviation": "D", "altName": "Democratic"},
+                      {"name": "Republican", "abbreviation": "R", "altName": "Republican"}]
+              
     static getPartyNameFromAbbr(abbr) {
-        abbr = abbr.toLowerCase();
-        for (var i = 0;i < this.parties.length;i++) {
-            var party = this.parties[i];
-            if (abbr == party.abbr.toLowerCase()) return party.name;
-        }
+        return PartyUtil.getPropertyFromTerm(this.partyDict, abbr, "abbreviation", "name");
+    }
+
+    static getPartyNameFromAltName(altName) {
+        return PartyUtil.getPropertyFromTerm(this.partyDict, altName, "altName", "name");
     }
 
     static getPartyAbbrFromName(name) {
-        name = name.toLowerCase();
-        for (var i = 0;i < this.parties.length;i++) {
-            var party = this.parties[i];
-            if (name == party.name.toLowerCase() || name == party.altName.toLowerCase()) return party.abbreviation;
-        }
+        return PartyUtil.getPropertyFromTerm(this.partyDict, name, "altName", "abbreviation");
     }
 }
