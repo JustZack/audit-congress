@@ -29,10 +29,17 @@ class APICache {
         return file_put_contents($filename, json_encode($data));
     }
 
+    //Just for ease, cant set static array with another var
+    private static $secondsIn = [
+        "5Min" => 60*5,
+        "1Hour" => 60*60,
+        "1Day" => 60*60*24,
+        "1Week" => 60*60*24*7,
+    ];
     private static $cacheIntervalMapping = [
-        "recent.bills" => 300,
-        "bill" => 604800,
-        "member" => 604800*7,
+        "recent.bills" => 60*5,
+        "bill" => 60*60,
+        "member" => 60*60*24*7,
     ];
     //Decide how often a given route cache should be invalidated
     private static function DecideCacheInterval($routeString) {
