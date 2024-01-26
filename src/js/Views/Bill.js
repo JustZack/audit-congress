@@ -1,13 +1,14 @@
-import APICallingComponent from "./APICallingComponent.js";
-import DateUtil from "./DateUtil.js";
-import Chamber from "./BillItems/Chamber.js"
-import Congress from "./BillItems/Congress.js";
-import CoSponsors from "./BillItems/CoSponsors.js";
-import PolicyArea from "./BillItems/PolicyArea.js";
-import Actions from "./BillItems/Actions.js";
-import Committees from "./BillItems/Committees.js";
-import Titles from "./BillItems/Titles.js";
-import TextVersions from "./BillItems/TextVersions.js";
+import APICallingComponent from "../Api/APICallingComponent.js";
+import DateUtil from "../Util/DateUtil.js";
+import Chamber from "../Bill/Chamber.js"
+import Congress from "../Bill/Congress.js";
+import CoSponsors from "../Bill/CoSponsors.js";
+import Sponsors from "../Bill/Sponsors.js";
+import PolicyArea from "../Bill/PolicyArea.js";
+import Actions from "../Bill/Actions.js";
+import Committees from "../Bill/Committees.js";
+import Titles from "../Bill/Titles.js";
+import TextVersions from "../Bill/TextVersions.js";
 
 export default class BillInfo extends APICallingComponent {
   constructor(props) {
@@ -41,13 +42,15 @@ export default class BillInfo extends APICallingComponent {
   getJSX = (bill) => {
     return (
       <div>
-        <PolicyArea policyArea={bill.policyArea.name}/>
+        <PolicyArea policyArea={bill.policyArea}/>
         <Congress congress={bill.congress}/>
         <Chamber chamber={bill.originChamber}/>
 
         <TextVersions textVersions={bill.textVersions}/>
+        
+        <Sponsors sponsors={bill.sponsors} setView={this.props.setView}/>
+        <CoSponsors cosponsors={bill.cosponsors} setView={this.props.setView}/>
 
-        <CoSponsors cosponsors={bill.cosponsors}/>
         <Actions actions={bill.actions}/>
         <Committees committees={bill.committees}/>
         <Titles titles={bill.titles}/>

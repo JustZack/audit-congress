@@ -1,4 +1,4 @@
-import DateUtil from "../DateUtil";
+import DateUtil from "../Util/DateUtil";
 
 export default class Action extends React.Component {
     constructor(props) {
@@ -15,7 +15,6 @@ export default class Action extends React.Component {
         var jsx = (
             <div>
                 [{DateUtil.buildSimpleDateString(a.actionDate)}] (<i>{a.sourceSystem.name}</i>) {a.text}
-
             </div>
         )
                 

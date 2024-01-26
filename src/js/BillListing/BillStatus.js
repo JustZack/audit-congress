@@ -1,5 +1,5 @@
-import APICallingComponent from "./APICallingComponent.js";
-import DateUtil from "./DateUtil.js";
+import APICallingComponent from "../Api/APICallingComponent.js";
+import DateUtil from "../Util/DateUtil.js";
 
 export default class BillStatus extends APICallingComponent{
     static possibleStatuses = {

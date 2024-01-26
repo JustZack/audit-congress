@@ -11,10 +11,12 @@ export default class PolicyArea extends React.Component {
   };
   
   render() {
-    return (
-    <div className="">
-        Filed under: {this.props.policyArea}
-    </div>
-    );
+    if (this.props.policyArea !== undefined) {
+      return (
+        <div className="">
+            Filed under: {this.props.policyArea.name}
+        </div>
+      );
+    }
   }
 }

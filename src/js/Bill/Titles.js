@@ -12,13 +12,15 @@ export default class Titles extends React.Component {
     componentDidMount = () => {
         var jsx = []
         var titles = this.props.titles;
-        for (var i = 0;i < titles.length;i++) {
-            var t = titles[i];
-            jsx.push(<Title title={t} key={i}/>);
+        if (titles !== undefined) {
+          for (var i = 0;i < titles.length;i++) {
+              var t = titles[i];
+              jsx.push(<Title title={t} key={i}/>);
+          }
+          this.setState({
+            jsx: jsx
+          });
         }
-        this.setState({
-          jsx: jsx
-        });
     };
     
     render() {

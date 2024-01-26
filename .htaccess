@@ -1,0 +1,5 @@
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !.*\.js
+RewriteCond %{REQUEST_FILENAME} !.*\.css
+RewriteCond %{REQUEST_FILENAME} !api.php
+RewriteRule (.*) index.php?url=$1

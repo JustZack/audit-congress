@@ -1,7 +1,7 @@
-import APICallingComponent from "./APICallingComponent.js";
-import BillListItem from "./BillListItem.js";
+import APICallingComponent from "../Api/APICallingComponent.js";
+import BillListItem from "../BillListing/BillListItem.js";
 
-export default class RecentBills extends APICallingComponent {
+export default class BillListing extends APICallingComponent {
   constructor(props) {
     super(props);
     this.state = {

@@ -12,14 +12,16 @@ export default class Actions extends React.Component {
     componentDidMount = () => {
         var jsx = []
         var actions = this.props.actions;
-        for (var i = 0;i < actions.length;i++) {
-            var a = actions[i];
-            var key = `${a.actionCode}-${a.actionDate}-${i}`;
-            jsx.push(<Action action={a} key={key}/>);
+        if (actions !== undefined) {
+          for (var i = 0;i < actions.length;i++) {
+              var a = actions[i];
+              var key = `${a.actionCode}-${a.actionDate}-${i}`;
+              jsx.push(<Action action={a} key={key}/>);
+          }
+          this.setState({
+            jsx: jsx
+          });
         }
-        this.setState({
-          jsx: jsx
-        });
     };
     
     render() {

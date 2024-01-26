@@ -1,5 +1,5 @@
 import BillStatus from "./BillStatus.js";
-import DateUtil from "./DateUtil.js";
+import DateUtil from "../Util/DateUtil.js";
 
 export default class BillListItem extends React.Component {
   constructor(props) {

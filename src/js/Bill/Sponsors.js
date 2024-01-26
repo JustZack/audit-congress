@@ -1,6 +1,6 @@
 import Sponsor from "./Sponsor.js";
 
-export default class CoSponsors extends React.Component {
+export default class Sponsors extends React.Component {
   constructor(props) {
     super(props);
     this.state = { 
@@ -11,13 +11,15 @@ export default class CoSponsors extends React.Component {
   
   componentDidMount = () => {
     var jsx = []
-    var people = this.props.cosponsors;
-    for (var i = 0;i < people.length;i++) {
-      jsx.push(<Sponsor person={people[i]} key={people[i].bioguideId}/>)
+    var people = this.props.sponsors;
+    if (people !== undefined) {
+      for (var i = 0;i < people.length;i++) {
+        jsx.push(<Sponsor person={people[i]} key={people[i].bioguideId} setView={this.props.setView}/>)
+      }
+      this.setState({
+        jsx: jsx
+      });
     }
-    this.setState({
-      jsx: jsx
-    });
   };
   
   render() {

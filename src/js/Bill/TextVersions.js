@@ -12,13 +12,15 @@ export default class TextVersions extends React.Component {
     componentDidMount = () => {
         var jsx = []
         var textVersions = this.props.textVersions;
-        for (var i = 0;i < textVersions.length;i++) {
-            var tv = textVersions[i];
-            jsx.push(<TextVersion textVersion={tv} key={i}/>);
+        if (textVersions !== undefined) {
+          for (var i = 0;i < textVersions.length;i++) {
+              var tv = textVersions[i];
+              jsx.push(<TextVersion textVersion={tv} key={i}/>);
+          }
+          this.setState({
+            jsx: jsx
+          });
         }
-        this.setState({
-          jsx: jsx
-        });
     };
     
     render() {
