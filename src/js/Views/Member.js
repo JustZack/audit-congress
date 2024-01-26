@@ -2,11 +2,13 @@ import APICallingComponent from "../Api/APICallingComponent.js";
 import DateUtil from "../Util/DateUtil.js";
 import UrlUtil from "../Util/UrlUtil.js";
 
-export default class MemberInfo extends APICallingComponent {
+export default class Member extends APICallingComponent {
   constructor(props) {
     super(props);
     this.state = { 
       isset: false,
+      jsx: (<h1>Loading Data...</h1>),
+      member: null
     };
 
     this.handleBackClick = this.handleBackClick.bind(this);
@@ -19,7 +21,8 @@ export default class MemberInfo extends APICallingComponent {
 
   componentDidMount = () => {
     var member = this.props.member;
-    UrlUtil.setWindowUrl(`Member`, MemberInfo.getPath(member.id));
+    var path = Member.getPath(member.id);
+    UrlUtil.setWindowUrl(`Member`, path);
     this.APIFetch("member", {id: member.id}, this.handleMemberData);
   };
 
@@ -48,20 +51,11 @@ export default class MemberInfo extends APICallingComponent {
   
   render() {
     console.log(this.state.member);
-    if (this.state.isset) {
-      return (
-        <div className="detailed-view">
-          <button onClick={this.handleBackClick}>Back To Listing</button>   
-            {this.state.jsx}      
-        </div>
-      );
-    } else {
-      return (
-        <div className="detailed-view">
-          <h1>Loading Data...</h1>
-          <button onClick={this.handleBackClick}>Back To Listing</button>
-        </div>
-      );
-    }
+    return (
+      <div className="detailed-view">
+        <button onClick={this.handleBackClick}>Back To Listing</button>   
+          {this.state.jsx}      
+      </div>
+    );
   }
 }

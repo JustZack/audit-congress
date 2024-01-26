@@ -6,7 +6,8 @@ export default class BillListing extends APICallingComponent {
   constructor(props) {
     super(props);
     this.state = {
-      isset: false
+      isset: false,
+      jsx: (<h1>Loading Data...</h1>)
     };
 
     this.handleRecentBills = this.handleRecentBills.bind(this);
@@ -36,16 +37,10 @@ export default class BillListing extends APICallingComponent {
   }
 
   render() {
-    if (this.state.isset) {
-      return (
-        <ul className="list-view">
-          {this.state.jsx}
-        </ul>
-      );
-    } else {
-      return (
-        <div>Loading Data...</div>
-      );
-    }
+    return (
+      <ul className="list-view">
+        {this.state.jsx}
+      </ul>
+    );
   }
 }

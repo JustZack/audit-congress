@@ -1,7 +1,7 @@
 //import React, { PureComponent } from "react";
 import UrlUtil from "./Util/UrlUtil.js";
-import BillInfo from "./Views/Bill.js";
-import MemberInfo from "./Views/Member.js";
+import Bill from "./Views/Bill.js";
+import Member from "./Views/Member.js";
 import BillListing from "./Views/BillListing.js";
 import Header from "./Header.js";
 import "../css/App.scss"
@@ -40,10 +40,10 @@ export default class App extends React.Component {
         jsx.push(<BillListing key="billListing" setView={this.setView} options={options}/>);
         break;
       case "bill": 
-        jsx.push(<BillInfo key="billInfo" setView={this.setView} bill={options}/>);
+        jsx.push(<Bill key="billInfo" setView={this.setView} bill={options}/>);
         break;
       case "member": 
-        jsx.push(<MemberInfo key="memberInfo" setView={this.setView} member={options}/>);
+        jsx.push(<Member key="memberInfo" setView={this.setView} member={options}/>);
         break;
       //Use this as home for now
       default: 
@@ -60,10 +60,10 @@ export default class App extends React.Component {
         jsx.push(<BillListing key="billListing" setView={this.setView} options={options}/>);
         break;
       case "bill": 
-        jsx.push(<BillInfo key="billInfo" setView={this.setView} bill={options}/>);
+        jsx.push(<Bill key="billInfo" setView={this.setView} bill={options}/>);
         break;
       case "member": 
-        jsx.push(<MemberInfo key="memberInfo" setView={this.setView} member={options}/>);
+        jsx.push(<Member key="memberInfo" setView={this.setView} member={options}/>);
         break;
       //Use this as home for now
       default: 
