@@ -1,5 +1,6 @@
 import APICallingComponent from "../Api/APICallingComponent.js";
 import DateUtil from "../Util/DateUtil.js";
+import UrlUtil from "../Util/UrlUtil.js";
 
 export default class MemberInfo extends APICallingComponent {
   constructor(props) {
@@ -12,9 +13,14 @@ export default class MemberInfo extends APICallingComponent {
     this.handleMemberData = this.handleMemberData.bind(this);
   }
   
+  static getPath(id) {
+    return `member/${id}`;
+  }
+
   componentDidMount = () => {
     var member = this.props.member;
-    this.APIFetch("member", {member: member.bioguideId}, this.handleMemberData);
+    UrlUtil.setWindowUrl(`Member`, MemberInfo.getPath(member.id));
+    this.APIFetch("member", {id: member.id}, this.handleMemberData);
   };
 
   handleMemberData = (json) => {

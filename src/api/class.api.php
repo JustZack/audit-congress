@@ -147,7 +147,7 @@ class API {
     */
     //Handle the memeber route and options
     public static function HandleMemberRoute() {
-        $member = API::getQueryArgIfSet("member");
+        $member = API::getQueryArgIfSet("id");
         $option = API::getQueryArgIfSet("option");
 
         $function = -1; $args = [$member, $option];

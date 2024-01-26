@@ -9,6 +9,8 @@ import Actions from "../Bill/Actions.js";
 import Committees from "../Bill/Committees.js";
 import Titles from "../Bill/Titles.js";
 import TextVersions from "../Bill/TextVersions.js";
+import Env from "../Env.js";
+import UrlUtil from "../Util/UrlUtil.js";
 
 export default class BillInfo extends APICallingComponent {
   constructor(props) {
@@ -23,9 +25,18 @@ export default class BillInfo extends APICallingComponent {
     this.getJSX = this.getJSX.bind(this);
   }
   
+  static getPath(congress, type, number) {
+    return `bill/${congress}/${type}/${number}`;
+  }
+
   componentDidMount = () => {
     var bill = this.props.bill;
     bill.type = `${bill.type}`.toLowerCase();
+
+    var congress = bill.congress;
+    var type = bill.type;
+    var number = bill.number;
+    UrlUtil.setWindowUrl(`Bill ${type} ${number}`, BillInfo.getPath(congress, type, number));
     this.APIFetch("fullBill", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
   };
 

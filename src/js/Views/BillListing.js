@@ -1,5 +1,6 @@
 import APICallingComponent from "../Api/APICallingComponent.js";
 import BillListItem from "../BillListing/BillListItem.js";
+import UrlUtil from "../Util/UrlUtil.js";
 
 export default class BillListing extends APICallingComponent {
   constructor(props) {
@@ -13,6 +14,7 @@ export default class BillListing extends APICallingComponent {
   }
   
   componentDidMount = () => {
+    UrlUtil.setWindowUrl(`Bill Listing`, "bill-listing");
     this.APIFetch("recentBills", {}, this.handleRecentBills)
   }
 

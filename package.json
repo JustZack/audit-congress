@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "npx webpack --config webpack.config.js && npx babel dist/main.bundle.js --out-file dist/main.bundle.js",
-    "watch": "nodemon --exec \"npm run build\" -e js --ignore dist/ --ignore cache/"
+    "watchProd": "nodemon --exec \"npm run build\" -e js --ignore dist/ --ignore cache/",
+    "buildDev": "npx webpack --mode development --config webpack.config.js && npx babel dist/main.bundle.js --out-file dist/main.bundle.js",
+    "watch": "nodemon --exec \"npm run buildDev\" -e js --ignore dist/ --ignore cache/"
+    
   },
   "author": "",
   "license": "ISC",

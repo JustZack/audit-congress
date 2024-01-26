@@ -19,7 +19,7 @@ export default class APICallingComponent extends React.Component {
         json = APICache.GetRouteCache(route);
         console.log(`Fetched ${route} from cache`);
       } else {
-        var url = `${Env.getUrl()}src/api/api.php?route=${route}`;
+        var url = `${Env.getDomain()}src/api/api.php?route=${route}`;
         console.log(`Fetching ${route} from ${url}`);
         const res = await fetch(url);
         json = await res.json();

@@ -13,7 +13,7 @@ export default class BillListItem extends React.Component {
   }
   
   handleBillInfoClick = () => {
-    this.props.setView("bill-detail", this.props.bill);
+    this.props.setView("bill", this.props.bill);
   }
 
   render() {

@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !.*\.js
-RewriteCond %{REQUEST_FILENAME} !.*\.css
-RewriteCond %{REQUEST_FILENAME} !api.php
-RewriteRule (.*) index.php?url=$1
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api.php
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]

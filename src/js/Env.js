@@ -1,7 +1,7 @@
 export default class Env {
-    static devUrl = "http://localhost/audit-congress/";
+    static devDomain = "http://localhost/audit-congress/";
 
-    static getUrl() {
-        return Env.devUrl;
+    static getDomain() {
+        return Env.devDomain;
     }
 }

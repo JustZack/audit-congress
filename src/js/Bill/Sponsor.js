@@ -18,7 +18,7 @@ export default class Sponsor extends React.Component {
 
   handleMemberInfo() {
     var p = this.props.person;
-    this.props.setView("member-detail", {bioguideId: p.bioguideId});
+    this.props.setView("member", {id: p.bioguideId});
   }
 
   render() {
