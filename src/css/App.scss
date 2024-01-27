@@ -1,10 +1,10 @@
 @use "classes";
+@use "RecentBills";
 
 body {
     @extend %reset-spacing;
+    font-family: Arial, Helvetica, sans-serif;
 }
-
-
 
 #audit-congress-react-root {
     @extend %full-width;

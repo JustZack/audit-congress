@@ -1,5 +1,6 @@
 import BillStatus from "./BillStatus.js";
 import DateUtil from "../Util/DateUtil.js";
+import BillType from "./BillType.js";
 
 export default class BillListItem extends React.Component {
   constructor(props) {
@@ -17,16 +18,16 @@ export default class BillListItem extends React.Component {
   }
 
   render() {
-    
     var bill = this.props.bill;
     return (
       <li>
-        <strong onClick={this.handleBillInfoClick} className={'li-bill-title link'}>
+        <BillType type={bill.type}/>
+        <div onClick={this.handleBillInfoClick} className={'li-bill-title link'}>
           {bill.id} — {bill.congressTitle}
-        </strong>
+        </div>
         <div className={'li-bill-details'}>
-          <strong className={'fullwidth'}>{bill.title}</strong>
-          <span className={'fullwidth'}>Last Updated: {this.state.updated}</span>
+          <div className={'bill-details-title fullwidth'}>{bill.title}</div>
+          <div className={'bill-details-update fullwidth'}>Last Update: {this.state.updated}</div>
           <BillStatus action={bill.latestAction}/>
         </div>
       </li>

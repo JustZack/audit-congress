@@ -38,7 +38,7 @@ export default class BillListing extends APICallingComponent {
 
   render() {
     return (
-      <ul className="list-view">
+      <ul id="bill-listing" className="list-view">
         {this.state.jsx}
       </ul>
     );

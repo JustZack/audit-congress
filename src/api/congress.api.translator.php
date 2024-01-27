@@ -24,8 +24,8 @@ class CongressAPITranslator {
         $relevent = $number%100; $tens = $relevent%10;
         $suffix = ""; $isTeens = $relevent >= 4 && $relevent <= 20;
 
-        if ($tens == 0 || $isTeens) CongressAPITranslator::$pluralizeMapping[0];
-        else                        CongressAPITranslator::$pluralizeMapping[$tens];
+        if ($tens == 0 || $isTeens) $suffix = CongressAPITranslator::$pluralizeMapping[0];
+        else                        $suffix = CongressAPITranslator::$pluralizeMapping[$tens];
 
         $suffix = $number.$suffix;
         return $suffix;
@@ -42,16 +42,17 @@ class CongressAPITranslator {
         return $years;
     }
     private static function getCongressTitle($congress) {
-        return CongressAPITranslator::pluralizeNumber($congress)." congress ".CongressAPITranslator::getYearsByCongress($congress);
+        return CongressAPITranslator::pluralizeNumber($congress)." Congress ".CongressAPITranslator::getYearsByCongress($congress);
     }
-    private static function getBillID($type, $congress) {
+    private static function getBillID($type, $number) {
         $billID = ""; $type = str_split($type);
         foreach ($type as $c) $billID .= $c.".";
-        $billID .= $congress;
+        $billID .= " ".$number;
         return $billID;
     }
     private static function translateRecentBill($bill) {
-        $bill["id"] = CongressAPITranslator::getBillID($bill["type"], $bill["number"]);
+        //$bill["id"] = CongressAPITranslator::getBillID($bill["type"], $bill["number"]);
+        $bill["id"] = $bill["type"]." ".$bill["number"];
         $bill["congressTitle"] = CongressAPITranslator::getCongressTitle($bill["congress"]);
         return $bill;
     }

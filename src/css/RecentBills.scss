@@ -1,2 +1,59 @@
-@use "classes"
+@use "classes";
+
+ul#bill-listing {
+    li {
+        padding: 5px 0px 5px 5px;
+        margin: 5px 0px;
+        border: 1px #d0d0d0 solid;
+        display: block;
+        width: 65vw;
+        max-width: 1000px;
+        min-width: 400px;
+        div.bill-type-container {
+    
+            .bill-type-text {
+                font-size: 0.6875rem;
+                letter-spacing: 1px;
+                border: 1px solid #cc989a;
+                color: #980000;
+                padding: 3px 20px;
+                margin: 0 0 5px 0;
+                display: inline-block;
+                background-color: #fef8f9;
+                text-transform: uppercase;
+            }
+        }
+        div.li-bill-title {
+            display: block;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        div.li-bill-details {
+            font-size: 0.9rem;
+            div.bill-details-title {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: clip;
+                font-weight: bold;
+            }
+            div.bill-details-update {
+                font-style: italic;
+            }
+            div.bill-status-container {
+                div {
+                    display: inline-block;
+                }
+                div.bill-status-time {
+                    font-style: italic;
+                }
+                div.bill-status-separator {
+                    margin: 0px 5px;
+                }
+                div.bill-status-text {
+            
+                }
+            }
+        }
+    }
+}
 

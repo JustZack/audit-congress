@@ -20,7 +20,7 @@ export default class BillStatus extends APICallingComponent{
         super(props);
         this.state = { 
             jsx: [],
-            updated: DateUtil.buildLocaleDateTimeString(this.props.action.actionDate)
+            updated: DateUtil.buildSimpleDateString(this.props.action.actionDate)
         };
         
         //this.state.jsx = this.generateStatus(this.props.latestAction);
@@ -44,11 +44,10 @@ export default class BillStatus extends APICallingComponent{
     render() {
         return(
             <div className={'bill-status-container full-width'}>
-                <div className={'bill-status-date'}>
-                    Last Action: {this.state.updated}
-                </div>
                 <div className={'bill-status'}>
-                    {this.props.action.text}
+                    <div className={'bill-status-time'}>Last Action: {this.state.updated}</div>
+                    <div className={'bill-status-separator'}> - </div>
+                    <div className={'bill-status-text'}>{this.props.action.text}</div>
                 </div>
             </div>
         );
