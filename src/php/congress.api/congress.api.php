@@ -3,6 +3,13 @@
 /*
     Represents all endpoints found on:
         https://api.congress.gov/
+        MISSING:
+            committee-print
+            committee-meeting
+            hearing
+            daily-congressional-record
+            bound-congressional-record
+            house-requirement
 */
 include_once "api.bill.php";
 include_once "api.amendment.php";
