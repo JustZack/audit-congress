@@ -23,7 +23,7 @@ function getPPBillTest($congress, $slug) {
     $bill->fetchFromApi();
     $bill->printAsJson();
 }
-getPPBillTest(117, "hr3076");
+getPPBillTest(118, "hr3377");
 
 function getPPVoteTest($congress, $chamber, $session, $rollCall) {
     $vote = new ProPublica\Vote($congress, $chamber, $session, $rollCall);
