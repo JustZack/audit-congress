@@ -2,7 +2,7 @@
 namespace ProPublica {
     require_once "propublica.api.php";
     require_once "interface.api.object.php";
-    class Vote implements ProPublicaApiObject{
+    class Vote implements ApiObject{
         use getAndPrintAsJson;
         public
             $uid,
@@ -46,8 +46,8 @@ namespace ProPublica {
 
         function fetchFromApi() {
             $result = Api::call("$this->congress/$this->chamber/sessions/$this->session/votes/$this->roll_call.json");
-            $mem = $result["results"]["votes"];
-            $this->setFromApi($mem);
+            $votes = $result["results"]["votes"];
+            $this->setFromApi($votes);
             $this->getUid();
         }
 

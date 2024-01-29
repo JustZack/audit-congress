@@ -1,21 +1,20 @@
 <?php
 
 namespace ProPublica {
-    interface ProPublicaApiObject {
+    interface ApiObject {
         function fetchFromApi();
         function setFromApi($apiRes);
-
         function getUid();
     }
 
     trait getAndPrintAsJson {
         function getAsJson() {
-            json_encode($this);
+            return json_encode($this);
         }
 
         function printAsJson() {
             header('Content-Type: application/json');
-            print(json_encode($this));
+            print($this->getAsJson());
         }
     }
 }

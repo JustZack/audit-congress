@@ -2,7 +2,7 @@
 namespace ProPublica {
     require_once "propublica.api.php";
     require_once "interface.api.object.php";
-    class Bill implements ProPublicaApiObject{
+    class Bill implements ApiObject{
         use getAndPrintAsJson;
         public 
             $uid,
@@ -70,8 +70,8 @@ namespace ProPublica {
 
         function fetchFromApi() {
             $result = Api::call("$this->congress/bills/$this->bill_slug.json");
-            $mem = $result["results"][0];
-            $this->setFromApi($mem);
+            $bill = $result["results"][0];
+            $this->setFromApi($bill);
             $this->getUid();
         }
 

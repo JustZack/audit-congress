@@ -13,33 +13,21 @@ namespace ProPublica {
             $api_item_limit = 20,
             $api_base_url = "https://api.propublica.org/congress/v1/",
             $api_url;
-        //Set and fetch the API key from a file
-        public static function key() {
-            if (!isset(Api::$api_key))
-                API::$api_key = file_get_contents("api.propublica.key");
-            return API::$api_key;
-        }
-        //Set and fetch the headers using api key
-        public static function headers() {
-            if (!isset(Api::$api_headers)) {
-                $key = Api::key();
-                API::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
-            }
-            return API::$api_headers;
-        }
-        //Set and fetch api url format string
-        public static function url() {
-            if (!isset(Api::$api_url))
-                API::$api_url = Api::$api_base_url . "%s";
-            return API::$api_url;
+
+        //Initialize private members
+        public static function init() {
+            API::$api_key = file_get_contents("api.propublica.key");
+            $key = API::$api_key;
+            API::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
+            API::$api_url = Api::$api_base_url . "%s";
         }
 
         //Fetch and parse JSON API data
         //The base level of all API functions
         static function get($url) {
-            if (!Api::key() || !Api::headers()) print_r("Error: API Key not set");
+            if (!Api::$api_key || !Api::$api_headers) print_r("Error: API Key not set");
 
-            $json = @file_get_contents($url, false, Api::headers());
+            $json = @file_get_contents($url, false, Api::$api_headers);
             if ($json === false) throw new \Exception("Request failed: $url");
 
             return json_decode($json, true);
@@ -48,7 +36,7 @@ namespace ProPublica {
         //Make an API call with the given route and options
         //Defaults to 20 items per request
         static function call($route, $additional_args = null) {//, $options) {
-            $url = sprintf(Api::url(), "$route");
+            $url = sprintf(Api::$api_url, "$route");
             if ($additional_args !== null) $url .= "&$additional_args";
             $json = Api::get($url);
             return $json;
@@ -59,7 +47,7 @@ namespace ProPublica {
         static function call_bulk($route, $options, $additional_args = null) {
             $full_route_json = []; 
             //$json; $data_array_name;
-            $url = sprintf(Api::url(), "$route/$options");
+            $url = sprintf(Api::$api_url, "$route/$options");
             if ($additional_args !== null) $url .= "&$additional_args";
             //Keep track of the record offset for pagination
             $offset = 0; $doneCalling = false;
@@ -91,6 +79,8 @@ namespace ProPublica {
             return $json;
         }
     }
+    //Initialize private members
+    API::init();
 }
 
 ?>
