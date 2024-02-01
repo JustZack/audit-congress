@@ -1,8 +1,8 @@
 <?php
 namespace ProPublica {
     require_once "propublica.api.php";
-    require_once "abstract.api.object.php";
-    class Bill extends ApiObject {
+    require_once "../audit.congress/abstract.api.object.php";
+    class Bill extends \AuditCongress\ApiObject {
         public 
             $uid,
 

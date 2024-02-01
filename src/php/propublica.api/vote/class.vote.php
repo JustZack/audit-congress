@@ -1,8 +1,8 @@
 <?php
 namespace ProPublica {
     require_once "propublica.api.php";
-    require_once "abstract.api.object.php";
-    class Vote extends ApiObject {
+    require_once "../audit.congress/abstract.api.object.php";
+    class Vote extends \AuditCongress\ApiObject {
         public
             $uid,
             $congress,
@@ -51,7 +51,7 @@ namespace ProPublica {
         }
 
         function setFromApi($apiRes) {
-            ApiObject::setFromApi($apiRes["vote"]);
+            \AuditCongress\ApiObject::setFromApi($apiRes["vote"]);
             $this->vacant_seats = $apiRes["vacant_seats"];
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace ProPublica {
+namespace AuditCongress {
     abstract class ApiObject {
         use getAndPrintAsJson;
         //Sub classes must implement a fetch and get UID function

@@ -10,21 +10,21 @@ function getPPMemberVotesTest($bioid) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-//getPPMemberVotesTest("K000388");
+//getPPMemberVotesTest("M000087");
 
 function getPPMemberTest($bioid) {
     $mem = new ProPublica\Member($bioid);
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-getPPMemberTest("M000087");
+//getPPMemberTest("M000087");
 
 function getPPBillTest($congress, $slug) {
     $bill = new ProPublica\Bill($congress, $slug);
     $bill->fetchFromApi();
     $bill->printAsJson();
 }
-//getPPBillTest(118, "hr3377");
+getPPBillTest(118, "hr3377");
 
 function getPPVoteTest($congress, $chamber, $session, $rollCall) {
     $vote = new ProPublica\Vote($congress, $chamber, $session, $rollCall);
