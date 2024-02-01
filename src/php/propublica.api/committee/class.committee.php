@@ -1,7 +1,7 @@
 <?php
 namespace ProPublica {
-    require_once "propublica.api.php";
-    require_once "../audit.congress/abstract.api.object.php";
+    require_once PROPUBLICA_FOLDER."/api/propublica.api.php";
+    require_once AUDITCONGRESS_FOLDER."/abstract.api.object.php";
     class Committee extends \AuditCongress\ApiObject {
         public 
             $uid,
@@ -18,9 +18,11 @@ namespace ProPublica {
 
         function fetchFromApi() {
             $result = Api::call("$this->congress/$this->chamber/committees/$this->committeeId.json");
-            $bill = $result["results"][0];
-            $this->setFromApi($bill);
-            $this->getUid();
+            if (isset($result) && isset($result["results"]) && isset($result["results"][0])) {
+                $bill = $result["results"][0];
+                $this->setFromApi($bill);
+                $this->getUid();
+            } else throw new \Exception("ProPublica.Api => $this->congress/$this->chamber/committees/$this->committeeId.json returned null value");
         }
 
         function getUid() {

@@ -1,9 +1,6 @@
 <?php
-require_once "member/class.member.php";
-require_once "member/class.member.votes.php";
-require_once "bill/class.bill.php";
-require_once "vote/class.vote.php";
-require_once "committee/class.committee.php";
+
+require_once "../php/audit.congress/autoload.php";
 
 function getPPMemberVotesTest($bioid) {
     $mem = new ProPublica\MemberVotes($bioid);
@@ -19,12 +16,19 @@ function getPPMemberTest($bioid) {
 }
 //getPPMemberTest("M000087");
 
+function getCAMemberTest($bioid) {
+    $mem = new CongressGov\Member($bioid);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+getCAMemberTest("M000087");
+
 function getPPBillTest($congress, $slug) {
     $bill = new ProPublica\Bill($congress, $slug);
     $bill->fetchFromApi();
     $bill->printAsJson();
 }
-getPPBillTest(118, "hr3377");
+//getPPBillTest(118, "hr3377");
 
 function getPPVoteTest($congress, $chamber, $session, $rollCall) {
     $vote = new ProPublica\Vote($congress, $chamber, $session, $rollCall);

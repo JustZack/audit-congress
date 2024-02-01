@@ -6,7 +6,8 @@
 */
 
 namespace ProPublica {
-    class Api {
+    require_once AUDITCONGRESS_FOLDER."/abstract.api.php";
+    class Api extends \AuditCongress\Api {
         private static
             $api_key,
             $api_headers,
@@ -16,7 +17,7 @@ namespace ProPublica {
 
         //Initialize private members
         public static function init() {
-            API::$api_key = file_get_contents("api.propublica.key");
+            API::$api_key = file_get_contents(PROPUBLICA_FOLDER."/api.propublica.key");
             $key = API::$api_key;
             API::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
             API::$api_url = Api::$api_base_url . "%s";
