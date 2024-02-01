@@ -30,7 +30,7 @@ namespace CongressGov {
         }
 
         function fetchFromApi() {
-            $result = Api::call("member/$this->id.json");
+            $result = Api::call("member/$this->id");
             if (isset($result) && isset($result["member"])) {
                 $mem = $result["member"];
                 $this->setFromApi($mem);

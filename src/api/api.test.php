@@ -1,5 +1,6 @@
 <?php
 
+//Load everything needed for any congress API calls all at once
 require_once "../php/audit.congress/autoload.php";
 
 function getPPMemberVotesTest($bioid) {
@@ -15,13 +16,6 @@ function getPPMemberTest($bioid) {
     $mem->printAsJson();
 }
 //getPPMemberTest("M000087");
-
-function getCAMemberTest($bioid) {
-    $mem = new CongressGov\Member($bioid);
-    $mem->fetchFromApi();
-    $mem->printAsJson();
-}
-getCAMemberTest("M000087");
 
 function getPPBillTest($congress, $slug) {
     $bill = new ProPublica\Bill($congress, $slug);
@@ -43,5 +37,26 @@ function getPPCommitteeTest($congress, $chamber, $committeeId) {
     $comm->printAsJson();
 }
 //getPPCommitteeTest(115, "senate", "SSAF");
+
+
+
+
+
+
+
+
+function getCApiMemberTest($bioid) {
+    $mem = new CongressGov\Member($bioid);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiMemberTest("M000087");
+
+function getCApiBillTest($bioid) {
+    $mem = new CongressGov\Bill(118, "hr", "3377");
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+getCApiBillTest("M000087");
 
 ?>
