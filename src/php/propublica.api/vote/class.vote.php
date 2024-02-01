@@ -1,9 +1,8 @@
 <?php
 namespace ProPublica {
     require_once "propublica.api.php";
-    require_once "interface.api.object.php";
-    class Vote implements ApiObject{
-        use getAndPrintAsJson;
+    require_once "abstract.api.object.php";
+    class Vote extends ApiObject {
         public
             $uid,
             $congress,
@@ -52,7 +51,7 @@ namespace ProPublica {
         }
 
         function setFromApi($apiRes) {
-            foreach ($apiRes["vote"] as $key=>$value) $this->{$key} = $value;
+            ApiObject::setFromApi($apiRes["vote"]);
             $this->vacant_seats = $apiRes["vacant_seats"];
         }
 

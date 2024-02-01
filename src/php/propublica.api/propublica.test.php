@@ -3,6 +3,7 @@ require_once "member/class.member.php";
 require_once "member/class.member.votes.php";
 require_once "bill/class.bill.php";
 require_once "vote/class.vote.php";
+require_once "committee/class.committee.php";
 
 function getPPMemberVotesTest($bioid) {
     $mem = new ProPublica\MemberVotes($bioid);
@@ -16,7 +17,7 @@ function getPPMemberTest($bioid) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-//getPPMemberTest("M000087");
+getPPMemberTest("M000087");
 
 function getPPBillTest($congress, $slug) {
     $bill = new ProPublica\Bill($congress, $slug);
@@ -30,6 +31,13 @@ function getPPVoteTest($congress, $chamber, $session, $rollCall) {
     $vote->fetchFromApi();
     $vote->printAsJson();
 }
-getPPVoteTest(115, "senate", 1, 17);
+//getPPVoteTest(115, "senate", 1, 17);
+
+function getPPCommitteeTest($congress, $chamber, $committeeId) {
+    $comm = new ProPublica\Committee($congress, $chamber, $committeeId);
+    $comm->fetchFromApi();
+    $comm->printAsJson();
+}
+//getPPCommitteeTest(115, "senate", "SSAF");
 
 ?>

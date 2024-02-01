@@ -3,9 +3,8 @@
 
 namespace ProPublica {
     require_once "propublica.api.php";
-    require_once "interface.api.object.php";
-    class Member implements ApiObject{
-        use getAndPrintAsJson;
+    require_once "abstract.api.object.php";
+    class Member extends ApiObject {
         public
             $uid,
 
@@ -51,12 +50,6 @@ namespace ProPublica {
             $mem = $result["results"][0];
             $this->setFromApi($mem);
             $this->getUid();
-        }
-
-        function setFromApi($apiRes) {
-            foreach ($apiRes as $key=>$value) {
-                $this->{$key} = $value;
-            }
         }
 
         function getUid() {

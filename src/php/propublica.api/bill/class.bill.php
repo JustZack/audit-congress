@@ -1,9 +1,8 @@
 <?php
 namespace ProPublica {
     require_once "propublica.api.php";
-    require_once "interface.api.object.php";
-    class Bill implements ApiObject{
-        use getAndPrintAsJson;
+    require_once "abstract.api.object.php";
+    class Bill extends ApiObject {
         public 
             $uid,
 
@@ -73,10 +72,6 @@ namespace ProPublica {
             $bill = $result["results"][0];
             $this->setFromApi($bill);
             $this->getUid();
-        }
-
-        function setFromApi($apiRes) {
-            foreach ($apiRes as $key=>$value) $this->{$key} = $value;
         }
 
         function getUid() {
