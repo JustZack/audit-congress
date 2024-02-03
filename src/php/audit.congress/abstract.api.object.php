@@ -6,6 +6,8 @@ namespace AuditCongress {
 
     abstract class ApiObject {
         use getAndPrintAsJson;
+        use lowerCaseField;
+        use setFieldsFromObject;
         private $uid;
         //Sub classes must implement the fetch function
         abstract function fetchFromApi();
@@ -14,7 +16,7 @@ namespace AuditCongress {
         function getUid() { return $this->uid; }
         //Generic setFromApi function to set all class fields with response fields
         function setFromApi($apiRes) { 
-            foreach ($apiRes as $key=>$value) $this->{$key} = $value; 
+            $this->setFieldsFromObject($apiRes);
         }
         //Generic setFromApi function to set specific class field with array, and optinally as the specified object
         function setFromApiAsArray($apiRes, $destinationKey, $objectType = null) { 
@@ -27,6 +29,12 @@ namespace AuditCongress {
         }
     }
 
+    class ApiChildObject {
+        use lowerCaseField;
+        use setFieldsFromObject;
+        use unsetField;
+    }
+
     trait getAndPrintAsJson {
         function getAsJson() {
             return json_encode($this);
@@ -35,6 +43,24 @@ namespace AuditCongress {
         function printAsJson() {
             header('Content-Type: application/json');
             print($this->getAsJson());
+        }
+    }
+
+    trait lowerCaseField {
+        function lowerCaseField($fieldName) {
+            $this->{$fieldName} = strtolower($this->{$fieldName});
+        }
+    }
+
+    trait unsetField {
+        function unsetField($fieldName) {
+            unset($this->{$fieldName});
+        }
+    }
+
+    trait setFieldsFromObject {
+        function setFieldsFromObject($obj) {
+            foreach ($obj as $key=>$value) $this->{$key} = $value; 
         }
     }
 }

@@ -54,7 +54,7 @@ function getCApiBillTest($congress, $type, $number) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-getCApiBillTest(118, "hr", "3377");
+//getCApiBillTest(118, "hr", "3377");
 
 function getCApiActionsTest($congress, $type, $number, $isBill) {
     $mem = new CongressGov\Actions($congress, $type, $number, $isBill);
@@ -83,5 +83,41 @@ function getCApiCosponsorsTest($congress, $type, $number, $isBill) {
     $mem->printAsJson();
 }
 //getCApiCosponsorsTest(117, "hr", "3076", true);
+
+function getCApiCommitteesTest($congress, $type, $number) {
+    $mem = new CongressGov\Committees($congress, $type, $number);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiCommitteesTest(117, "hr", "3076");
+
+function getCApiRelatedBillsTest($congress, $type, $number) {
+    $mem = new CongressGov\RelatedBills($congress, $type, $number);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiRelatedBillsTest(117, "hr", "3076");
+
+function getCApiSubjectsTest($congress, $type, $number) {
+    $mem = new CongressGov\Subjects($congress, $type, $number);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiSubjectsTest(117, "hr", "3076");
+
+function getCApiSummariesTest($congress, $type, $number) {
+    $mem = new CongressGov\Summaries($congress, $type, $number);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiSummariesTest(117, "hr", "3076");
+
+function getCApiTitlesTest($congress, $type, $number) {
+    $mem = new CongressGov\Titles($congress, $type, $number);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+getCApiTitlesTest(117, "hr", "3076");
+
 
 ?>

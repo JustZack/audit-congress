@@ -10,8 +10,6 @@ namespace CongressGov {
             $type,
             $number,
 
-            $actionType,
-
             $actions;
 
         function __construct($congress, $type, $number, $isBill) {
@@ -28,13 +26,13 @@ namespace CongressGov {
             $result = Api::call_bulk("$this->actionType/$this->congress/$this->type/$this->number/actions");
             if (isset($result) && isset($result["actions"])) {
                 $actions = $result["actions"];
-                $this->setFromApiAsArray($actions, "CongressGov\Action", "actions");
-                $this->type = strtolower($this->type);
+                $this->setFromApiAsArray($actions, "actions", "CongressGov\Action");
+                $this->lowerCaseField("type");
             } else throw new \Exception("CongressGov.Api => $this->actionType/$this->congress/$this->type/$this->number/actions returned null value");
         }
     }
 
-    class Action {
+    class Action extends \AuditCongress\ApiChildObject {
         public
             $actionCode,
             $actionDate,
@@ -48,7 +46,7 @@ namespace CongressGov {
             $recordedVotes;
 
             function __construct($actionObject) {
-                foreach ($actionObject as $key=>$value) $this->{$key} = $value;
+                $this->setFieldsFromObject($actionObject);
             }
     }
 }

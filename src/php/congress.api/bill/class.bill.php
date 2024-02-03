@@ -48,8 +48,7 @@ namespace CongressGov {
             if (isset($result) && isset($result["bill"])) {
                 $bill = $result["bill"];
                 $this->setFromApi($bill);
-                $this->type = strtolower($this->type);
-                $this->getUid();
+                $this->lowerCaseField("type");
             } else throw new \Exception("CongressGov.Api => bill/$this->congress/$this->type/$this->number returned null value");
         }
     }

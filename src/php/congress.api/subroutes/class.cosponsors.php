@@ -9,9 +9,7 @@ namespace CongressGov {
             $congress,
             $type,
             $number,
-
-            $actionType,
-
+            
             $cosponsors;
 
         function __construct($congress, $type, $number, $isBill) {
@@ -27,14 +25,14 @@ namespace CongressGov {
         function fetchFromApi() {
             $result = Api::call_bulk("$this->actionType/$this->congress/$this->type/$this->number/cosponsors");
             if (isset($result) && isset($result["cosponsors"])) {
-                $texts = $result["cosponsors"];
-                $this->setFromApiAsArray($texts, "CongressGov\Cosponsor", "cosponsors");
-                $this->type = strtolower($this->type);
+                $cosponsors = $result["cosponsors"];
+                $this->setFromApiAsArray($cosponsors, "cosponsors", "CongressGov\Cosponsor");
+                $this->lowerCaseField("type");
             } else throw new \Exception("CongressGov.Api => $this->actionType/$this->congress/$this->type/$this->number/cosponsors returned null value");
         }
     }
 
-    class Cosponsor {
+    class Cosponsor extends \AuditCongress\ApiChildObject {
         public
             $bioguideId,
             $district,
@@ -50,8 +48,8 @@ namespace CongressGov {
             $isOriginalCosponsor;
             
             function __construct($cosponsorObject) {
-                unset($cosponsorObject["url"]);
-                foreach ($cosponsorObject as $key=>$value) $this->{$key} = $value;
+                $this->setFieldsFromObject($cosponsorObject);
+                $this->unsetField("url");
             }
     }
 }

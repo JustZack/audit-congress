@@ -10,8 +10,6 @@ namespace CongressGov {
             $type,
             $number,
 
-            $actionType,
-
             $amendments;
 
         function __construct($congress, $type, $number, $isBill) {
@@ -28,13 +26,13 @@ namespace CongressGov {
             $result = Api::call_bulk("$this->actionType/$this->congress/$this->type/$this->number/amendments");
             if (isset($result) && isset($result["amendments"])) {
                 $amendments = $result["amendments"];
-                $this->setFromApiAsArray($amendments, "CongressGov\Amendment", "amendments");
-                $this->type = strtolower($this->type);
+                $this->setFromApiAsArray($amendments, "amendments", "CongressGov\Amendment");
+                $this->lowerCaseField("type");
             } else throw new \Exception("CongressGov.Api => $this->actionType/$this->congress/$this->type/$this->number/amendments returned null value");
         }
     }
 
-    class Amendment {
+    class Amendment extends \AuditCongress\ApiChildObject {
         public
             $congress,
             $type,
@@ -43,8 +41,8 @@ namespace CongressGov {
             $updateDate;
 
             function __construct($amendmentObject) {
-                unset($amendmentObject["url"]);
-                foreach ($amendmentObject as $key=>$value) $this->{$key} = $value;
+                $this->setFieldsFromObject($amendmentObject);
+                $this->unsetField("url");
             }
     }
 }
