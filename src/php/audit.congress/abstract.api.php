@@ -12,7 +12,7 @@ namespace AuditCongress {
         static abstract function get($url);
         //Make a call
         static abstract function call($route, $additional_args = null);
-        static abstract function call_bulk($route, $options, $additional_args = null);
+        static abstract function call_bulk($route, $additional_args = null);
     }
 }
 

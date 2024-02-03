@@ -42,9 +42,6 @@ function getPPCommitteeTest($congress, $chamber, $committeeId) {
 
 
 
-
-
-
 function getCApiMemberTest($bioid) {
     $mem = new CongressGov\Member($bioid);
     $mem->fetchFromApi();
@@ -52,11 +49,39 @@ function getCApiMemberTest($bioid) {
 }
 //getCApiMemberTest("M000087");
 
-function getCApiBillTest($bioid) {
-    $mem = new CongressGov\Bill(118, "hr", "3377");
+function getCApiBillTest($congress, $type, $number) {
+    $mem = new CongressGov\Bill($congress, $type, $number);
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-getCApiBillTest("M000087");
+getCApiBillTest(118, "hr", "3377");
+
+function getCApiActionsTest($congress, $type, $number, $isBill) {
+    $mem = new CongressGov\Actions($congress, $type, $number, $isBill);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiActionsTest(117, "hr", "3076", true);
+
+function getCApiAmendmentsTest($congress, $type, $number, $isBill) {
+    $mem = new CongressGov\Amendments($congress, $type, $number, $isBill);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiAmendmentsTest(117, "hr", "3076", true);
+
+function getCApiTextsTest($congress, $type, $number, $isBill) {
+    $mem = new CongressGov\Texts($congress, $type, $number, $isBill);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiTextsTest(117, "hr", "3076", true);
+
+function getCApiCosponsorsTest($congress, $type, $number, $isBill) {
+    $mem = new CongressGov\Cosponsors($congress, $type, $number, $isBill);
+    $mem->fetchFromApi();
+    $mem->printAsJson();
+}
+//getCApiCosponsorsTest(117, "hr", "3076", true);
 
 ?>

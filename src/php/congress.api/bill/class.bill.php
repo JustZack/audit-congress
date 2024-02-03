@@ -2,8 +2,6 @@
 
 
 namespace CongressGov {
-    require_once CONGRESSGOV_FOLDER."\\congress.api.php";
-    require_once AUDITCONGRESS_FOLDER."\\abstract.api.object.php";
     class Bill extends \AuditCongress\ApiObject {
         public
             $uid,
@@ -41,6 +39,8 @@ namespace CongressGov {
             $this->congress = $congress;
             $this->type = strtolower($type);
             $this->number = $number;
+
+            $this->uid = "bill.$this->congress.$this->type.$this->number";
         }
 
         function fetchFromApi() {
@@ -51,12 +51,6 @@ namespace CongressGov {
                 $this->type = strtolower($this->type);
                 $this->getUid();
             } else throw new \Exception("CongressGov.Api => bill/$this->congress/$this->type/$this->number returned null value");
-        }
-
-        function getUid() {
-            if (isset($this->uid)) return $this->uid;
-            else $this->uid = "bill.$this->congress.$this->type.$this->number";
-            return $this->uid;
         }
     }
 }
