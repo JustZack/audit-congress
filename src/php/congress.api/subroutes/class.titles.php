@@ -4,8 +4,6 @@
 namespace CongressGov {
     class Titles extends \AuditCongress\ApiObject {
         public
-            $uid,
-
             $congress,
             $type,
             $number,
@@ -17,16 +15,17 @@ namespace CongressGov {
             $this->type = strtolower($type);
             $this->number = $number;
 
-            $this->uid = "bill.$this->congress.$this->type.$this->number.titles";
+            $this->route = "bill/$this->congress/$this->type/$this->number/titles";
+            $this->setUidFromRoute();
         }
 
         function fetchFromApi() {
-            $result = Api::call_bulk("bill/$this->congress/$this->type/$this->number/titles");
+            $result = Api::call_bulk($this->route);
             if (isset($result) && isset($result["titles"])) {
                 $titles = $result["titles"];
                 $this->setFromApiAsArray($titles, "titles", "CongressGov\Title");
                 $this->lowerCaseField("type");
-            } else throw new \Exception("CongressGov.Api => bill/$this->congress/$this->type/$this->number/titles returned null value");
+            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
         }
     }
 
@@ -41,7 +40,7 @@ namespace CongressGov {
             
             function __construct($subjectObject) {
                 $this->setFieldsFromObject($subjectObject);
-                $this->lowerCaseField("chamber");
+                $this->lowerCaseField("chamberName");
                 $this->lowerCaseField("chamberCode");
             }
     }

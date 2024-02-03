@@ -26,15 +26,16 @@ namespace CongressGov {
         function __construct($memberId) {
             $this->id = $memberId;
 
-            $this->uid = "member.$this->id";
+            $this->route = "member/$this->id";
+            $this->setUidFromRoute();
         }
 
         function fetchFromApi() {
-            $result = Api::call("member/$this->id");
+            $result = Api::call($this->route);
             if (isset($result) && isset($result["member"])) {
                 $mem = $result["member"];
                 $this->setFromApi($mem);
-            } else throw new \Exception("CongressGov.Api => member/$this->id.json returned null value");
+            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
         }
     }
 }

@@ -40,16 +40,17 @@ namespace CongressGov {
             $this->type = strtolower($type);
             $this->number = $number;
 
-            $this->uid = "bill.$this->congress.$this->type.$this->number";
+            $this->route = "bill/$this->congress/$this->type/$this->number";
+            $this->setUidFromRoute();
         }
 
         function fetchFromApi() {
-            $result = Api::call("bill/$this->congress/$this->type/$this->number");
+            $result = Api::call($this->route);
             if (isset($result) && isset($result["bill"])) {
                 $bill = $result["bill"];
                 $this->setFromApi($bill);
                 $this->lowerCaseField("type");
-            } else throw new \Exception("CongressGov.Api => bill/$this->congress/$this->type/$this->number returned null value");
+            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
         }
     }
 }

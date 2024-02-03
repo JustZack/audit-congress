@@ -10,6 +10,8 @@ namespace CongressGov {
             $type,
             $number,
 
+            $actionType,
+
             $texts;
 
         function __construct($congress, $type, $number, $isBill) {
@@ -19,16 +21,17 @@ namespace CongressGov {
 
             $this->actionType = $isBill ? "bill" : "amendment";
 
-            $this->uid = "$this->actionType.$this->congress.$this->type.$this->number.texts";
+            $this->route = "$this->actionType/$this->congress/$this->type/$this->number/text";
+            $this->setUidFromRoute();
         }
 
         function fetchFromApi() {
-            $result = Api::call_bulk("$this->actionType/$this->congress/$this->type/$this->number/text");
+            $result = Api::call_bulk($this->route);
             if (isset($result) && isset($result["textVersions"])) {
                 $texts = $result["textVersions"];
                 $this->setFromApiAsArray($texts, "texts", "CongressGov\Text");
                 $this->lowerCaseField("type");
-            } else throw new \Exception("CongressGov.Api => $this->actionType/$this->congress/$this->type/$this->number/text returned null value");
+            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
         }
     }
 

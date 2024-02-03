@@ -54,7 +54,7 @@ function getCApiBillTest($congress, $type, $number) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-//getCApiBillTest(118, "hr", "3377");
+getCApiBillTest(118, "hr", "3377");
 
 function getCApiActionsTest($congress, $type, $number, $isBill) {
     $mem = new CongressGov\Actions($congress, $type, $number, $isBill);
@@ -117,7 +117,7 @@ function getCApiTitlesTest($congress, $type, $number) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-getCApiTitlesTest(117, "hr", "3076");
+//getCApiTitlesTest(117, "hr", "3076");
 
 
 ?>

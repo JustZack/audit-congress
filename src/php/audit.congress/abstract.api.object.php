@@ -8,11 +8,15 @@ namespace AuditCongress {
         use getAndPrintAsJson;
         use lowerCaseField;
         use setFieldsFromObject;
-        private $uid;
+
+        public 
+            $uid,
+            $route;
         //Sub classes must implement the fetch function
         abstract function fetchFromApi();
 
         //Can inherit or override UID & set functions
+        function setUidFromRoute() { $this->uid = str_replace("/", ".", $this->route); }
         function getUid() { return $this->uid; }
         //Generic setFromApi function to set all class fields with response fields
         function setFromApi($apiRes) { 
