@@ -28,14 +28,16 @@ namespace AuditCongress {
 
         //Handle api calls with or without headers
         static function doApiGet($url, $headers = null) {
+            
             if ($headers == null) return @file_get_contents($url);
             else                  return @file_get_contents($url, false, $headers);
         }
 
         //Return for api CALL functions
         static function doApiCallReturn($json, $required_field, $url, $api_title) {
-            if (Api::responseIsValid($json, $required_field)) return $json[$required_field];
-            else Api::throwApiError($api_title, $url, "null");
+            if (!isset($required_field))                            return $json;
+            else if (Api::responseIsValid($json, $required_field))  return $json[$required_field];
+            else                                                    Api::throwApiError($api_title, $url, "null");
         }
 
         //Initialize required API members
@@ -45,8 +47,8 @@ namespace AuditCongress {
         static abstract function get($url);
 
         //Make an api call, or make as many as pagination allows
-        static abstract function call($route, $required_field, $additional_args = null);
-        static abstract function call_bulk($route, $required_field, $additional_args = null);
+        static abstract function call($route, $required_field = null, $additional_args = null);
+        static abstract function call_bulk($route, $required_field = null, $limit = null, $additionalArgs = null);
     }
 
     class ApiException extends \Exception{

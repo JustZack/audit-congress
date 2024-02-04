@@ -35,7 +35,7 @@ namespace ProPublica {
 
         //Make an API call with the given route and options
         //Defaults to 20 items per request
-        static function call($route, $required_field, $additional_args = null) {//, $options) {
+        static function call($route, $required_field = null, $additional_args = null) {//, $options) {
             $url = sprintf(Api::$api_url, $route);
             if ($additional_args !== null) $url .= "&$additional_args";
             $json = Api::get($url);
@@ -45,11 +45,11 @@ namespace ProPublica {
 
         //Make an API call with the given route and options
         //Pulls all items for this route via the pagination property
-        static function call_bulk($route, $required_field, $additional_args = null) {
+        static function call_bulk($route, $required_field = null, $limit = 750, $additionalArgs = null) {
             $full_route_json = []; 
             //$json; $data_array_name;
             $url = sprintf(Api::$api_url, $route);
-            if ($additional_args !== null) $url .= "&$additional_args";
+            if ($additionalArgs !== null) $url .= "&$additionalArgs";
             //Keep track of the record offset for pagination
             $offset = 0; $doneCalling = false;
             //Fetch API pages while pages exist
