@@ -14,21 +14,15 @@ namespace ProPublica {
 
         function __construct($memberId) {
             $this->id = $memberId;
+
+            $this->route = "members/$this->id/votes";
+            $this->setUidFromRoute();
+            $this->route .= ".json";
         }
 
         function fetchFromApi() {
-            $result = Api::call("members/$this->id/votes.json");
-            if (isset($result) && isset($result["results"]) && isset($result["results"][0])) {
-                $mem = $result["results"][0];
-                $this->setFromApi($mem);
-                $this->getUid();
-            } else throw new \Exception("ProPublica.Api => members/$this->id/votes.json returned null value");
-        }
-
-        function getUid() {
-            if (isset($this->uid)) return $this->uid;
-            else $this->uid = "member.$this->member_id.votes";
-            return $this->uid;
+            $memberVotes = Api::call($this->route, "results")[0];
+            $this->setFromApi($memberVotes);
         }
     }
 }

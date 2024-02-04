@@ -33,7 +33,9 @@ namespace CongressGov {
             $textVersions,
             
             $title,
-            $titles;
+            $titles,
+
+            $apiDataField = "bill";
 
         function __construct($congress, $type, $number) {
             $this->congress = $congress;
@@ -45,12 +47,9 @@ namespace CongressGov {
         }
 
         function fetchFromApi() {
-            $result = Api::call($this->route);
-            if (isset($result) && isset($result["bill"])) {
-                $bill = $result["bill"];
-                $this->setFromApi($bill);
-                $this->lowerCaseField("type");
-            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
+            $bill = Api::call($this->route, $this->apiDataField);
+            $this->setFromApi($bill);
+            $this->lowerCaseField("type");
         }
     }
 }

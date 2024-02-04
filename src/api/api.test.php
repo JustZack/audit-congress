@@ -29,7 +29,7 @@ function getPPVoteTest($congress, $chamber, $session, $rollCall) {
     $vote->fetchFromApi();
     $vote->printAsJson();
 }
-//getPPVoteTest(115, "senate", 1, 17);
+getPPVoteTest(115, "senate", 1, 17);
 
 function getPPCommitteeTest($congress, $chamber, $committeeId) {
     $comm = new ProPublica\Committee($congress, $chamber, $committeeId);
@@ -54,7 +54,7 @@ function getCApiBillTest($congress, $type, $number) {
     $mem->fetchFromApi();
     $mem->printAsJson();
 }
-getCApiBillTest(118, "hr", "3377");
+//getCApiBillTest(118, "hr", "3377");
 
 function getCApiActionsTest($congress, $type, $number, $isBill) {
     $mem = new CongressGov\Actions($congress, $type, $number, $isBill);

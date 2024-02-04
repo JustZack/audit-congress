@@ -41,26 +41,16 @@ namespace ProPublica {
             $this->chamber = $chamber;
             $this->session = $sessionNumber;
             $this->roll_call = $rollCallNumber;
+
+            $this->route = "$this->congress/$this->chamber/sessions/$this->session/votes/$this->roll_call";
+            $this->setUidFromRoute();
+            $this->route .= ".json";
         }
 
         function fetchFromApi() {
-            $result = Api::call("$this->congress/$this->chamber/sessions/$this->session/votes/$this->roll_call.json");
-            if (isset($result) && isset($result["results"]) && isset($result["results"]["votes"])) {
-                $votes = $result["results"]["votes"];
-                $this->setFromApi($votes);
-                $this->getUid();
-            } else throw new \Exception("ProPublica.Api => $this->congress/$this->chamber/sessions/$this->session/votes/$this->roll_call.json returned null value");
-        }
-
-        function setFromApi($apiRes) {
-            \AuditCongress\ApiObject::setFromApi($apiRes["vote"]);
-            $this->vacant_seats = $apiRes["vacant_seats"];
-        }
-
-        function getUid() {
-            if (isset($this->uid)) return $this->uid;
-            else $this->uid = "vote.$this->chamber.$this->congress.$this->session.$this->roll_call";
-            return $this->uid;
+            $memberVotes = Api::call($this->route, "results")["votes"];
+            $this->setFromApi($memberVotes["vote"]);
+            $this->vacant_seats = $memberVotes["vacant_seats"];
         }
     }
 }

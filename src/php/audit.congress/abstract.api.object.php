@@ -2,8 +2,6 @@
 
 namespace AuditCongress {
 
-    use Exception;
-
     abstract class ApiObject {
         use getAndPrintAsJson;
         use lowerCaseField;

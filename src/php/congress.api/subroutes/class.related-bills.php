@@ -10,7 +10,11 @@ namespace CongressGov {
             $type,
             $number,
 
-            $relatedBills;
+            $relatedBills,
+
+            $apiDataField = "relatedBills",
+            $objectArrayField = "relatedBills",
+            $objectArrayType = "CongressGov\RelatedBill";
 
         function __construct($congress, $type, $number) {
             $this->congress = $congress;
@@ -22,12 +26,9 @@ namespace CongressGov {
         }
 
         function fetchFromApi() {
-            $result = Api::call_bulk($this->route);
-            if (isset($result) && isset($result["relatedBills"])) {
-                $relatedBills = $result["relatedBills"];
-                $this->setFromApiAsArray($relatedBills, "relatedBills", "CongressGov\RelatedBill");
-                $this->lowerCaseField("type");
-            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
+            $relatedBills = Api::call_bulk($this->route, $this->apiDataField);
+            $this->setFromApiAsArray($relatedBills, $this->objectArrayField, $this->objectArrayType);
+            $this->lowerCaseField("type");
         }
     }
 

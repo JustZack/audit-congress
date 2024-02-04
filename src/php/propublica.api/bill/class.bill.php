@@ -65,24 +65,15 @@ namespace ProPublica {
         function __construct($congressNumber, $billSlug) {
             $this->congress = $congressNumber;
             $this->bill_slug = $billSlug;
+
+            $this->route = "$this->congress/bills/$this->bill_slug";
+            $this->setUidFromRoute();
+            $this->route .= ".json";
         }
 
         function fetchFromApi() {
-            $result = Api::call("$this->congress/bills/$this->bill_slug.json");
-            if (isset($result) && isset($result["results"]) && isset($result["results"][0])) {
-                $bill = $result["results"][0];
-                $this->setFromApi($bill);
-                $this->getUid();
-            } else throw new \Exception("ProPublica.Api => $this->congress/bills/$this->bill_slug.json returned null value");
-        }
-
-        function getUid() {
-            if (isset($this->uid)) return $this->uid;
-            else {
-                $num = substr($this->bill_slug, strlen($this->bill_type));
-                $this->uid = "bill.$this->congress.$this->bill_type.$num";
-            }
-            return $this->uid;
+            $bill = Api::call($this->route, "results")[0];
+            $this->setFromApi($bill);
         }
     }
 }

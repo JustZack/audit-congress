@@ -13,7 +13,8 @@ namespace ProPublica {
             $api_headers,
             $api_item_limit = 20,
             $api_base_url = "https://api.propublica.org/congress/v1/",
-            $api_url;
+            $api_url,
+            $api_title;
 
         //Initialize private members
         public static function init() {
@@ -21,31 +22,30 @@ namespace ProPublica {
             $key = API::$api_key;
             API::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
             API::$api_url = Api::$api_base_url . "%s";
+            Api::$api_title = "ProPublica";
         }
 
         //Fetch and parse JSON API data
         //The base level of all API functions
         static function get($url) {
-            if (!Api::$api_key || !Api::$api_headers) print_r("Error: API Key not set");
-
-            $json = @file_get_contents($url, false, Api::$api_headers);
-            if ($json === false) throw new \Exception("Request failed: $url");
-
-            return json_decode($json, true);
+            if (!Api::$api_key || !Api::$api_headers) Api::noApiKeySet($url, Api::$api_title);
+            $json = Api::doApiGet($url, Api::$api_headers);
+            return Api::doApiGetReturn($json, $url, Api::$api_title);
         }
 
         //Make an API call with the given route and options
         //Defaults to 20 items per request
-        static function call($route, $additional_args = null) {//, $options) {
+        static function call($route, $required_field, $additional_args = null) {//, $options) {
             $url = sprintf(Api::$api_url, $route);
             if ($additional_args !== null) $url .= "&$additional_args";
             $json = Api::get($url);
-            return $json;
+            
+            return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
         }
 
         //Make an API call with the given route and options
         //Pulls all items for this route via the pagination property
-        static function call_bulk($route, $additional_args = null) {
+        static function call_bulk($route, $required_field, $additional_args = null) {
             $full_route_json = []; 
             //$json; $data_array_name;
             $url = sprintf(Api::$api_url, $route);
@@ -77,7 +77,7 @@ namespace ProPublica {
             //Remove pagination section since paging isn't nessesary for this request (anymore)
             unset($json["pagination"]);
 
-            return $json;
+            return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
         }
     }
     //Initialize private members

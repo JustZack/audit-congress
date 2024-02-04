@@ -21,7 +21,9 @@ namespace CongressGov {
             $sponsoredLegislation,
             $state,
             $terms,
-            $updateDate;
+            $updateDate,
+
+            $apiDataField = "member";
 
         function __construct($memberId) {
             $this->id = $memberId;
@@ -31,11 +33,8 @@ namespace CongressGov {
         }
 
         function fetchFromApi() {
-            $result = Api::call($this->route);
-            if (isset($result) && isset($result["member"])) {
-                $mem = $result["member"];
-                $this->setFromApi($mem);
-            } else throw new \Exception("CongressGov.Api => $this->route returned null value");
+            $member = Api::call($this->route, $this->apiDataField);
+            $this->setFromApi($member);
         }
     }
 }
