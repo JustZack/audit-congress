@@ -39,8 +39,7 @@ namespace ProPublica {
             $url = sprintf(Api::$api_url, $route);
             if ($additional_args !== null) $url .= "&$additional_args";
             
-            $req = Api::createRequest($url);
-            $json = $req->doRequest();
+            $json = Api::createRequest($url)->doRequest();
             
             return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
         }
@@ -59,8 +58,7 @@ namespace ProPublica {
                 //Make the API call with offset and limit arguments appended
                 $args = "?offset=$offset";
                 
-                $req = Api::createRequest($url . $args);
-                $json = $req->doRequest();
+                $json = Api::createRequest($url . $args)->doRequest();
                 
                 //TODO: FIX FOR PROPUBLICA
                 //Determine which key stores the data in this response, based on expected response having [pagination, request, $data_array]

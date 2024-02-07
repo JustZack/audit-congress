@@ -33,10 +33,9 @@ namespace CongressGov {
             $url = sprintf(Api::$api_url, $route);
             if ($additional_args !== null) $url .= "&$additional_args";
             
-            $req = Api::createRequest($url);
-            $json = $req->doRequest();
+            $json = Api::createRequest($url)->doRequest();
             
-            return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
+            return Api::doApiCallReturn($json, $required_field, $url);
         }
 
         private static $lastBulkCallTotal = -1;
@@ -55,8 +54,7 @@ namespace CongressGov {
                 if ($offset + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
                 $args = "&offset=$offset&limit=$pageLimit&$additionalArgs";
 
-                $req = Api::createRequest($url . $args);
-                $json = $req->doRequest();
+                $json = Api::createRequest($url . $args)->doRequest();
 
                 //Determine which key stores the data in this response, based on expected response having [pagination, request, $data_array]
                 if ($data_array_name == null) $data_array_name = array_values(array_diff(array_keys($json), ["pagination", "request"]))[0];
@@ -79,7 +77,7 @@ namespace CongressGov {
             unset($json["pagination"]);
             unset($json["request"]);
 
-            return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
+            return Api::doApiCallReturn($json, $required_field, $url);
         }
     }
     //Initialize private members

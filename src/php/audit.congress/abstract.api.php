@@ -3,7 +3,7 @@
 namespace AuditCongress {
     abstract class Api {
         //Fields every API needs to implement
-        /*public static 
+        public static 
             $api_key,
             $api_item_limit,
             $api_base_url,
@@ -11,7 +11,6 @@ namespace AuditCongress {
             $api_url,
             $api_headers,
             $api_title;
-        */
 
         //Define a valid response based off provided field
         static function responseIsValid($response, $required_field) {
@@ -19,8 +18,8 @@ namespace AuditCongress {
         }
 
         //Throw an exception when this api fails
-        static function throwApiException($api_title, $url, $type) {
-            throw new ApiException($type, $url, $api_title);
+        static function throwApiException($url, $type) {
+            throw new ApiException($type, $url, static::$api_title);
         }
 
         //Return for no API key being set
@@ -29,18 +28,18 @@ namespace AuditCongress {
         }
 
         //Return for api CALL functions
-        static function doApiCallReturn($json, $required_field, $url, $api_title) {
-            if ($json == false)                                     Api::throwApiException($api_title, $url, "fail");
+        static function doApiCallReturn($json, $required_field, $url) {
+            if ($json == false)                                     Api::throwApiException($url, "fail");
             else if (!isset($required_field))                       return $json;
             else if (Api::responseIsValid($json, $required_field))  return $json[$required_field];
-            else                                                    Api::throwApiException($api_title, $url, "null");
+            else                                                    Api::throwApiException($url, "null");
         }
-
-        static abstract function createRequest($url);
 
         //Initialize required API members
         static abstract function init();
-        //Make an api call, or make as many as pagination allows
+        //Create an ApiRequest object with this Api's parameters
+        static abstract function createRequest($url);
+        //Make an api call, or make as many as pagination specifies
         static abstract function call($route, $required_field = null, $additional_args = null);
         static abstract function call_bulk($route, $required_field = null, $limit = null, $additionalArgs = null);
     }
