@@ -12,8 +12,8 @@ namespace AuditCongress {
             $this->headers = $headers;
         }
 
-        public static function parseJson($json) {
-            if ($json !== false)    return json_decode($json, true);
+        public static function parseJson($toParse) {
+            if ($toParse !== false) return json_decode($toParse, true);
             else                    return false;
         }
 
