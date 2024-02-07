@@ -31,6 +31,8 @@ namespace ProPublica {
             Api::$api_url = Api::$api_base_url . "%s";
             Api::$api_title = "ProPublica";
             Api::$api_item_limit = 20;
+
+            Api::postInit();
         }
 
         //Make an API call with the given route and options

@@ -25,6 +25,8 @@ namespace CongressGov {
             Api::$api_url = Api::$api_base_url . "%s" . Api::$api_query_args;
             Api::$api_title = "CongressGov";
             Api::$api_item_limit = 75;
+
+            Api::postInit();
         }
 
         //Make an API call with the given route and options

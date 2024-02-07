@@ -22,17 +22,31 @@ namespace AuditCongress {
             throw new ApiException($type, $url, static::$api_title);
         }
 
-        //Return for no API key being set
-        static function noApiKeySet($url, $api_title) {
-            Api::throwApiException($api_title, $url, "nokey");
+        //Throw for no API key being set
+        static function noApiKeySet($url) {
+            Api::throwApiException($url, "nokey");
+        }
+
+        //Throw for no API response
+        static function failedApiResponse($url) {
+            Api::throwApiException($url, "fail");
+        }
+
+        //Throw for no API key being set
+        static function noApiResponse($url) {
+            Api::throwApiException($url, "null");
         }
 
         //Return for api CALL functions
         static function doApiCallReturn($json, $required_field, $url) {
-            if ($json == false)                                     Api::throwApiException($url, "fail");
+            if ($json == false)                                     Api::failedApiResponse($url);
             else if (!isset($required_field))                       return $json;
             else if (Api::responseIsValid($json, $required_field))  return $json[$required_field];
-            else                                                    Api::throwApiException($url, "null");
+            else                                                    Api::noApiResponse($url);
+        }
+
+        static function postInit() {
+            if (strlen(static::$api_key) == 0) static::noApiKeySet(static::$api_base_url);
         }
 
         //Initialize required API members
@@ -61,7 +75,7 @@ namespace AuditCongress {
             switch ($type) {
                 case "null": $error = "returned null value"; break;
                 case "fail": $error = "request failed"; break;
-                case "nokey": $error = "no  api key set"; break;
+                case "nokey": $error = "no api key set"; break;
                 default: $error = "encountered an exception"; break;
             }
             return $error;
