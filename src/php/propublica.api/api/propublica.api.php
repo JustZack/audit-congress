@@ -7,30 +7,30 @@
 
 namespace ProPublica {
     require_once AUDITCONGRESS_FOLDER."/abstract.api.php";
+    require_once AUDITCONGRESS_FOLDER."/api.request.php";
     class Api extends \AuditCongress\Api {
-        private static
+        public static 
             $api_key,
-            $api_headers,
-            $api_item_limit = 20,
-            $api_base_url = "https://api.propublica.org/congress/v1/",
+            $api_item_limit,
+            $api_base_url,
+            $api_query_args,
             $api_url,
+            $api_headers,
             $api_title;
+        
+        public static function createRequest($url) {
+            return new \AuditCongress\ApiRequest($url, Api::$api_headers);
+        }
 
         //Initialize private members
         public static function init() {
-            API::$api_key = file_get_contents(PROPUBLICA_FOLDER."/api.propublica.key");
-            $key = API::$api_key;
-            API::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
-            API::$api_url = Api::$api_base_url . "%s";
+            Api::$api_base_url = "https://api.propublica.org/congress/v1/";
+            Api::$api_key = file_get_contents(PROPUBLICA_FOLDER."/api.propublica.key");
+            $key = Api::$api_key;
+            Api::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
+            Api::$api_url = Api::$api_base_url . "%s";
             Api::$api_title = "ProPublica";
-        }
-
-        //Fetch and parse JSON API data
-        //The base level of all API functions
-        static function get($url) {
-            if (!Api::$api_key || !Api::$api_headers) Api::noApiKeySet($url, Api::$api_title);
-            $json = Api::doApiGet($url, Api::$api_headers);
-            return Api::doApiGetReturn($json, $url, Api::$api_title);
+            Api::$api_item_limit = 20;
         }
 
         //Make an API call with the given route and options
@@ -38,7 +38,9 @@ namespace ProPublica {
         static function call($route, $required_field = null, $additional_args = null) {//, $options) {
             $url = sprintf(Api::$api_url, $route);
             if ($additional_args !== null) $url .= "&$additional_args";
-            $json = Api::get($url);
+            
+            $req = Api::createRequest($url);
+            $json = $req->doRequest();
             
             return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
         }
@@ -56,10 +58,12 @@ namespace ProPublica {
             do {
                 //Make the API call with offset and limit arguments appended
                 $args = "?offset=$offset";
-                $json = Api::get($url . $args);
-                //If this is the first run
-                //Determine which key stores the data in this response
-                //Based on all requests having at most [pagination, request, $data_array]
+                
+                $req = Api::createRequest($url . $args);
+                $json = $req->doRequest();
+                
+                //TODO: FIX FOR PROPUBLICA
+                //Determine which key stores the data in this response, based on expected response having [pagination, request, $data_array]
                 if ($offset == 0) $data_array_name = array_values(array_diff(array_keys($json), ["pagination", "request"]))[0];
                 //Increment offset by itme limit amount
                 $offset += Api::$api_item_limit;
@@ -81,7 +85,7 @@ namespace ProPublica {
         }
     }
     //Initialize private members
-    API::init();
+    \ProPublica\API::init();
 }
 
 ?>

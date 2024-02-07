@@ -1,7 +1,6 @@
 <?php
 
 namespace AuditCongress {
-
     abstract class ApiObject {
         use getAndPrintAsJson;
         use lowerCaseField;

@@ -3,9 +3,6 @@
 //Load everything needed for any congress API calls all at once
 require_once "../php/audit.congress/autoload.php";
 
-
-
-
 //ProPublicaApiTest::getPPMemberVotesTest("M000087");
 //ProPublicaApiTest::getPPMemberTest("M000087");
 
