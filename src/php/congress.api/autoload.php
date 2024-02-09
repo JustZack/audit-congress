@@ -6,6 +6,7 @@ require_once CONGRESSGOV_FOLDER."\\congress.api.php";
 require_once AUDITCONGRESS_FOLDER."\\abstract.api.object.php";
 
 require_once CONGRESSGOV_FOLDER."\\member\\class.member.php";
+require_once CONGRESSGOV_FOLDER."\\member\\class.memberlist.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.bill.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.billlist.php";
 require_once CONGRESSGOV_FOLDER."\\subroutes\\class.actions.php";

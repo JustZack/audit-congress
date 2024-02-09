@@ -15,8 +15,9 @@ require_once "../php/audit.congress/autoload.php";
 
 
 //CongressGovApiTest::getCApiMemberTest("M000087");
+//CongressGovApiTest::getCApiMemberListTest();
 
-CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
+//CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
 
 //CongressGovApiTest::getCApiBillListTestNoArg();
 
@@ -84,7 +85,11 @@ class CongressGovApiTest {
         $mem->fetchFromApi();
         $mem->printAsJson();
     }
-
+    static function getCApiMemberListTest() {
+        $mem = new CongressGov\MemberList();
+        $mem->fetchFromApi();
+        $mem->printAsJson();
+    }
 
     static function getCApiBillTest($congress, $type, $number) {
         $mem = new CongressGov\Bill($congress, $type, $number);
