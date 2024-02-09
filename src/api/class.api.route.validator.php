@@ -11,6 +11,10 @@ class APIRouteValidator {
         return isset($congress) && isset($type) && isset($number) && !isset($option) &&
                is_numeric($congress) && is_string($type) && is_numeric($number);
     }
+    public static function couldFetchBillOrOption($congress, $type, $number, $option) {
+        return self::shouldFetchBill($congress, $type, $number, $option) 
+            || self::shouldFetchBillOption($congress, $type, $number, $option);
+    }
     //
     public static function shouldFetchFullBill($congress, $type, $number, $option) {
         return isset($congress) && isset($type) && isset($number) && !isset($option) &&

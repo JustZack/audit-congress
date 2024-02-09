@@ -12,7 +12,7 @@ export default class Sponsors extends React.Component {
   componentDidMount = () => {
     var jsx = []
     var people = this.props.sponsors;
-    if (people !== undefined) {
+    if (people !== undefined && people !== null) {
       for (var i = 0;i < people.length;i++) {
         jsx.push(<Sponsor person={people[i]} key={people[i].bioguideId} setView={this.props.setView}/>)
       }

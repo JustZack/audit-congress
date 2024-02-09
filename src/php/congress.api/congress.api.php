@@ -44,16 +44,16 @@ namespace CongressGov {
         static function getLastBulkCallTotal() { return Api::$lastBulkCallTotal; }
         //Make an API call with the given route and options
         //Pulls all items for this route via the pagination property
-        static function call_bulk($route, $required_field = null, $itemLimit = 750, $additionalArgs = null) {
+        static function call_bulk($route, $required_field = null, $itemLimit = 750, $startOffset = 0, $additionalArgs = null) {
             $full_route_json = []; $json = "";
             $url = sprintf(Api::$api_url, $route);
             //Keep track of the record offset for pagination
-            $offset = 0; $pageLimit = Api::$api_item_limit; $doneCalling = false; $data_array_name = null;
+            $offset = $startOffset; $pageLimit = Api::$api_item_limit; $doneCalling = false; $data_array_name = null;
             if ($itemLimit < $pageLimit) $pageLimit = $itemLimit;
             //Fetch API pages while pages exist
             do {
                 //Make the API call with offset and limit arguments appended
-                if ($offset + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
+                //if ($offset + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
                 $args = "&offset=$offset&limit=$pageLimit&$additionalArgs";
 
                 $json = Api::createRequest($url . $args)->doRequest();
@@ -74,7 +74,8 @@ namespace CongressGov {
 
             //Store the full dataset in the json response
             $json[$data_array_name] = $full_route_json;
-            Api::$lastBulkCallTotal = $json["pagination"]["count"];
+            if (isset($json["pagination"])) Api::$lastBulkCallTotal = $json["pagination"]["count"];
+            else Api::$lastBulkCallTotal = count($full_route_json);
             //Remove pagination section since paging isn't nessesary for this request (anymore)
             unset($json["pagination"]);
             unset($json["request"]);

@@ -1,8 +1,8 @@
 <?php
-
-require_once "../php/congress.api/congress.api.php";
-require_once "api.cache.php";
+require_once "../php/congress.api/congress.api.old.php";
+require_once "api.cache.old.php";
 require_once "class.api.route.validator.php";
+require_once "congress.api.translator.php";
 
 class API {
     /*
@@ -39,14 +39,15 @@ class API {
         else return null;
     }
     //Get the API data, either via fetch or cache
-    private static function getAPIData($object) {
-        $data = APICache::UseCache($object);
+    private static function getAPIData($route, $api_function, $options) {
+        $translationFunction = CongressAPITranslator::determineTranslateFunction($route);
+        $data = APICache::UseCache($route, $translationFunction, $api_function, ...$options);
         return $data;
     }
     //Do a full API response for the given route and function(...$args)
-    private static function doAPIResponse($slug, $object) {
+    private static function doAPIResponse($route, $function, $args) {
         try {
-            $data = API::getAPIData($object);
+            $data = API::getAPIData($route, $function, $args);
             API::Success($data);
         } catch (Exception $ex) {
             API::Error($ex->getMessage());
@@ -65,59 +66,47 @@ class API {
         $number = API::getQueryArgIfSet("number");
         $option = API::getQueryArgIfSet("option");
 
-        $object = null; $args = [$congress, $type, $number, $option];
+        $function = -1; $args = [$congress, $type, $number, $option];
         
-        if (APIRouteValidator::couldFetchBillOrOption(...$args)) {
-            $bill = new \CongressGov\Bill($congress, $type, $number);
-            if (APIRouteValidator::shouldFetchBill(...$args)) $object = $bill;
-            else $object = $bill->getOption($option);
-        }
-        else if (APIRouteValidator::shouldFetchBillsByCongressByType(...$args)) 
-            $object = new \CongressGov\BillList($congress, $type);
-        else if (APIRouteValidator::shouldFetchBillsByCongress(...$args))
-            $object = new \CongressGov\BillList($congress);
+        if (APIRouteValidator::shouldFetchBillOption(...$args)) $function = "GetBillOption";
+        else if (APIRouteValidator::shouldFetchBill(...$args)) $function = "GetBill";
+        else if (APIRouteValidator::shouldFetchBillsByCongressByType(...$args)) $function = "GetBillsByCongressByType";
+        else if (APIRouteValidator::shouldFetchBillsByCongress(...$args)) $function = "GetBillsByCongress";
 
-        if ($object == null) API::NotFound("bill/$congress/$type/$number/$option");
-        else API::doAPIResponse("bill", $object, $args);
+        if ($function == -1) API::NotFound("bill/$congress/$type/$number/$option");
+        else API::doAPIResponse("bill", $function, $args);
     }
     //Handle the logic for getting all bill api data
     private static function getFullBillData($args) {
         $start = time();
     
-        $bill = new \CongressGov\Bill(...$args);
-        $billData = API::getAPIData($bill);
-        
-        $options = \CongressGov\Bill::getOptionList();
+        $data = API::getAPIData("bill", "GetBill", $args);
+        $bill = $data["bill"];
+
+        $options = GetBillOptionsList();
         //Get data for each option
         foreach ($options as $option) {
-            $optionObj = $bill->getOption($option);
-            $optionData = API::getAPIData($optionObj);
-
+            $args[3] = $option;
+            
+            $optionData = API::getAPIData("bill", "GetBillOption", $args);      
             //'relatedbills' and 'text' options have different data keys, this fixes that
             $optionIndex = $option;
-            $billIndex = $option;
-            if ($option == "relatedbills") $billIndex = $optionIndex = "relatedBills";
-            if ($option == "text") { $billIndex = "textVersions"; $optionIndex = "texts"; }
-            if ($option == "subjects") { $billIndex = "subjects"; $optionIndex = "legislativeSubjects"; }
-            
-            $billData[$billIndex] = $optionData[$optionIndex];
+            if ($option == "relatedbills") $optionIndex = "relatedBills";
+            if ($option == "text") $optionIndex = "textVersions";
+
+            $bill[$optionIndex] = $optionData[$optionIndex];
         }   
 
         //Also get more detailed sponsor data
-        if (isset($billData["sponsors"])) {
-            $sponsors = $billData["sponsors"];
-            for ($i = 0;$i < count($sponsors);$i++) {
-                $memberId = $sponsors[$i]["bioguideId"];
-                $member = new \CongressGov\Member($memberId);
-                $memberData = API::getAPIData($member);
-                $sponsors[$i] = $memberData;
-            }
-            $billData["sponsors"] = $sponsors;
+        $sponsors = $bill["sponsors"];
+        for ($i = 0;$i < count($sponsors);$i++) {
+            $member = $sponsors[$i]["bioguideId"];
+            $sponsors[$i] = API::getAPIData("member", "GetMember", [$member, null])["member"];
         }
+        $bill["sponsors"] = $sponsors;
 
         $end = time();
-        $data = array();
-        $data["bill"] = $billData;
+        $data["bill"] = $bill;
         $data["request"]["dataType"] = "full";
         $data["request"]["time"] = ($end-$start);
         return $data;
@@ -145,14 +134,10 @@ class API {
     //Handle asking for recent bills
     public static function HandleRecentBillsRoute() {
         $page = API::getQueryArgIfSet("page");
-        if (!isset($page)) $page = 1;
-        $pageSize = 25;
-        $list = null;
-        if (APIRouteValidator::shouldFetchRecentBillsPage($page)) 
-            $list = new \CongressGov\BillList(null, null, $pageSize, ($page-1)*$pageSize);
-        $sort = $list == null ? "" : $list->getSortType();
-
-        API::doAPIResponse("recent.bills", $list, [$pageSize, $page, $sort]);
+    
+        if (!APIRouteValidator::shouldFetchRecentBillsPage($page)) $page = 1;
+        
+        API::doAPIResponse("recent.bills", "GetRecentBills", [25, $page, "desc"]);
     }
 
 
@@ -165,13 +150,13 @@ class API {
         $member = API::getQueryArgIfSet("id");
         $option = API::getQueryArgIfSet("option");
 
-        $object = null; $args = [$member, $option];
-        if (APIRouteValidator::shouldFetchMembersList($member)) $object = "GetMembers";
-        if (APIRouteValidator::shouldFetchMember($member)) $object = new \CongressGov\Member($member);
-        if (APIRouteValidator::shouldFetchMemberOption($member, $option)) $object = "GetMemberOption";
+        $function = -1; $args = [$member, $option];
+        if (APIRouteValidator::shouldFetchMembersList($member)) $function = "GetMembers";
+        if (APIRouteValidator::shouldFetchMember($member)) $function = "GetMember";
+        if (APIRouteValidator::shouldFetchMemberOption($member, $option)) $function = "GetMemberOption";
 
-        if ($object == null) API::NotFound("member/$member/$option");
-        else API::doAPIResponse("member", $object, $args);
+        if ($function == -1) API::NotFound("member/$member/$option");
+        else API::doAPIResponse("member", $function, $args);
     }
     //Handle the logic for getting all the member api data
     private static function getFullMemberData($args) {

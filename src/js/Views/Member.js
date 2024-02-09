@@ -28,10 +28,9 @@ export default class Member extends APICallingComponent {
   };
 
   handleMemberData = (json) => {
-    var memberObj = json.member;
     this.setState({
-      member: memberObj,
-      jsx: this.getJSX(memberObj),
+      member: json,
+      jsx: this.getJSX(json),
       isset: true
     });
   }

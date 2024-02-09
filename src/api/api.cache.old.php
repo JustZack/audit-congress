@@ -1,7 +1,5 @@
 <?php
 
-use AuditCongress\ApiObject;
-
 class APICache {    
     private static function GetCacheFolder() {
         return __DIR__.DIRECTORY_SEPARATOR."cache".DIRECTORY_SEPARATOR;
@@ -39,9 +37,9 @@ class APICache {
         "1Week" => 60*60*24*7,
     ];
     private static $cacheIntervalMapping = [
-        "bill.list" => 60*5,
-        "bills" => 60*60,
-        "members" => 60*60*24*7,
+        "recent.bills" => 60*5,
+        "bill" => 60*60,
+        "member" => 60*60*24*7,
     ];
     //Decide how often a given route cache should be invalidated
     private static function DecideCacheInterval($routeString) {
@@ -98,24 +96,27 @@ class APICache {
         else return false;
     }
 
-    public static function CacheRoute(ApiObject $object) {
+    public static function CacheRoute($routeString, $data) {
         APICache::EnsureCacheIsCreated();
 
-        $filename = APICache::GetCacheFilePath($object->getUid().".json");
+        $filename = APICache::GetCacheFilePath($routeString.".json");
         if (file_exists($filename)) unlink($filename);
 
-        APICache::UpdateStatusCache($object->getUid());
-        APICache::StoreCacheFile($filename, $object);
+        APICache::UpdateStatusCache($routeString);
+        APICache::StoreCacheFile($filename, $data);
     }
 
-    public static function UseCache(ApiObject $object) {
-        $data = APICache::GetIfCached($object->getUid());
+    public static function UseCache($route, $filter_function, $api_function, ...$options) {
+        foreach ($options as $op) if (isset($op)) $route .= ".$op";
+
+        $data = APICache::GetIfCached($route);
 
         if ($data == false) {
-            $object->fetchFromApi();
+            $data =  call_user_func_array($api_function, $options);
             //Filter the data if a function is given
-            APICache::CacheRoute($object);
-            $data = (array)$object;
+            if (strlen($filter_function) > 0) 
+            $data = call_user_func($filter_function, $data);
+            APICache::CacheRoute($route, $data);
             $data["request"]["source"] = "API CALL";
         } else {
             $data["request"]["source"] = "CACHE";

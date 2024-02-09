@@ -20,7 +20,6 @@ namespace AuditCongress {
         public function doRequest() {
             if ($this->headers == null) $this->result = @file_get_contents($this->url);
             else                        $this->result = @file_get_contents($this->url, false, $this->headers);
-
             $this->result = ApiRequest::parseJson($this->result);
             return $this->result;
         }

@@ -20,7 +20,8 @@ export default class App extends React.Component {
       options: null,
       jsx: this.determineViewJSX(UrlUtil.getViewOptions()),
       lastBillOpts: null,
-      lastMemberOpts: null
+      lastMemberOpts: null,
+      lastBillListPage: null
     };
 
   }

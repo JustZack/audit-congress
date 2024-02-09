@@ -16,7 +16,7 @@ require_once "../php/audit.congress/autoload.php";
 
 //CongressGovApiTest::getCApiMemberTest("M000087");
 
-//CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
+CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
 
 //CongressGovApiTest::getCApiBillListTestNoArg();
 

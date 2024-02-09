@@ -14,8 +14,15 @@ export default class BillType extends React.Component {
         switch (type) {
             case "S":
             case "HR": billType = "Bill"; break;
+            
+            case "SRES":
             case "HRES": billType = "Resolution"; break;
-            case "SCONRES": billType = "Concurrent Resolution"; break;
+            
+            case "SCONRES":
+            case "HRCONRES": billType = "Concurrent Resolution"; break;
+            
+            case "SJRES":
+            case "HRJRES": billType = "Joint Resolution"; break;
         }
 
         return (<div className={'bill-type-text'}>{billType}</div>);

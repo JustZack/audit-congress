@@ -15,8 +15,10 @@ export default class BillListing extends APICallingComponent {
   }
   
   componentDidMount = () => {
-    UrlUtil.setWindowUrl(`Bill Listing`, "bill-listing");
-    this.APIFetch("recentBills", {page: 1}, this.handleRecentBills)
+    var page = 1;
+    if (this.props.options != undefined) page = this.props.options.page;
+    UrlUtil.setWindowUrl(`Bill Listing`, `bill-listing/${page}`);
+    this.APIFetch("recentBills", {page: page}, this.handleRecentBills)
   }
 
   handleRecentBills = (json) => {

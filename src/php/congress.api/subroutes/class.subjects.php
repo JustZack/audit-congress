@@ -29,7 +29,7 @@ namespace CongressGov {
         function fetchFromApi() {
             $subjects = Api::call_bulk($this->route, $this->apiDataField);
             $this->setFromApiAsArray($subjects["legislativeSubjects"], $this->objectArrayField, $this->objectArrayType);
-            $this->policyArea = new Subject($subjects["policyArea"]);
+            if (isset($subjects["policyArea"])) $this->policyArea = new Subject($subjects["policyArea"]);
             $this->lowerCaseField("type");
         }
     }
