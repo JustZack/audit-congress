@@ -11,10 +11,5 @@ require_once UNITEDSTATESLEGISLATORS_FOLDER."\\historical\\class.members.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\historical\\class.committees.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\socials\\class.socials.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\presidents\\class.presidents.php";
-//require_once PROPUBLICA_FOLDER."\\member\\class.member.php";
-//require_once PROPUBLICA_FOLDER."\\member\\class.member.votes.php";
-//require_once PROPUBLICA_FOLDER."\\bill\\class.bill.php";
-//require_once PROPUBLICA_FOLDER."\\vote\\class.vote.php";
-//require_once PROPUBLICA_FOLDER."\\committee\\class.committee.php";
 
 ?>
