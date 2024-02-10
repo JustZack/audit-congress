@@ -2,8 +2,6 @@
 
 
 namespace UnitedStatesLegislators {
-//    require_once UNITEDSTATESLEGISLATORS_FOLDER."/api/unitedstates.legislators.api.php";
-//    require_once AUDITCONGRESS_FOLDER."/abstract.api.object.php";
     class HistoricalCommittees extends \AuditCongress\ApiObject {
         public
             $uid,
