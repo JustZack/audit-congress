@@ -14,7 +14,12 @@ require_once "test/autoload.php";
 //ProPublica::getCommitteeTest(115, "senate", "SSAF");
 
 
-
+//UnitedStatesLegislators::getCurrentMembers();
+//UnitedStatesLegislators::getHistoricalMembers();
+//UnitedStatesLegislators::getCurrentCommittees();
+//UnitedStatesLegislators::getHistoricalCommittees();;
+//UnitedStatesLegislators::getMembersSocials();
+//UnitedStatesLegislators::getMembersOffices();
 
 //CongressGov::getMemberTest("M000087");
 //CongressGov::getMemberListTest();

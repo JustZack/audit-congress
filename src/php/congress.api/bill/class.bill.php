@@ -2,9 +2,6 @@
 
 
 namespace CongressGov {
-
-    use BillActions;
-
     class Bill extends \AuditCongress\ApiObject {
         public
             $uid,

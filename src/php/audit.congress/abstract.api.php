@@ -37,6 +37,11 @@ namespace AuditCongress {
             Api::throwApiException($url, "null");
         }
 
+        //Throw for non implemented API function
+        static function notImplemented($url) {
+            Api::throwApiException($url, "not-implemented");
+        }
+
         //Return for api CALL functions
         static function doApiCallReturn($json, $required_field, $url) {
             if ($json == false)                                     Api::failedApiResponse($url);
@@ -76,6 +81,7 @@ namespace AuditCongress {
                 case "null": $error = "returned null value"; break;
                 case "fail": $error = "request failed"; break;
                 case "nokey": $error = "no api key set"; break;
+                case "not-implemented": $error = "function isn't implemented"; break;
                 default: $error = "encountered an exception"; break;
             }
             return $error;
