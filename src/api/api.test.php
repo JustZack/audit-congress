@@ -17,7 +17,7 @@ require_once "../php/audit.congress/autoload.php";
 //CongressGovApiTest::getCApiMemberTest("M000087");
 //CongressGovApiTest::getCApiMemberListTest();
 //CongressGovApiTest::getCApiMemberSponsoredLegisTest("M000087");
-CongressGovApiTest::getCApiMemberCoSponsoredLegisTest("M000087");
+//CongressGovApiTest::getCApiMemberCoSponsoredLegisTest("M000087");
 
 //CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
 
