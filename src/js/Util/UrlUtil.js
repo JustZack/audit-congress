@@ -15,6 +15,17 @@ export default class UrlUtil {
         return items;
     }
 
+    static getBillListViewOptions(pathItems) {
+        if (pathItems.length >= 1) {
+            var page = 1;
+            if (pathItems.length > 1) page = parseInt(pathItems[1]);
+            return {
+                view: "bill-listing", 
+                options: {page: page}
+            };
+        } else return this.getDefaultOptions();
+    }
+
     static getBillViewOptions(pathItems) {
         if (pathItems.length >= 4)
             return {
@@ -40,6 +51,7 @@ export default class UrlUtil {
 
     static getViewOptionsObject(view, pathItems) {
         switch (view) {
+            case "bill-listing": return UrlUtil.getBillListViewOptions(pathItems);
             case "bill": return UrlUtil.getBillViewOptions(pathItems);
             case "member": return UrlUtil.getMemberViewOptions(pathItems);
             default: return UrlUtil.getDefaultOptions()

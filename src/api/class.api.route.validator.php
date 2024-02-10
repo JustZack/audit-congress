@@ -11,6 +11,11 @@ class APIRouteValidator {
         return isset($congress) && isset($type) && isset($number) && !isset($option) &&
                is_numeric($congress) && is_string($type) && is_numeric($number);
     }
+    //Check if we could fetch a bill or and option
+    public static function couldFetchBillOrOption($congress, $type, $number, $option) {
+        return self::shouldFetchBill($congress, $type, $number, $option) 
+            || self::shouldFetchBillOption($congress, $type, $number, $option);
+    }
     //
     public static function shouldFetchFullBill($congress, $type, $number, $option) {
         return isset($congress) && isset($type) && isset($number) && !isset($option) &&
@@ -47,6 +52,11 @@ class APIRouteValidator {
     //Check if arguments match member option call
     public static function shouldFetchMemberOption($member, $option) {
         return isset($member) && isset($option);
+    }
+    //Check if we could fetch a member or and option
+    public static function couldFetchMemberOrOption($member, $option) {
+        return self::shouldFetchMember($member) 
+            || self::shouldFetchMemberOption($member, $option);
     }
 }
 

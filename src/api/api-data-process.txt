@@ -13,3 +13,20 @@ Everything that needs to happen between fetching from api.congress.gov to the fi
     c. Join the thread
 3. ask cache for each route cache
 
+
+Another approach, multiple API's with specific purposes:
+    1. Use api.congress.gov for general data/listings
+        * Bill Breifs, Member Breifs, Listings, etc...
+        * Has all the info needed to fetch detailed information
+        * This info will not be updated as often
+        * DO NOT use for detailed information
+    2. Use api.ProPublica.org for detailed information
+        * Instead of pulling individual items in api.congress.gov
+        * Pull fully filled out info from API when needed
+        * Pull updated information from here as needed
+        * DO NOT use for general info/listings
+    3. Both sources of data is placed in the database
+        * Still keep the general separated from specific
+        * Frequently udpated information might exist as json in the database
+        * Consistent information would have its own table/columns
+
