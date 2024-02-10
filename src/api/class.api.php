@@ -1,6 +1,5 @@
 <?php
 
-require_once "../php/congress.api/congress.api.php";
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
 
@@ -67,15 +66,13 @@ class API {
 
         $object = null; $args = [$congress, $type, $number, $option];
         
-        if (APIRouteValidator::couldFetchBillOrOption(...$args)) {
+        if (APIRouteValidator::shouldFetchBillsByCongress(...$args))       $object = new \CongressGov\BillList($congress);
+        else if (APIRouteValidator::shouldFetchBillsByCongressByType(...$args)) $object = new \CongressGov\BillList($congress, $type);
+        else if (APIRouteValidator::couldFetchBillOrOption(...$args)) {
             $bill = new \CongressGov\Bill($congress, $type, $number);
             if (APIRouteValidator::shouldFetchBill(...$args)) $object = $bill;
             else $object = $bill->getOption($option);
         }
-        else if (APIRouteValidator::shouldFetchBillsByCongressByType(...$args)) 
-            $object = new \CongressGov\BillList($congress, $type);
-        else if (APIRouteValidator::shouldFetchBillsByCongress(...$args))
-            $object = new \CongressGov\BillList($congress);
 
         if ($object == null) API::NotFound("bill/$congress/$type/$number/$option");
         else API::doAPIResponse("bill", $object, $args);
@@ -90,12 +87,10 @@ class API {
         $options = \CongressGov\Bill::getOptionList();
         //Get data for each option
         foreach ($options as $option) {
-            $optionObj = $bill->getOption($option);
-            $optionData = API::getAPIData($optionObj);
+            $optionData = API::getAPIData($bill->getOption($option));
 
-            //'relatedbills' and 'text' options have different data keys, this fixes that
-            $optionIndex = $option;
-            $billIndex = $option;
+            //Some bill options / subroutes have different keys
+            $optionIndex = $option; $billIndex = $option;
             if ($option == "relatedbills") $billIndex = $optionIndex = "relatedBills";
             if ($option == "text") { $billIndex = "textVersions"; $optionIndex = "texts"; }
             if ($option == "subjects") { $billIndex = "subjects"; $optionIndex = "legislativeSubjects"; }
@@ -103,23 +98,20 @@ class API {
             $billData[$billIndex] = $optionData[$optionIndex];
         }   
 
-        //Also get more detailed sponsor data
+        //If the bill has sponsors, get more detailed info about them
         if (isset($billData["sponsors"])) {
             $sponsors = $billData["sponsors"];
             for ($i = 0;$i < count($sponsors);$i++) {
-                $memberId = $sponsors[$i]["bioguideId"];
-                $member = new \CongressGov\Member($memberId);
-                $memberData = API::getAPIData($member);
-                $sponsors[$i] = $memberData;
+                $member = new \CongressGov\Member($sponsors[$i]["bioguideId"]);
+                $sponsors[$i] = API::getAPIData($member);
             }
             $billData["sponsors"] = $sponsors;
         }
 
-        $end = time();
         $data = array();
         $data["bill"] = $billData;
         $data["request"]["dataType"] = "full";
-        $data["request"]["time"] = ($end-$start);
+        $data["request"]["time"] = (time()-$start);
         return $data;
     }
     //Handle asking for all bill data in one response
@@ -162,13 +154,17 @@ class API {
     */
     //Handle the memeber route and options
     public static function HandleMemberRoute() {
-        $member = API::getQueryArgIfSet("id");
+        $bioId = API::getQueryArgIfSet("id");
         $option = API::getQueryArgIfSet("option");
 
-        $object = null; $args = [$member, $option];
-        if (APIRouteValidator::shouldFetchMembersList($member)) $object = "GetMembers";
-        if (APIRouteValidator::shouldFetchMember($member)) $object = new \CongressGov\Member($member);
-        if (APIRouteValidator::shouldFetchMemberOption($member, $option)) $object = "GetMemberOption";
+        $object = null; $args = [$bioId, $option];
+
+        if (APIRouteValidator::shouldFetchMembersList($bioId)) $object = new \CongressGov\MemberList();
+        else if (APIRouteValidator::couldFetchMemberOrOption($bioId, $option)) {
+            $member = new \CongressGov\Member($bioId);
+            if (APIRouteValidator::shouldFetchMember($bioId)) $object = $member;
+            else $object = $member->getOption($option);
+        }
 
         if ($object == null) API::NotFound("member/$member/$option");
         else API::doAPIResponse("member", $object, $args);
@@ -177,32 +173,30 @@ class API {
     private static function getFullMemberData($args) {
         $start = time();
 
-        $data = API::getAPIData("member", "GetMember", $args);
-        $member = $data["member"];
+        $member = new \CongressGov\Member(...$args);
+        $memberData = API::getAPIData($member);
 
-        $options = GetMemberOptionsList();
-        
+        $options = \CongressGov\Member::getOptionList();
         //Get data for each option
         foreach ($options as $option) {
             $args[1] = $option;
-            $optionData = API::getAPIData("member", "GetMemberOption", $args);
+            $optionData = API::getAPIData($member->getOption($option));
             
             //both options have different data keys, this fixes that
             $optionIndex = $option;
             if ($option == "sponsored-legislation") $optionIndex = "sponsoredLegislation";
             if ($option == "cosponsored-legislation") $optionIndex = "cosponsoredLegislation";
-            $member[$optionIndex] = $optionData[$optionIndex];
+            $memberData[$optionIndex] = $optionData[$optionIndex];
         }   
 
-        $end = time();
-        $data["member"] = $member;
+        $data["member"] = $memberData;
         $data["request"]["dataType"] = "full";
-        $data["request"]["time"] = ($end-$start);
+        $data["request"]["time"] = (time()-$start);
         return $data;
     }
     //Handle asking for all member data in one response
     public static function HandleFullMemberRoute() {
-        $member = API::getQueryArgIfSet("member");
+        $member = API::getQueryArgIfSet("id");
 
         $args = [$member, null];
         if (APIRouteValidator::shouldFetchFullMember(...$args)) {

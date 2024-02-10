@@ -52,8 +52,9 @@ namespace CongressGov {
             if ($itemLimit < $pageLimit) $pageLimit = $itemLimit;
             //Fetch API pages while pages exist
             do {
+                //print("start: $startOffset, offset: $offset, pageLimit: $pageLimit, itemLimit: $itemLimit");
                 //Make the API call with offset and limit arguments appended
-                //if ($offset + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
+                if (($offset-$startOffset) + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
                 $args = "&offset=$offset&limit=$pageLimit&$additionalArgs";
 
                 $json = Api::createRequest($url . $args)->doRequest();

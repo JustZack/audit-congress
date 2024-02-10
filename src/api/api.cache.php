@@ -57,6 +57,7 @@ class APICache {
 
     private static function GetStatusFile() {
         APICache::EnsureCacheIsCreated();
+        
         $filename = APICache::GetCacheFilePath("status.json");
         return APICache::GetCacheFile($filename);
     }

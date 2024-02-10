@@ -2,10 +2,13 @@
 
 
 define("CONGRESSGOV_FOLDER", __DIR__);
-require_once CONGRESSGOV_FOLDER."\\congress.api.php";
 require_once AUDITCONGRESS_FOLDER."\\abstract.api.object.php";
+require_once CONGRESSGOV_FOLDER."\\api\\congress.api.php";
 
 require_once CONGRESSGOV_FOLDER."\\member\\class.member.php";
+require_once CONGRESSGOV_FOLDER."\\member\\class.cosponsored-legislation.php";
+require_once CONGRESSGOV_FOLDER."\\member\\class.sponsored-legislation.php";
+require_once CONGRESSGOV_FOLDER."\\member\\class.legislation.php";
 require_once CONGRESSGOV_FOLDER."\\member\\class.memberlist.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.bill.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.billlist.php";

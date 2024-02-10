@@ -16,6 +16,8 @@ require_once "../php/audit.congress/autoload.php";
 
 //CongressGovApiTest::getCApiMemberTest("M000087");
 //CongressGovApiTest::getCApiMemberListTest();
+//CongressGovApiTest::getCApiMemberSponsoredLegisTest("M000087");
+CongressGovApiTest::getCApiMemberCoSponsoredLegisTest("M000087");
 
 //CongressGovApiTest::getCApiBillTest(118, "hr", "3377");
 
@@ -85,6 +87,19 @@ class CongressGovApiTest {
         $mem->fetchFromApi();
         $mem->printAsJson();
     }
+
+    static function getCApiMemberSponsoredLegisTest($bioid) {
+        $mem = new CongressGov\SponsoredLegislation($bioid);
+        $mem->fetchFromApi();
+        $mem->printAsJson();
+    }
+
+    static function getCApiMemberCoSponsoredLegisTest($bioid) {
+        $mem = new CongressGov\CoSponsoredLegislation($bioid);
+        $mem->fetchFromApi();
+        $mem->printAsJson();
+    }
+
     static function getCApiMemberListTest() {
         $mem = new CongressGov\MemberList();
         $mem->fetchFromApi();
