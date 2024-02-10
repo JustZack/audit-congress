@@ -1,8 +1,8 @@
 <?php
-require_once "../php/congress.api/congress.api.old.php";
-require_once "api.cache.old.php";
+require_once "../php/congress.api/old/congress.api.old.php";
+require_once "old/api.cache.old.php";
 require_once "class.api.route.validator.php";
-require_once "congress.api.translator.php";
+require_once "old/congress.api.translator.php";
 
 class API {
     /*
