@@ -8,8 +8,8 @@ namespace UnitedStatesLegislators {
 
             $historicalCommittees,
 
-            $objectArrayField = "historicalCommittees";
-            //$objectArrayType = "UnitedStatesLegislators\CurrentMember";
+            $objectArrayField = "historicalCommittees",
+            $objectArrayType = "UnitedStatesLegislators\Committee";
         function __construct() {
             $this->route = "committees-historical";
             $this->setUidFromRoute();
@@ -18,7 +18,7 @@ namespace UnitedStatesLegislators {
 
         function fetchFromApi() {
             $current = Api::call($this->route);
-            $this->setFromApiAsArray($current, $this->objectArrayField);
+            $this->setFromApiAsArray($current, $this->objectArrayField, $this->objectArrayType);
         }
     }
 }

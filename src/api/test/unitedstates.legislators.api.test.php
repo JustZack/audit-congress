@@ -39,7 +39,7 @@ namespace APITest {
         }
 
         static function getPresidents() {
-            $mem = new \UnitedStatesLegislators\Socials();
+            $mem = new \UnitedStatesLegislators\Presidents();
             $mem->fetchFromApi();
             $mem->printAsJson();
         }

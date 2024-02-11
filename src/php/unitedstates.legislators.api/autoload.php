@@ -12,4 +12,7 @@ require_once UNITEDSTATESLEGISLATORS_FOLDER."\\historical\\class.committees.php"
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\socials\\class.socials.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\presidents\\class.presidents.php";
 
+require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\autoload.php";
+require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\committee\\autoload.php";
+
 ?>
