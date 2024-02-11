@@ -6,6 +6,7 @@ require_once UNITEDSTATESLEGISLATORS_FOLDER."\\api\\unitedstates.legislators.api
 
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\current\\class.members.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\current\\class.committees.php";
+require_once UNITEDSTATESLEGISLATORS_FOLDER."\\current\\class.committee-membership.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\current\\class.district-offices.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\historical\\class.members.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\historical\\class.committees.php";

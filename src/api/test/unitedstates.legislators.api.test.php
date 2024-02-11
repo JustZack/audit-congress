@@ -20,6 +20,12 @@ namespace APITest {
             $mem->printAsJson();
         }
 
+        static function getCurrentCommitteeMembership() {
+            $mem = new \UnitedStatesLegislators\CurrentCommitteeMembership();
+            $mem->fetchFromApi();
+            $mem->printAsJson();
+        }
+
         static function getHistoricalCommittees() {
             $mem = new \UnitedStatesLegislators\HistoricalCommittees();
             $mem->fetchFromApi();

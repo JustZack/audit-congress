@@ -16,7 +16,8 @@ require_once "test/autoload.php";
 
 //UnitedStatesLegislators::getCurrentMembers();
 //UnitedStatesLegislators::getHistoricalMembers();
-UnitedStatesLegislators::getCurrentCommittees();
+//UnitedStatesLegislators::getCurrentCommittees();
+//UnitedStatesLegislators::getCurrentCommitteeMembership();
 //UnitedStatesLegislators::getHistoricalCommittees();;
 //UnitedStatesLegislators::getMembersSocials();
 //UnitedStatesLegislators::getMembersOffices();
