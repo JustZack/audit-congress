@@ -10,8 +10,8 @@ namespace UnitedStatesLegislators {
 
             $legislatorSocialMedia,
 
-            $objectArrayField = "legislatorSocialMedia";
-            //$objectArrayType = "UnitedStatesLegislators\HistoricalMember";
+            $objectArrayField = "legislatorSocialMedia",
+            $objectArrayType = "UnitedStatesLegislators\PersonWithSocials";
         function __construct() {
             $this->route = "legislators-social-media";
             $this->setUidFromRoute();
@@ -20,7 +20,7 @@ namespace UnitedStatesLegislators {
 
         function fetchFromApi() {
             $current = Api::call($this->route);
-            $this->setFromApiAsArray($current, $this->objectArrayField);
+            $this->setFromApiAsAssocArray($current, $this->objectArrayField, $this->objectArrayType);
         }
     }
 }

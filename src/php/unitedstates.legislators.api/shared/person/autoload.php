@@ -9,4 +9,7 @@ require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.term
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.id.short.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.offices.php";
 require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.with.offices.php";
+
+require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.socials.php";
+require_once UNITEDSTATESLEGISLATORS_FOLDER."\\shared\\person\\class.person.with.socials.php";
 ?>
