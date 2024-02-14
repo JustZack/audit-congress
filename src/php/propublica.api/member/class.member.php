@@ -2,8 +2,6 @@
 
 
 namespace ProPublica {
-    require_once PROPUBLICA_FOLDER."/api/propublica.api.php";
-    require_once AUDITCONGRESS_FOLDER."/abstract.api.object.php";
     class Member extends \AuditCongress\ApiObject {
         public
             $uid,

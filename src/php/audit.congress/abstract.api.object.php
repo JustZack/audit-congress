@@ -19,12 +19,25 @@ namespace AuditCongress {
         function setFromApi($apiRes) { 
             $this->setFieldsFromObject($apiRes);
         }
-        //Generic setFromApi function to set specific class field with array, and optinally as the specified object
+        //Generic setFromApi function to set specific class field with array, and optionally as the specified object
         function setFromApiAsArray($apiRes, $destinationKey, $objectType = null) { 
+            $this->setFromApiAsAnyArray($apiRes, $destinationKey, $objectType, false);
+        }
+        //Generic setFromApi function to set specific class field with an associative array, and optionally as the specified object
+        function setFromApiAsAssocArray($apiRes, $destinationKey, $objectType = null) { 
+            $this->setFromApiAsAnyArray($apiRes, $destinationKey, $objectType, true);
+        }
+        //Private function to handle setting as an (associative) array
+        private function setFromApiAsAnyArray($apiRes, $destinationKey, $objectType = null, $associative) {
             $toSet = array();
-            foreach ($apiRes as $key=>$value) {
-                if ($objectType == null) array_push($toSet, $value); 
-                else array_push($toSet, new $objectType($value)); 
+            foreach ($apiRes as $key=>$value) {                              
+                if ($associative == true) {
+                    if ($objectType == null) $toSet[$key] = $value; 
+                    else $toSet[$key] = new $objectType($value); 
+                } else {
+                    if ($objectType == null) array_push($toSet, $value); 
+                    else array_push($toSet, new $objectType($value)); 
+                }
             }
             $this->{$destinationKey} = $toSet;
         }
