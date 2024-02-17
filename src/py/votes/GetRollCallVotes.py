@@ -20,18 +20,23 @@ SENATE_VOTE_URL = SENATE_BASE_URL+"LIS/roll_call_votes/vote{congress}{session}/v
 
 VOTES_DIR = "cache"
 VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
-VOTE_COLLECTION_FINISHED_MESSAGE = "End of votes in {} for congress {}, session {} ({})"
+VOTE_COLLECTION_FINISHED_MESSAGE = "End of votes ({}) in {} for congress {}, session {} ({})"
 
-SECONDS_BETWEEN_VOTE_CALLS = 3
+SECONDS_BETWEEN_THREAD_STARTS = .2
+SECONDS_BETWEEN_VOTE_CALLS = 10
 
 TEST_MODE = True
 TEST_MODE_VOTES_PER_SESSION = 1
 TEST_MODE_CONGRESSES_PER_CHAMBER = 1
 
 def shouldStopVoteFetchForTestMode(voteNum):
-    return TEST_MODE and voteNum >= TEST_MODE_VOTES_PER_SESSION
+    return TEST_MODE and TEST_MODE_VOTES_PER_SESSION > -1 and voteNum > TEST_MODE_VOTES_PER_SESSION
 def shouldStopVoteStartForTestMode(voteStarts):
-    return TEST_MODE and voteStarts >= TEST_MODE_CONGRESSES_PER_CHAMBER
+    return TEST_MODE and TEST_MODE_CONGRESSES_PER_CHAMBER > -1 and voteStarts >= TEST_MODE_CONGRESSES_PER_CHAMBER
+
+SHOW_DEBUG_MESSAGES = False
+def debug_print(*strs):
+    if SHOW_DEBUG_MESSAGES: print(*strs)
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 def countFiles(inDir):
@@ -51,7 +56,7 @@ def saveVoteFile(voteData, *fileNameArgs):
 
 def getParsedSoup(url, features="html.parser"):
     page = rq.get(url)
-    print("GET:", url)
+    debug_print("GET:", url)
     soup = BeautifulSoup(page.content, features)
     return soup
 def getParsedHtml(url): return getParsedSoup(url)
@@ -109,14 +114,14 @@ def isPageTitle(html, titleStr):
         return True
     return False
 def isHouseServerErrorPage(html): return isPageTitle(html, "404 - File or directory not found.")
-def isSenateServerErrorPage(html): return isPageTitle(html, "U.S. Senate: Roll Call Vote Unavailable")
 def isSenateUnAuthorizedPage(html): return isPageTitle(html, "Senate.gov - Unauthorized")
+def isSenateServerErrorPage(html): return isPageTitle(html, "U.S. Senate: Roll Call Vote Unavailable") or isSenateUnAuthorizedPage(html)
 
 
 def getVoteUrl(voteCfg):
     chamber = voteCfg[0]
     if chamber == "house": return getHouseVoteUrl(voteCfg[4], voteCfg[3])
-    elif chamber == "senate": return getSenateVotes(voteCfg[1], voteCfg[2], voteCfg[3])
+    elif chamber == "senate": return getSenateVoteUrl(voteCfg[1], voteCfg[2], voteCfg[3])
 def getHouseVoteUrl(year,vote):
     voteStr = getLeadingZeroNumber(vote, 3)
     return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
@@ -126,7 +131,7 @@ def getSenateVoteUrl(congress,session,vote):
 
 def handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction):
     if pageIsErrorCheckFunction(voteHtml): 
-        print(VOTE_COLLECTION_FINISHED_MESSAGE.format(voteCfg[0], voteCfg[1], voteCfg[2], voteCfg[4]))
+        print(VOTE_COLLECTION_FINISHED_MESSAGE.format(voteCfg[3]-1, voteCfg[0], voteCfg[1], voteCfg[2], voteCfg[4]))
         return False
     else:
         saveVoteFile(voteHtml,*voteCfg)
@@ -152,39 +157,45 @@ def pullVotesWithThreadPool(function, allOptions):
             
 def buildThread(target, args):
     return threading.Thread(target=target, args=(args,), daemon=True)
-def pullVotesWithThreads(function, allOptions):
+def getVoteThreads(function, allOptions):
     threads = []
     for op in allOptions:
         thread = buildThread(function, op)
-        thread.start()
         threads.append(thread)
-
         if shouldStopVoteStartForTestMode(len(threads)): break
     return threads
 
-def waitForThreadsJoin(threads): [thread.join() for thread in threads]
+def startThreads(threads): 
+    for thread in threads:
+        thread.start() 
+        time.sleep(SECONDS_BETWEEN_THREAD_STARTS)
+def joinThreadsBlocking(threads): [thread.join() for thread in threads]
+def joinThreadsNonBlocking(threads): 
+    numAlive = len(threads)
+    while numAlive > 0:
+        numAlive = 0
+        for thread in threads:
+            thread.join(2)
+            if thread.is_alive(): numAlive += 1
+        time.sleep(1)    
 
 
-def getVotes(configFunction, theadFunction): return pullVotesWithThreads(theadFunction, configFunction())
+def getVotes(configFunction, theadFunction): return getVoteThreads(theadFunction, configFunction())
 def getHouseVotes(): return getVotes(determineHouseConfig, iterateHouseVotes)
 def getSenateVotes(): return getVotes(determineSenateConfig, iterateSenateVotes)
 def doVotePull():
     if os.path.exists(VOTES_DIR): shutil.rmtree(VOTES_DIR)
     startPull = datetime.now()
 
-    threads = []
-
     hThreads = getHouseVotes()
+    sThreads = getSenateVotes()
+    threads = []
     threads.extend(hThreads)
-    print("Started Processing",len(hThreads),"House votes by session.")
-
-    #sThreads = getSenateVotes()
-    #threads.extend(sThreads)
-    #print("Started Processing",len(sThreads),"Senate votes by session.")
+    threads.extend(sThreads)
     
-    
-    waitForThreadsJoin(threads)
-
+    print("Starting threads for",len(hThreads),"House and",len(sThreads),"senate votes by session.")
+    startThreads(threads)
+    joinThreadsNonBlocking(threads)
     print("Took", seconds_since(startPull),"seconds to pull",countFiles(VOTES_DIR),"votes.")
 
 if __name__ == "__main__":
