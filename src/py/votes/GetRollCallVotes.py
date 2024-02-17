@@ -107,7 +107,7 @@ def isSenateServerErrorPage(html): return isPageTitle(html, "U.S. Senate: Roll C
 def isSenateUnAuthorizedPage(html): return isPageTitle(html, "Senate.gov - Unauthorized")
 
 
-def getVoteUrl(chamber, config, vote):
+def getVoteUrl(config, chamber, vote):
     congress,session,year = config["congress"],config["session"],config["year"]
     if chamber == "house": return getHouseVoteUrl(year, vote)
     elif chamber == "senate": return getSenateVotes(congress, session, vote)
@@ -118,14 +118,17 @@ def getSenateVoteUrl(congress,session,vote):
     voteStr = getLeadingZeroNumber(vote, 5)
     return SENATE_VOTE_URL.format(congress=congress,session=session,vote=voteStr)
 
+def endOfVoteIterate(chamber, config):
+    print("End of votes in",chamber.title(),"for",config["congress"],"session",config["session"])
+
 def iterateVotes(config, chamber, pageIsErrorCheckFunction):
     vote,congress,session,year = 1,config["congress"],config["session"],config["year"]
     while True:
-        url = getVoteUrl(chamber, config, vote)
+        url = getVoteUrl(config, chamber, vote)
         voteHtml = getParsedXml(url)
 
-        if pageIsErrorCheckFunction(voteHtml):
-            print("End of votes in",chamber.title(),"for",congress,"session",session)
+        if pageIsErrorCheckFunction(voteHtml): 
+            endOfVoteIterate(chamber, config)
             break
         else:
             saveVoteFile(voteHtml,(chamber,congress,session,vote))
