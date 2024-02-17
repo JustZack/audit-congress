@@ -1,5 +1,6 @@
 import requests as rq
 import os
+import time
 import shutil
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -20,7 +21,9 @@ SENATE_VOTE_URL = SENATE_BASE_URL+"LIS/roll_call_votes/vote{congress}{session}/v
 VOTES_DIR = "cache"
 VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
 
-TEST_MODE = True
+SECONDS_BETWEEN_VOTE_CALLS = 5
+
+TEST_MODE = False
 TEST_MODE_VOTES_PER_SESSION = 1
 TEST_MODE_CONGRESSES_PER_CHAMBER = 1
 
@@ -42,7 +45,7 @@ def saveVoteFile(voteData, chamber, congress, session, vote):
 
 def getParsedSoup(url, features="html.parser"):
     page = rq.get(url)
-    #print("GET:", url)
+    print("GET:", url)
     soup = BeautifulSoup(page.content, features)
     return soup
 def getParsedHtml(url): return getParsedSoup(url)
@@ -94,14 +97,14 @@ def determineSenateConfig():
     return congresses
 
 
-def isErrorPage(html, errorString):
+def isPageTitle(html, titleStr):
     elem = html.select("title")
-    if (len(elem) > 0 and elem[0].text == "errorString"): 
+    if (len(elem) > 0 and elem[0].text == titleStr): 
         return True
     return False
-def isHouseServerErrorPage(html): return isErrorPage(html, "404 - File or directory not found.")
-def isSenateServerErrorPage(html): return isErrorPage(html, "U.S. Senate: Roll Call Vote Unavailable")
-def isSenateUnAuthorizedPage(html): return isErrorPage(html, "Senate.gov - Unauthorized")
+def isHouseServerErrorPage(html): return isPageTitle(html, "404 - File or directory not found.")
+def isSenateServerErrorPage(html): return isPageTitle(html, "U.S. Senate: Roll Call Vote Unavailable")
+def isSenateUnAuthorizedPage(html): return isPageTitle(html, "Senate.gov - Unauthorized")
 
 
 def getHouseVoteUrl(year,vote):
@@ -126,6 +129,7 @@ def iterateVotes(config, chamber, pageIsErrorCheckFunction):
         else:
             saveVoteFile(voteHtml,chamber,congress,session,vote)
             vote += 1 
+            time.sleep(SECONDS_BETWEEN_VOTE_CALLS)
 
         if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
 def iterateHouseVotes(config):  iterateVotes(config, "house", isHouseServerErrorPage)
