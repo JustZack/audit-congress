@@ -12,7 +12,6 @@ HOUSE_CONFIG_URL = HOUSE_BASE_URL+"Votes"
 HOUSE_CONFIG_SELECTOR = "form#members-votes-filter select#member-votes-congress option"
 HOUSE_VOTE_URL = HOUSE_BASE_URL+"evs/{year}/roll{vote}.xml"
 
-
 SENATE_BASE_URL = "https://www.senate.gov/legislative/"
 SENATE_CONFIG_URL = SENATE_BASE_URL+"votes_new.htm"
 SENATE_CONFIG_SELECTOR = "form[name='PastVotes'] select[name='menu'] option:not(:first-child)"
@@ -26,6 +25,11 @@ TEST_MODE_VOTES_PER_SESSION = 1
 TEST_MODE_CONGRESSES_PER_CHAMBER = 1
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
+def countFiles(inDir):
+    count = 0
+    for root_dir, cur_dir, files in os.walk(inDir):
+        count += len(files)
+    return count
 
 def saveFile(path, data):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -167,7 +171,7 @@ def doVotePull():
     
     waitForThreadsJoin(threads)
 
-    print("Took", seconds_since(startPull))
+    print("Took", seconds_since(startPull),"seconds to pull",countFiles(VOTES_DIR),"votes.")
 
 if __name__ == "__main__":
     doVotePull()
