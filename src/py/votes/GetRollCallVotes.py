@@ -21,6 +21,9 @@ SENATE_VOTE_URL = SENATE_BASE_URL+"LIS/roll_call_votes/vote{congress}{session}/v
 VOTES_DIR = "cache"
 VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
 
+TEST_MODE = True
+TEST_MODE_VOTES_PER_SESSION = 1
+
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
 def saveFile(path, data):
@@ -28,30 +31,23 @@ def saveFile(path, data):
     file = open(path, "w")
     file.write(data)
     file.close()
+def saveVoteFile(voteData, chamber, congress, session, vote):
+    fileName = VOTE_FILE_PATH.format(chamber, congress, session, vote)
+    saveFile(fileName, str(voteData))
 
-def getParsedHtml(url):
+def getParsedSoup(url, features="html.parser"):
     page = rq.get(url)
-    print("GET HTML:", url)
-    soup = BeautifulSoup(page.content, "html.parser")
+    #print("GET:", url)
+    soup = BeautifulSoup(page.content, features)
     return soup
+def getParsedHtml(url): return getParsedSoup(url)
+def getParsedXml(url): return getParsedSoup(url, "xml")
 
-def getParsedXml(url):
-    page = rq.get(url)
-    print("GET XML:", url)
-    soup = BeautifulSoup(page.content, "xml")
-    return soup
 
-def getLeadingZeroNumber(number, requiredLength):
+def getLeadingZeroNumber(number, minLength):
     nStr = str(number)
-    nDiff = requiredLength-len(nStr)
-    return ("0"*nDiff)+nStr
-
-def getCongressOptionsElements(url, selector):
-    soup = getParsedHtml(url)
-    dropdown = soup.select(selector)
-    return dropdown
-
-# Return all years for the given congress
+    nDiff = minLength-len(nStr)
+    return nStr if nDiff <= 0 else ("0"*nDiff)+nStr
 def getYearsByCongress(congress):
     n2 = int(congress)*2
     # congress# * 2 + 1787 = first year of this congress session
@@ -62,7 +58,10 @@ def getYearsByCongress(congress):
 
     return [year1, year2]
 
-
+def getCongressOptionsElements(url, selector):
+    soup = getParsedHtml(url)
+    dropdown = soup.select(selector)
+    return dropdown
 def determineHouseConfig():
     options = getCongressOptionsElements(HOUSE_CONFIG_URL,HOUSE_CONFIG_SELECTOR)
 
@@ -76,80 +75,66 @@ def determineHouseConfig():
             session+=1
     
     return congresses
-
 def determineSenateConfig():
     options = getCongressOptionsElements(SENATE_CONFIG_URL,SENATE_CONFIG_SELECTOR)
-
+    
     congresses = []
     for option in options:
         parts = option.text.split(" ")
-        year = parts[0]
+        year = parts[0],
         congress = parts[1][1:-3]
         session = parts[2][:-3]
         congresses.append({"congress": congress, "session": session, "year": year})
     
     return congresses
- 
+
 
 def getHouseVoteUrl(year,vote):
     voteStr = getLeadingZeroNumber(vote, 3)
     return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
-
 def getSenateVoteUrl(congress,session,vote):
     voteStr = getLeadingZeroNumber(vote, 5)
     return SENATE_VOTE_URL.format(congress=congress,session=session,vote=voteStr)
 
 
-def isHouseServerErrorPage(html):
-    header = html.select("#header h1")
-    if (len(header) > 0):
-        if header[0].text == "Server Error": 
-            return True
-    
+def isErrorPage(html, errorString):
+    elem = html.select("title")
+    if (len(elem) > 0 and elem[0].text == "errorString"): 
+        return True
     return False
-
-def isSenateServerErrorPage(html):
-    error = html.select("title")
-    if (len(error) > 0):
-        if error[0].text == "U.S. Senate: Roll Call Vote Unavailable": 
-            return True
-    return False
+def isHouseServerErrorPage(html): return isErrorPage(html, "404 - File or directory not found.")
+def isSenateServerErrorPage(html): return isErrorPage(html, "U.S. Senate: Roll Call Vote Unavailable")
+def isSenateUnAuthorizedPage(html): return isErrorPage(html, "Senate.gov - Unauthorized")
 
 
+def doIteration(url, chamber, errorCheckFunction, fileArgs):
+    voteHtml = getParsedXml(url)
+    if errorCheckFunction(voteHtml):
+        print("End of votes in",chamber.title(),"for",congress,"session",session)
+        return False
+    else:
+        saveVoteFile(voteHtml, *fileArgs)
+        return True
 def iterateHouseVotes(config):
-    validVoteFound = True
-    congress = config["congress"]
-    session = config["session"]
-    year = config["year"]
-    vote = 1
+    vote,congress,session,year = 1,config["congress"],config["session"],config["year"]
 
-    while validVoteFound:
+    while True:
         url = getHouseVoteUrl(year, vote)
-        voteHtml = getParsedXml(url)
-        if isHouseServerErrorPage(voteHtml):
-            print("End of votes in House for",congress,"session",session)
-            validVoteFound = False
-        else:
-            fileName = VOTE_FILE_PATH.format("house", congress, session, vote)
-            saveFile(fileName, str(voteHtml))
-            vote += 1
+        success = doIteration(url, "house", isHouseServerErrorPage, (congress, session, vote))
+        if success: vote += 1 
+        else: break
 
+        if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
 def iterateSenateVotes(config):
-    validVoteFound = True
-    congress = config["congress"]
-    session = config["session"]
-    vote = 1
+    vote,congress,session = 1,config["congress"],config["session"]
 
-    while validVoteFound:
+    while True:
         url = getSenateVoteUrl(congress, session, vote)
-        voteHtml = getParsedXml(url)
-        if isSenateServerErrorPage(voteHtml):
-            print("End of votes in Senate for",congress,"session",session)
-            validVoteFound = False
-        else:
-            fileName = VOTE_FILE_PATH.format("senate", congress, session, vote)
-            saveFile(fileName, str(voteHtml))
-            vote += 1
+        success = doIteration(url, "senate", isSenateServerErrorPage, (congress, session, vote))
+        if success: vote += 1 
+        else: break
+
+        if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
 
 
 def pullVotesWithThreadPool(function, allOptions):
@@ -157,28 +142,23 @@ def pullVotesWithThreadPool(function, allOptions):
         for op in allOptions:
             executor.submit(function, op)
 
+def buildThread(target, args):
+    return threading.Thread(target=target, args=(args,), daemon=True)
 def pullVotesWithThreads(function, allOptions):
     threads = []
     for op in allOptions:
-        t = threading.Thread(target=function, args=(op,))
-        threads.append(t)
-        t.start()
+        thread = threading.Thread(target=function, args=(op,))
+        thread = buildThread(function, op)
+        thread.start()
+        threads.append(thread)
     return threads
-
-def waitForThreadJoin(threads):
-    for thread in threads:
-        thread.join()
+def waitForThreadsJoin(threads): [thread.join() for thread in threads]
 
 
-def getVotes(configFunction, iterativeFunction):
-    config = configFunction()
-    return pullVotesWithThreads(iterativeFunction, config)
 
+def getVotes(configFunction, theadFunction): return pullVotesWithThreads(theadFunction, configFunction())
 def getHouseVotes(): return getVotes(determineHouseConfig, iterateHouseVotes)
-
 def getSenateVotes(): return getVotes(determineSenateConfig, iterateSenateVotes)
-
-
 def doVotePull():
     if os.path.exists(VOTES_DIR): shutil.rmtree(VOTES_DIR)
     startPull = datetime.now()
@@ -194,7 +174,7 @@ def doVotePull():
     threads.extend(hThreads)
     threads.extend(sThreads)
     
-    waitForThreadJoin(threads)
+    waitForThreadsJoin(threads)
 
     print("Took", seconds_since(startPull))
 
