@@ -21,11 +21,11 @@ SENATE_VOTE_URL = SENATE_BASE_URL+"LIS/roll_call_votes/vote{congress}{session}/v
 VOTES_DIR = "cache"
 VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
 
-SECONDS_BETWEEN_VOTE_CALLS = 5
+SECONDS_BETWEEN_VOTE_CALLS = 3
 
-TEST_MODE = False
-TEST_MODE_VOTES_PER_SESSION = 1
-TEST_MODE_CONGRESSES_PER_CHAMBER = 1
+TEST_MODE = True
+TEST_MODE_VOTES_PER_SESSION = 5
+TEST_MODE_CONGRESSES_PER_CHAMBER = 4
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 def countFiles(inDir):
@@ -39,8 +39,8 @@ def saveFile(path, data):
     file = open(path, "w")
     file.write(data)
     file.close()
-def saveVoteFile(voteData, chamber, congress, session, vote):
-    fileName = VOTE_FILE_PATH.format(chamber, congress, session, vote)
+def saveVoteFile(voteData, fileNameArgs):
+    fileName = VOTE_FILE_PATH.format(*fileNameArgs)
     saveFile(fileName, str(voteData))
 
 def getParsedSoup(url, features="html.parser"):
@@ -127,7 +127,7 @@ def iterateVotes(config, chamber, pageIsErrorCheckFunction):
             print("End of votes in",chamber.title(),"for",congress,"session",session)
             break
         else:
-            saveVoteFile(voteHtml,chamber,congress,session,vote)
+            saveVoteFile(voteHtml,(chamber,congress,session,vote))
             vote += 1 
             time.sleep(SECONDS_BETWEEN_VOTE_CALLS)
 
