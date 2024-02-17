@@ -107,10 +107,10 @@ def isSenateServerErrorPage(html): return isPageTitle(html, "U.S. Senate: Roll C
 def isSenateUnAuthorizedPage(html): return isPageTitle(html, "Senate.gov - Unauthorized")
 
 
-def getVoteUrl(config, chamber, vote):
-    congress,session,year = config["congress"],config["session"],config["year"]
-    if chamber == "house": return getHouseVoteUrl(year, vote)
-    elif chamber == "senate": return getSenateVotes(congress, session, vote)
+def getVoteUrl(voteCfg):
+    chamber = voteCfg[4]
+    if chamber == "house": return getHouseVoteUrl(voteCfg[3], voteCfg[0])
+    elif chamber == "senate": return getSenateVotes(voteCfg[1], voteCfg[2], voteCfg[0])
 def getHouseVoteUrl(year,vote):
     voteStr = getLeadingZeroNumber(vote, 3)
     return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
@@ -118,24 +118,25 @@ def getSenateVoteUrl(congress,session,vote):
     voteStr = getLeadingZeroNumber(vote, 5)
     return SENATE_VOTE_URL.format(congress=congress,session=session,vote=voteStr)
 
-def endOfVoteIterate(chamber, config):
-    print("End of votes in",chamber.title(),"for",config["congress"],"session",config["session"])
-
+def handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction):
+    if pageIsErrorCheckFunction(voteHtml): 
+        print("End of votes in",voteCfg[4].title(),"for",voteCfg[1],"session",voteCfg[2])
+        return False
+    else:
+        saveVoteFile(voteHtml,(voteCfg[4],voteCfg[1],voteCfg[2],voteCfg[0]))
+        return True
 def iterateVotes(config, chamber, pageIsErrorCheckFunction):
-    vote,congress,session,year = 1,config["congress"],config["session"],config["year"]
+    voteCfg = [1,config["congress"],config["session"],config["year"], chamber]
     while True:
-        url = getVoteUrl(config, chamber, vote)
+        url = getVoteUrl(voteCfg)
         voteHtml = getParsedXml(url)
 
-        if pageIsErrorCheckFunction(voteHtml): 
-            endOfVoteIterate(chamber, config)
-            break
-        else:
-            saveVoteFile(voteHtml,(chamber,congress,session,vote))
-            vote += 1 
+        if handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction):
+            voteCfg[0] += 1
             time.sleep(SECONDS_BETWEEN_VOTE_CALLS)
+        else: break
 
-        if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
+        if TEST_MODE and voteCfg[0] >= TEST_MODE_VOTES_PER_SESSION: break
 def iterateHouseVotes(config):  iterateVotes(config, "house", isHouseServerErrorPage)
 def iterateSenateVotes(config): iterateVotes(config, "senate", isSenateServerErrorPage)
 
