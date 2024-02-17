@@ -20,12 +20,18 @@ SENATE_VOTE_URL = SENATE_BASE_URL+"LIS/roll_call_votes/vote{congress}{session}/v
 
 VOTES_DIR = "cache"
 VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
+VOTE_COLLECTION_FINISHED_MESSAGE = "End of votes in {} for congress {}, session {} ({})"
 
 SECONDS_BETWEEN_VOTE_CALLS = 3
 
 TEST_MODE = True
-TEST_MODE_VOTES_PER_SESSION = 5
-TEST_MODE_CONGRESSES_PER_CHAMBER = 4
+TEST_MODE_VOTES_PER_SESSION = 1
+TEST_MODE_CONGRESSES_PER_CHAMBER = 1
+
+def shouldStopVoteFetchForTestMode(voteNum):
+    return TEST_MODE and voteNum >= TEST_MODE_VOTES_PER_SESSION
+def shouldStopVoteStartForTestMode(voteStarts):
+    return TEST_MODE and voteStarts >= TEST_MODE_CONGRESSES_PER_CHAMBER
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 def countFiles(inDir):
@@ -39,7 +45,7 @@ def saveFile(path, data):
     file = open(path, "w")
     file.write(data)
     file.close()
-def saveVoteFile(voteData, fileNameArgs):
+def saveVoteFile(voteData, *fileNameArgs):
     fileName = VOTE_FILE_PATH.format(*fileNameArgs)
     saveFile(fileName, str(voteData))
 
@@ -108,9 +114,9 @@ def isSenateUnAuthorizedPage(html): return isPageTitle(html, "Senate.gov - Unaut
 
 
 def getVoteUrl(voteCfg):
-    chamber = voteCfg[4]
-    if chamber == "house": return getHouseVoteUrl(voteCfg[3], voteCfg[0])
-    elif chamber == "senate": return getSenateVotes(voteCfg[1], voteCfg[2], voteCfg[0])
+    chamber = voteCfg[0]
+    if chamber == "house": return getHouseVoteUrl(voteCfg[4], voteCfg[3])
+    elif chamber == "senate": return getSenateVotes(voteCfg[1], voteCfg[2], voteCfg[3])
 def getHouseVoteUrl(year,vote):
     voteStr = getLeadingZeroNumber(vote, 3)
     return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
@@ -120,23 +126,22 @@ def getSenateVoteUrl(congress,session,vote):
 
 def handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction):
     if pageIsErrorCheckFunction(voteHtml): 
-        print("End of votes in",voteCfg[4].title(),"for",voteCfg[1],"session",voteCfg[2])
+        print(VOTE_COLLECTION_FINISHED_MESSAGE.format(voteCfg[0], voteCfg[1], voteCfg[2], voteCfg[4]))
         return False
     else:
-        saveVoteFile(voteHtml,(voteCfg[4],voteCfg[1],voteCfg[2],voteCfg[0]))
+        saveVoteFile(voteHtml,*voteCfg)
+        voteCfg[3] += 1
         return True
 def iterateVotes(config, chamber, pageIsErrorCheckFunction):
-    voteCfg = [1,config["congress"],config["session"],config["year"], chamber]
+    voteCfg = [chamber,config["congress"],config["session"],1,config["year"]]
     while True:
         url = getVoteUrl(voteCfg)
         voteHtml = getParsedXml(url)
-
-        if handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction):
-            voteCfg[0] += 1
-            time.sleep(SECONDS_BETWEEN_VOTE_CALLS)
-        else: break
-
-        if TEST_MODE and voteCfg[0] >= TEST_MODE_VOTES_PER_SESSION: break
+        continuePullingVotes = handleVote(voteHtml, voteCfg, pageIsErrorCheckFunction)
+        
+        if shouldStopVoteFetchForTestMode(voteCfg[3]):  break
+        elif continuePullingVotes:                      time.sleep(SECONDS_BETWEEN_VOTE_CALLS)
+        else:                                           break
 def iterateHouseVotes(config):  iterateVotes(config, "house", isHouseServerErrorPage)
 def iterateSenateVotes(config): iterateVotes(config, "senate", isSenateServerErrorPage)
 
@@ -154,7 +159,7 @@ def pullVotesWithThreads(function, allOptions):
         thread.start()
         threads.append(thread)
 
-        if TEST_MODE and len(threads) >= TEST_MODE_CONGRESSES_PER_CHAMBER: break
+        if shouldStopVoteStartForTestMode(len(threads)): break
     return threads
 
 def waitForThreadsJoin(threads): [thread.join() for thread in threads]
