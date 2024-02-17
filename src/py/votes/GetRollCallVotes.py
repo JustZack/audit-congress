@@ -118,9 +118,7 @@ def getSenateVoteUrl(congress,session,vote):
 def iterateVotes(config, chamber, pageIsErrorCheckFunction):
     vote,congress,session,year = 1,config["congress"],config["session"],config["year"]
     while True:
-        if chamber == "house": url = getHouseVoteUrl(year, vote)
-        elif chamber == "senate": url = getSenateVoteUrl(congress, session, vote)
-
+        url = getHouseVoteUrl(year, vote) if chamber == "house" else getSenateVoteUrl(congress, session, vote)
         voteHtml = getParsedXml(url)
 
         if pageIsErrorCheckFunction(voteHtml):
