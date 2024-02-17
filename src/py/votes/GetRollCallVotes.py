@@ -23,6 +23,7 @@ VOTE_FILE_PATH = VOTES_DIR+"/{}/{}/{}/{}.xml"
 
 TEST_MODE = True
 TEST_MODE_VOTES_PER_SESSION = 1
+TEST_MODE_CONGRESSES_PER_CHAMBER = 1
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
@@ -89,14 +90,6 @@ def determineSenateConfig():
     return congresses
 
 
-def getHouseVoteUrl(year,vote):
-    voteStr = getLeadingZeroNumber(vote, 3)
-    return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
-def getSenateVoteUrl(congress,session,vote):
-    voteStr = getLeadingZeroNumber(vote, 5)
-    return SENATE_VOTE_URL.format(congress=congress,session=session,vote=voteStr)
-
-
 def isErrorPage(html, errorString):
     elem = html.select("title")
     if (len(elem) > 0 and elem[0].text == "errorString"): 
@@ -107,53 +100,51 @@ def isSenateServerErrorPage(html): return isErrorPage(html, "U.S. Senate: Roll C
 def isSenateUnAuthorizedPage(html): return isErrorPage(html, "Senate.gov - Unauthorized")
 
 
-def doIteration(url, chamber, errorCheckFunction, fileArgs):
-    voteHtml = getParsedXml(url)
-    if errorCheckFunction(voteHtml):
-        print("End of votes in",chamber.title(),"for",congress,"session",session)
-        return False
-    else:
-        saveVoteFile(voteHtml, *fileArgs)
-        return True
-def iterateHouseVotes(config):
+def getHouseVoteUrl(year,vote):
+    voteStr = getLeadingZeroNumber(vote, 3)
+    return HOUSE_VOTE_URL.format(year=year,vote=voteStr)
+def getSenateVoteUrl(congress,session,vote):
+    voteStr = getLeadingZeroNumber(vote, 5)
+    return SENATE_VOTE_URL.format(congress=congress,session=session,vote=voteStr)
+
+
+def iterateVotes(config, chamber, pageIsErrorCheckFunction):
     vote,congress,session,year = 1,config["congress"],config["session"],config["year"]
-
     while True:
-        url = getHouseVoteUrl(year, vote)
-        success = doIteration(url, "house", isHouseServerErrorPage, (congress, session, vote))
-        if success: vote += 1 
-        else: break
+        if chamber == "house": url = getHouseVoteUrl(year, vote)
+        elif chamber == "senate": url = getSenateVoteUrl(congress, session, vote)
+
+        voteHtml = getParsedXml(url)
+
+        if pageIsErrorCheckFunction(voteHtml):
+            print("End of votes in",chamber.title(),"for",congress,"session",session)
+            break
+        else:
+            saveVoteFile(voteHtml,chamber,congress,session,vote)
+            vote += 1 
 
         if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
-def iterateSenateVotes(config):
-    vote,congress,session = 1,config["congress"],config["session"]
-
-    while True:
-        url = getSenateVoteUrl(congress, session, vote)
-        success = doIteration(url, "senate", isSenateServerErrorPage, (congress, session, vote))
-        if success: vote += 1 
-        else: break
-
-        if TEST_MODE and vote >= TEST_MODE_VOTES_PER_SESSION: break
+def iterateHouseVotes(config):  iterateVotes(config, "house", isHouseServerErrorPage)
+def iterateSenateVotes(config): iterateVotes(config, "senate", isSenateServerErrorPage)
 
 
 def pullVotesWithThreadPool(function, allOptions):
     with ThreadPoolExecutor(max_workers=len(allOptions)) as executor:
-        for op in allOptions:
-            executor.submit(function, op)
-
+        [executor.submit(function, op) for op in allOptions]
+            
 def buildThread(target, args):
     return threading.Thread(target=target, args=(args,), daemon=True)
 def pullVotesWithThreads(function, allOptions):
     threads = []
     for op in allOptions:
-        thread = threading.Thread(target=function, args=(op,))
         thread = buildThread(function, op)
         thread.start()
         threads.append(thread)
-    return threads
-def waitForThreadsJoin(threads): [thread.join() for thread in threads]
 
+        if TEST_MODE and len(threads) >= TEST_MODE_CONGRESSES_PER_CHAMBER: break
+    return threads
+
+def waitForThreadsJoin(threads): [thread.join() for thread in threads]
 
 
 def getVotes(configFunction, theadFunction): return pullVotesWithThreads(theadFunction, configFunction())
@@ -166,13 +157,13 @@ def doVotePull():
     threads = []
 
     hThreads = getHouseVotes()
+    threads.extend(hThreads)
     print("Started Processing",len(hThreads),"House votes by session.")
 
-    sThreads = getSenateVotes()
-    print("Started Processing",len(sThreads),"Senate votes by session.")
+    #sThreads = getSenateVotes()
+    #threads.extend(sThreads)
+    #print("Started Processing",len(sThreads),"Senate votes by session.")
     
-    threads.extend(hThreads)
-    threads.extend(sThreads)
     
     waitForThreadsJoin(threads)
 
