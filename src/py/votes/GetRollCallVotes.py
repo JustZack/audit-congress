@@ -200,4 +200,5 @@ def doVotePull():
 
 if __name__ == "__main__":
     doVotePull()
-    #iteratieSenateVotes({'congress': 118, 'session': 2, 'year': 2023})
+    #iterateSenateVotes({'congress': 118, 'session': 2, 'year': 2023})
+    #iterateHouseVotes({'congress': 118, 'session': 2, 'year': 2023})
