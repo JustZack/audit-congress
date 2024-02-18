@@ -18,13 +18,25 @@ namespace MySqlConnector {
                 $url = $config["dburl"];
                 $user = $config["dbuser"];
                 $password = $config["dbpassword"];
-
+                
                 Connection::$connection = new \mysqli($url, $user, $password);
                 if (Connection::$connection->connect_errno) {
                     throw new \Exception("Failed to connect to ".$url." with information provided in config.");
+                } else if (isset($config["db"])) {
+                    Connection::useDatabase($config["db"]);
                 }
             }
             return Connection::$connection;
+        }
+
+        private static $database;
+        public static function getDatabase() {
+            return Connection::$database;
+        }
+        public static function useDatabase($database) {
+            Connection::$database = $database;
+            $connection = Connection::getConnection();
+            $connection->select_db(Connection::$database);
         }
     }
 }

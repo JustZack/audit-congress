@@ -21,23 +21,23 @@ namespace MySqlConnector {
             return gettype($this->mysqli_result) == "object";
         }
 
-        public function fetch_all() {
+        public function fetchAll() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_all();
             else return $this->success();
         }
-        public function fetch_array() {
+        public function fetchArray() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_array();
             else return $this->success();
         }
-        public function fetch_assoc() {
+        public function fetchAssoc() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_assoc();
             else return $this->success();
         }
-        public function fetch_row() {
+        public function fetchRow() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_row();
             else return $this->success();
         }
-        public function fetch_column($column_num) {
+        public function fetchColumn($column_num) {
             if ($this->hasResults()) return $this->mysqli_result->fetch_column($column_num);
             else return $this->success();
         }

@@ -14,8 +14,11 @@ namespace AuditCongress {
 
             $settings = array();
             foreach ($config as $setting) {
-                $parts = explode(";=;", $setting);
-                $settings[$parts[0]] = $parts[1];
+                //Only process valid settings like: a;=;b
+                if (strlen($setting) >= 5) {
+                    $parts = explode(";=;", $setting);
+                    $settings[$parts[0]] = $parts[1];
+                }
             }
             return $settings;
         }

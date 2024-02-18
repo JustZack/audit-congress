@@ -14,6 +14,10 @@ namespace MySqlConnector {
             } else $this->sql_formated = $this->sql;
         }
 
+        public function useDatabase($database) {
+            $connection = Connection::useDatabase($database);
+        }
+
         public function execute() {
             $connection = Connection::getConnection();
             return new Result($connection->query($this->sql_formated));   
