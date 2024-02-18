@@ -10,6 +10,7 @@ namespace MySqlConnector {
         private static ConnectionDeconstructor $destructor;
         private static $config = false;
         private static $connection = false;
+        private static $database = "";
         
         public static function getConfig() {
             if (Connection::$config == false) 
@@ -53,7 +54,6 @@ namespace MySqlConnector {
             }
         }
 
-        private static $database = "";
         public static function getDatabase() {
             return Connection::$database;
         }
@@ -66,7 +66,10 @@ namespace MySqlConnector {
         }
 
         public static function lastError() {
-            if (Connection::isOpen()) return Connection::$connection->error;
+            if (Connection::isOpen()) {
+                $connection = Connection::getConnection();
+                return $connection->error;
+            }
             else return "";
         }
     }

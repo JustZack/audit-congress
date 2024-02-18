@@ -14,36 +14,41 @@ namespace MySqlConnector {
             $this->name = $tableName;
         }
 
+        public function runActionQuery($sql, $params = null) {
+            $result = (new Query($sql, $params))->execute();
+            return $result->success();
+        }
+
+        public function runQuery($sql, $params = null) {
+            $query = new Query($sql, $params);
+            return $query->execute()->fetchAll();
+        }
+
         public function exists() {
+            $sql = "SHOW TABLES LIKE `$this->name`";
             if ($this->tableExists == null) {
-                $query = new Query("show tables like '$this->name'");
-                $results = $query->execute()->fetchAll();
+                $results = $this->runQuery($sql);
                 $this->tableExists = count($results) == 1;
             }
             return $this->tableExists;
         }
 
         public function columns() {
+            $sql = "DESCRIBE `$this->name`";
             if ($this->tableColumns == null) {
-                $query = new Query("describe $this->name");
-                $results = $query->execute()->fetchAll();
+                $results = $this->runQuery($sql);
                 $this->columns = new Columns($results);
             }
             return $this->columns->items();
         }
 
         public function count($useCache = true) {
+            $sql = "SELECT COUNT(*) FROM `$this->name`";
             if ($this->rowCount == null or !$useCache) {
-                $query = new Query("select count(*) from $this->name");
-                $results = $query->execute()->fetchAll();
+                $results = $this->runQuery($sql);
                 $this->rowCount = (int)$results[0][0];
             }
             return $this->rowCount;
-        }
-
-        public function runActionQuery($sql, $params = null) {
-            $result = (new Query($sql, $params))->execute();
-            return $result->success();
         }
 
         public function create($sql_column_descriptions_array) {
@@ -57,31 +62,31 @@ namespace MySqlConnector {
             return $this->runActionQuery($sql);
         }
 
-        public function insert($columnOrder, $columnValues) {
+        public function insert($columns, $values) {
             $sql = "INSERT INTO `$this->name` %s VALUES %s";
 
-            $numCols = count($columnOrder); $numValues = count($columnValues);
+            $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 
                 throw new \Exception("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
             
             $itemList = Query::buildItemList($numCols);
             $sql = sprintf($sql, $itemList, $itemList);
             
-            $colsAndValues = array_merge($columnOrder, $columnValues);
+            $colsAndValues = array_merge($columns, $values);
 
             return $this->runActionQuery($sql, $colsAndValues);
         }
 
-        public function update($columnOrder, $columnValues, $whereCondition) {
+        public function update($columns, $values, $whereCondition) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
-            $sql = "UPDATE $this->name SET %s WHERE %s";
+            $sql = "UPDATE `$this->name` SET %s WHERE %s";
 
-            $numCols = count($columnOrder); $numValues = count($columnValues);
+            $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 
                 throw new \Exception("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
             $colValuesAndWhere = array();
-            for ($i = 0;$i < $numCols;$i++) array_push($colValuesAndWhere, $columnOrder[$i]." = ".$columnValues[$i]);
+            for ($i = 0;$i < $numCols;$i++) array_push($colValuesAndWhere, $columns[$i]." = ".$values[$i]);
 
             $itemList = Query::buildItemList($numCols, false);
             $sql = sprintf($sql, $itemList, "%s");
@@ -89,6 +94,11 @@ namespace MySqlConnector {
             array_push($colValuesAndWhere, $whereCondition);
             
             return $this->runActionQuery($sql, $colValuesAndWhere);
+        }
+
+        public function delete($whereCondition) {
+            $sql = "DELETE FROM `$this->name` WHERE %s";
+            return $this->runActionQuery($sql, [$whereCondition]);
         }
 
         public function addColumn($columnName, $columnDescription) {
