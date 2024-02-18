@@ -9,6 +9,7 @@ require_once "../php/audit.congress/autoload.php";
 $table = new \MySqlConnector\Table("example1");
 //var_dump($table->exists());
 //var_dump($table->columns());
+//var_dump($table->count("col1 = 22"));
 //var_dump($table->count());
 //var_dump($table->create(["id int not null primary key", "name varchar(100)"]));
 //var_dump($table->drop());

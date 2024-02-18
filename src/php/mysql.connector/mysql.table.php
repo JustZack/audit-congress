@@ -4,8 +4,7 @@ namespace MySqlConnector {
     class Table {
         private 
             $tableExists = null,
-            $tableColumns = null,
-            $rowCount = null;
+            $tableColumns = null;
         private ?Columns $columns = null;
         public $name;
         
@@ -24,31 +23,34 @@ namespace MySqlConnector {
             return $query->execute()->fetchAll();
         }
 
-        public function exists() {
+        //Check if this table exists
+        public function exists($useCache = true) {
             $sql = "SHOW TABLES LIKE `$this->name`";
-            if ($this->tableExists == null) {
+            if ($this->tableExists == null || !$useCache) {
                 $results = $this->runQuery($sql);
                 $this->tableExists = count($results) == 1;
             }
             return $this->tableExists;
         }
-
-        public function columns() {
+        //Describe the columns in this table
+        public function columns($useCache = true) {
             $sql = "DESCRIBE `$this->name`";
-            if ($this->tableColumns == null) {
+            if ($this->tableColumns == null || !$useCache) {
                 $results = $this->runQuery($sql);
                 $this->columns = new Columns($results);
             }
             return $this->columns->items();
         }
-
-        public function count($useCache = true) {
+        //Count the number of rows in this table
+        public function count($whereCondition = null) {
             $sql = "SELECT COUNT(*) FROM `$this->name`";
-            if ($this->rowCount == null or !$useCache) {
+            if ($whereCondition != null) { 
+                $sql .= " WHERE %s";
+                $results = $this->runQuery($sql, [$whereCondition]);
+            } else {
                 $results = $this->runQuery($sql);
-                $this->rowCount = (int)$results[0][0];
             }
-            return $this->rowCount;
+            return (int)$results[0][0];
         }
 
         public function create($sql_column_descriptions_array) {
