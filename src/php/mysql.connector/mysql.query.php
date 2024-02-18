@@ -22,6 +22,13 @@ namespace MySqlConnector {
             $connection = Connection::getConnection();
             return new Result($connection->query($this->sql_formated));   
         }
+
+        public static function buildItemList($numItems, $withParens = true) {
+            $sql = $withParens ? "(" : "";
+            for ($i = 0;$i < $numItems;$i++) $sql .= $i < $numItems - 1 ? "%s, " : "%s";
+            $sql .= $withParens ? ")" : "";
+            return $sql;
+        }
     }
 }
 

@@ -1,16 +1,22 @@
 <?php
 
 namespace MySqlConnector {
-
+    class ConnectionDeconstructor {
+        public function __destruct() {
+            Connection::close();
+        }
+    }
     class Connection {
+        private static ConnectionDeconstructor $destructor;
         private static $config = false;
+        private static $connection = false;
+        
         public static function getConfig() {
             if (Connection::$config == false) 
                 Connection::$config = \AuditCongress\Enviroment::getConfig();
             return Connection::$config;            
         }
 
-        private static $connection = false;
         public static function getConnection() {
             if (Connection::$connection == false) {
                 $config = Connection::getConfig();
@@ -18,25 +24,50 @@ namespace MySqlConnector {
                 $url = $config["dburl"];
                 $user = $config["dbuser"];
                 $password = $config["dbpassword"];
-                
-                Connection::$connection = new \mysqli($url, $user, $password);
-                if (Connection::$connection->connect_errno) {
-                    throw new \Exception("Failed to connect to ".$url." with information provided in config.");
-                } else if (isset($config["db"])) {
-                    Connection::useDatabase($config["db"]);
-                }
+                $database = isset($config["db"]) ? $config["db"] : null;
+
+                Connection::open($url, $user, $password, $database);
+                Connection::$destructor = new ConnectionDeconstructor();
             }
             return Connection::$connection;
         }
 
-        private static $database;
+        public static function open($url, $user, $password, $database = null) {           
+            Connection::$connection = new \mysqli($url, $user, $password);
+            if (Connection::$connection->connect_errno) {
+                throw new \Exception("Failed to connect to ".$url." with information provided in config.");
+            } else if (isset($database)) {
+                Connection::useDatabase($database);
+            }
+        }
+
+        public static function isOpen() {
+            return gettype(Connection::$connection) == "object";
+        }
+
+        public static function close() {
+            if (Connection::isOpen()) {
+                $connection = Connection::getConnection();
+                $connection->close();
+                Connection::$connection = false;
+            }
+        }
+
+        private static $database = "";
         public static function getDatabase() {
             return Connection::$database;
         }
         public static function useDatabase($database) {
-            Connection::$database = $database;
-            $connection = Connection::getConnection();
-            $connection->select_db(Connection::$database);
+            if (Connection::isOpen()) { 
+                $connection = Connection::getConnection();
+                Connection::$database = $database;
+                $connection->select_db(Connection::$database);
+            }
+        }
+
+        public static function lastError() {
+            if (Connection::isOpen()) return Connection::$connection->error;
+            else return "";
         }
     }
 }

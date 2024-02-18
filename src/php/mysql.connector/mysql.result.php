@@ -7,7 +7,7 @@ namespace MySqlConnector {
         public function __construct($mysqli_result) {
             $this->mysqli_result = $mysqli_result;
         }
-
+        
         public function success() {
             return !$this->failure();
         }
