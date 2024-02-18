@@ -40,18 +40,21 @@ namespace MySqlConnector {
             }
             return $this->rowCount;
         }
-        
-        public function create($sql_column_descriptions_arry) {
-            $sql = "CREATE TABLE `$this->name` ";
-            $sql .= Query::buildItemList(count($sql_column_descriptions_arry));
-            $result = (new Query($sql, $sql_column_descriptions_arry))->execute();
+
+        public function runActionQuery($sql, $params = null) {
+            $result = (new Query($sql, $params))->execute();
             return $result->success();
+        }
+
+        public function create($sql_column_descriptions_array) {
+            $sql = "CREATE TABLE `$this->name` %s";
+            $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array)));
+            return $this->runActionQuery($sql, $sql_column_descriptions_array);
         }
 
         public function drop() {
             $sql = "DROP TABLE `$this->name`";
-            $result = (new Query($sql))->execute();
-            return $result->success();
+            return $this->runActionQuery($sql);
         }
 
         public function insert($columnOrder, $columnValues) {
@@ -65,8 +68,8 @@ namespace MySqlConnector {
             $sql = sprintf($sql, $itemList, $itemList);
             
             $colsAndValues = array_merge($columnOrder, $columnValues);
-            $result = (new Query($sql, $colsAndValues))->execute();
-            return $result->success();
+
+            return $this->runActionQuery($sql, $colsAndValues);
         }
 
         public function update($columnOrder, $columnValues, $whereCondition) {
@@ -85,26 +88,22 @@ namespace MySqlConnector {
 
             array_push($colValuesAndWhere, $whereCondition);
             
-            $result = (new Query($sql, $colValuesAndWhere))->execute();
-            return $result->success();
+            return $this->runActionQuery($sql, $colValuesAndWhere);
         }
 
         public function addColumn($columnName, $columnDescription) {
             $sql = "ALTER TABLE `$this->name` add $columnName $columnDescription";
-            $result = (new Query($sql))->execute();
-            return $result->success();
+            return $this->runActionQuery($sql);
         }
 
         public function dropColumn($columnName) {
             $sql = "ALTER TABLE `$this->name` DROP COLUMN $columnName";
-            $result = (new Query($sql))->execute();
-            return $result->success();
+            return $this->runActionQuery($sql);
         }
 
         public function modifyColumn($columnName, $columnDescription) {
             $sql = "ALTER TABLE `$this->name` MODIFY COLUMN $columnName $columnDescription";
-            $result = (new Query($sql))->execute();
-            return $result->success();
+            return $this->runActionQuery($sql);
         }
     } 
 }
