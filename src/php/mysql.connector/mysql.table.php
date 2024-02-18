@@ -1,6 +1,9 @@
 <?php
 
 namespace MySqlConnector {
+
+    use Exception;
+
     class Table {
         private 
             $tableExists = null,
@@ -33,9 +36,9 @@ namespace MySqlConnector {
             return $this->tableExists;
         }
         //Describe the columns in this table
-        public function columns($useCache = true) {
+        public function columns() {
             $sql = "DESCRIBE `$this->name`";
-            if ($this->tableColumns == null || !$useCache) {
+            if ($this->tableColumns == null) {
                 $results = $this->runQuery($sql);
                 $this->columns = new Columns($results);
             }
@@ -64,6 +67,7 @@ namespace MySqlConnector {
             return $this->runActionQuery($sql);
         }
 
+
         public function insert($columns, $values) {
             $sql = "INSERT INTO `$this->name` %s VALUES %s";
 
@@ -77,6 +81,10 @@ namespace MySqlConnector {
             $colsAndValues = array_merge($columns, $values);
 
             return $this->runActionQuery($sql, $colsAndValues);
+        }
+
+        public function insertObject(SqlObject $sqlObj) {
+            return $this->insert($sqlObj->getColumns(), $sqlObj->getValues());
         }
 
         public function update($columns, $values, $whereCondition) {
@@ -98,25 +106,31 @@ namespace MySqlConnector {
             return $this->runActionQuery($sql, $colValuesAndWhere);
         }
 
+        public function updateObject(SqlObject $sqlObj, $whereCondition) {
+            return $this->update($sqlObj->getColumns(), $sqlObj->getValues(), $whereCondition);
+        }
+
         public function delete($whereCondition) {
             $sql = "DELETE FROM `$this->name` WHERE %s";
             return $this->runActionQuery($sql, [$whereCondition]);
         }
 
-        public function addColumn($columnName, $columnDescription) {
-            $sql = "ALTER TABLE `$this->name` add $columnName $columnDescription";
+        //Where $type is one of: ADD, DROP, MODIFY
+        public function alter($type, $columnName, $columnDescription = null) {
+            $sql = "ALTER TABLE `$this->name`";
+            switch ($type) {
+                case "ADD":    $sql .= " ADD $columnName $columnDescription"; break;
+                case "DROP":   $sql .= " DROP COLUMN $columnName"; break;
+                case "MODIFY": $sql .= " MODIFY COLUMN $columnName $columnDescription"; break;
+                default: throw new \Exception("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
+            }
+            $this->tableColumns == null;
             return $this->runActionQuery($sql);
         }
 
-        public function dropColumn($columnName) {
-            $sql = "ALTER TABLE `$this->name` DROP COLUMN $columnName";
-            return $this->runActionQuery($sql);
-        }
-
-        public function modifyColumn($columnName, $columnDescription) {
-            $sql = "ALTER TABLE `$this->name` MODIFY COLUMN $columnName $columnDescription";
-            return $this->runActionQuery($sql);
-        }
+        public function addColumn($columnName, $columnDescription) { return $this->alter("ADD", $columnName, $columnDescription); }
+        public function dropColumn($columnName) { return $this->alter("DROP", $columnName); }
+        public function modifyColumn($columnName, $columnDescription) { return $this->alter("MODIFY", $columnName, $columnDescription); }
     } 
 }
 
