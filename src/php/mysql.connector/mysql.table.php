@@ -25,7 +25,7 @@ namespace MySqlConnector {
 
         //Check if this table exists
         public function exists($useCache = true) {
-            $sql = "SHOW TABLES LIKE `$this->name`";
+            $sql = "SHOW TABLES LIKE '$this->name'";
             if ($this->tableExists == null || !$useCache) {
                 $results = $this->runQuery($sql);
                 $this->tableExists = count($results) == 1;

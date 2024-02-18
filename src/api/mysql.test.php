@@ -17,6 +17,7 @@ $table = new \MySqlConnector\Table("example1");
 //var_dump($table->update(["col1", "col2"], [88, 99], "col1 = 11"));
 //var_dump($table->delete("col1 = 88"));
 //var_dump($table->addColumn("test", "varchar(123) NOT NULL"));
+//var_dump($table->columns());
 //var_dump($table->modifyColumn("test", "varchar(123) NOT NULL"));
 //var_dump($table->dropColumn("test"));
 
