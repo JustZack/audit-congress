@@ -33,12 +33,12 @@ namespace APITest {
 
         static function testUpdateRow($tableName) {
             $table = new \MySqlConnector\Table($tableName);
-            var_dump($table->update(["id", "name", "test", "tes3"], [13, "dabba","updated","here"], "id = 13"));
+            var_dump($table->update(["id", "name", "test", "tes3"], [11, "dabba","updateddhfjajkld","here"], "id = 11"));
         }
 
         static function testDeleteRow($tableName) {
             $table = new \MySqlConnector\Table($tableName);
-            var_dump($table->delete("id = 13"));
+            var_dump($table->delete("id = 148174992"));
         }
 
         static function testSelectRow($tableName) {

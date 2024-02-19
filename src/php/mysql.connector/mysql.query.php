@@ -55,11 +55,18 @@ namespace MySqlConnector {
             return $query->execute()->fetchAll();
         }
         //Build a formattable list with $numItems, like '(%s, %s, %s...)'
-        public static function buildItemList($numItems, $withParens = true, $quoteChar = "'") {
+        public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {
             $itemFormat = "$quoteChar%s$quoteChar";
             $sql = $withParens ? "(" : "";
             for ($i = 0;$i < $numItems;$i++) $sql .= $i < $numItems - 1 ? "$itemFormat, " : $itemFormat;
             $sql .= $withParens ? ")" : "";
+            return $sql;
+        }
+
+        //Build a list with the given items, parenthesis, and quote character
+        public static function buildList($items, $withParens = true, $quoteChar = "'") {
+            $listFormat = Query::buildFormattableList(count($items), $withParens, $quoteChar);
+            $sql = sprintf($listFormat, ...$items);
             return $sql;
         }
     }

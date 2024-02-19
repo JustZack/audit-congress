@@ -61,9 +61,9 @@ namespace MySqlConnector {
         //Create this table with columns described by $sql_column_descriptions_array
         public function create($sql_column_descriptions_array) {
             $sql = "CREATE TABLE `$this->name` %s";
-            $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array), true, ""));
+            $list = Query::buildList($sql_column_descriptions_array, true, "");
             $this->tableExists = null;
-            return Query::runActionQuery($sql, $sql_column_descriptions_array);
+            return Query::runActionQuery($sql, $list);
         }
         //Drop this table
         public function drop() {
@@ -77,21 +77,14 @@ namespace MySqlConnector {
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
         public function select($selectColumns, $whereCondition = null, $orderBy = null) {
             $sql = "SELECT %s FROM `$this->name`";
-            $selectList = Query::buildItemList(count($selectColumns), false, "");
-            $sql = sprintf($sql, $selectList);
-
-            $params = $selectColumns;
-            if ($whereCondition != null) {
-                $sql .= " WHERE %s";
-                array_push($params, $whereCondition);
-            }
-
-            if ($orderBy != null) {
-                $sql .= " ORDER BY %s";
-                array_push($params, $orderBy);
-            }
             
-            return Query::runQuery($sql, $params);
+            $colList = Query::buildList($selectColumns, false, "");
+            $sql = sprintf($sql, $colList);
+
+            if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
+            if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
+            
+            return Query::runQuery($sql);
         }
         //Insert a row with the provided $columns and $values
         public function insert($columns, $values) {
@@ -101,12 +94,12 @@ namespace MySqlConnector {
             if ($numCols != $numValues) 
                 throw new \Exception("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
             
-            $cols = Query::buildItemList($numCols, true, "`");
-            $vals = Query::buildItemList($numCols, true, "'");
-            $sql = sprintf($sql, $cols, $vals);
+            $colList = Query::buildList($columns, true, "`");
+            $valList = Query::buildList($values, true, "'");
+
+            $sql = sprintf($sql, $colList, $valList);
             
-            $colsAndValues = array_merge($columns, $values);
-            return Query::runActionQuery($sql, $colsAndValues);
+            return Query::runActionQuery($sql);
         } 
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
         public function update($columns, $values, $whereCondition) {
@@ -117,15 +110,14 @@ namespace MySqlConnector {
             if ($numCols != $numValues) 
                 throw new \Exception("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
-            $colValuesAndWhere = array();
-            for ($i = 0;$i < $numCols;$i++) array_push($colValuesAndWhere, "`".$columns[$i]."` = '".$values[$i]."'");
+            $colsAndValues = array();
+            for ($i = 0;$i < $numCols;$i++) array_push($colsAndValues, "`".$columns[$i]."` = '".$values[$i]."'");
 
-            $itemList = Query::buildItemList($numCols, false, "");
-            $sql = sprintf($sql, $itemList, "%s");
-
-            array_push($colValuesAndWhere, $whereCondition);
             
-            return Query::runActionQuery($sql, $colValuesAndWhere);
+            $colsAndValuesList = Query::buildList($colsAndValues, false, "");
+
+            $sql = sprintf($sql, $colsAndValuesList, $whereCondition);
+            return Query::runActionQuery($sql);
         }
         //Delete a row where $whereCondition is satisfied
         public function delete($whereCondition) {

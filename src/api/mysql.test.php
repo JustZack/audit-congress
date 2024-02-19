@@ -6,7 +6,7 @@ namespace APITest;
 //Load everything needed for any congress API calls all at once
 require_once "test/autoload.php";
 
-//MySqlConnector::testTable("example");
+MySqlConnector::testTable("example1");
 //MySqlConnector::testUpdateRow("example1");
 //MySqlConnector::testDeleteRow("example1");
 //MySqlConnector::testSelectRow("example1");
