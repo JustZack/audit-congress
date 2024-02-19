@@ -1,12 +1,20 @@
 <?php
 
-require_once "../php/audit.congress/autoload.php";
+//Use the testing namespace
+namespace APITest;
+
+//Load everything needed for any congress API calls all at once
+require_once "test/autoload.php";
+
+//MySqlConnector::testTable("example");
+//MySqlConnector::testDatabase("auditcongress");
+
 //$query = new \MySqlConnector\Query("CREATE TABLE `auditcongress`.`example` ( `col1` INT NOT NULL , `col2` INT NOT NULL , `col3` INT NOT NULL , `col4` INT NOT NULL ) ENGINE = InnoDB; ");
 //$query = new \MySqlConnector\Query("show databases");
 //$query = new \MySqlConnector\Query("show tables");
 //var_dump($query->execute()->fetchAll());
 
-$table = new \MySqlConnector\Table("example1");
+//$table = new \MySqlConnector\Table("example1");
 //var_dump($table->exists());
 //var_dump($table->columns());
 //var_dump($table->count("col1 = 22"));
@@ -25,13 +33,16 @@ $table = new \MySqlConnector\Table("example1");
 //var_dump($table->alter("add", "test2", "varchar(123) NOT NULL"));//Should fail
 //var_dump($table->dropColumn("test"));
 //var_dump($table->select(["*"], "col2 = 2", "col2"));
-var_dump($table->select(["*"]));
+//var_dump($table->select(["*"]));
 //var_dump($table::listTables());
 
-$db = new \MySqlConnector\Database("auditcongress");
+//$db = new \MySqlConnector\Database("auditcongress");
 //var_dump($db->exists());
 //var_dump($db->create());
 //var_dump($db->drop());
 //var_dump($db::listDatabases());
+
+
+
 
 ?>
