@@ -16,34 +16,33 @@ namespace MySqlConnector {
         }
 
 
-        
-        //For running  returing true or false (success values)
-        public function runActionQuery($sql, $params = null) {
-            $result = (new Query($sql, $params))->execute();
-            return $result->success();
-        }
-        //For running queries that return rows
-        public function runQuery($sql, $params = null) {
-            $query = new Query($sql, $params);
-            return $query->execute()->fetchAll();
-        }
-
-
 
         //Check if this table exists
         public function exists($useCache = true) {
             $sql = "SHOW TABLES LIKE '$this->name'";
             if ($this->tableExists == null || !$useCache) {
-                $results = $this->runQuery($sql);
+                $results = Query::runQuery($sql);
                 $this->tableExists = count($results) == 1;
             }
             return $this->tableExists;
         }
+        //List tables in the currently selection database
+        public static function listTables() {
+            $sql = "SHOW TABLES";
+            return Query::runQuery($sql);
+        }
+        //Change the database used by this connection
+        public static function useDatabase($database) {
+            Connection::useDatabase($database);
+        }
+
+
+        
         //Describe the columns in this table
         public function columns() {
             $sql = "DESCRIBE `$this->name`";
             if ($this->tableColumns == null) {
-                $results = $this->runQuery($sql);
+                $results = Query::runQuery($sql);
                 $this->columns = new Columns($results);
             }
             return $this->columns;
@@ -53,9 +52,9 @@ namespace MySqlConnector {
             $sql = "SELECT COUNT(*) FROM `$this->name`";
             if ($whereCondition != null) { 
                 $sql .= " WHERE %s";
-                $results = $this->runQuery($sql, [$whereCondition]);
+                $results = Query::runQuery($sql, [$whereCondition]);
             } else {
-                $results = $this->runQuery($sql);
+                $results = Query::runQuery($sql);
             }
             return (int)$results[0][0];
         }
@@ -63,12 +62,14 @@ namespace MySqlConnector {
         public function create($sql_column_descriptions_array) {
             $sql = "CREATE TABLE `$this->name` %s";
             $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array)));
-            return $this->runActionQuery($sql, $sql_column_descriptions_array);
+            $this->tableExists = null;
+            return Query::runActionQuery($sql, $sql_column_descriptions_array);
         }
         //Drop this table
         public function drop() {
             $sql = "DROP TABLE `$this->name`";
-            return $this->runActionQuery($sql);
+            $this->tableExists = null;
+            return Query::runActionQuery($sql);
         }
 
 
@@ -90,7 +91,7 @@ namespace MySqlConnector {
                 array_push($params, $orderBy);
             }
             
-            return $this->runQuery($sql, $params);
+            return Query::runQuery($sql, $params);
         }
         //Insert a row with the provided $columns and $values
         public function insert($columns, $values) {
@@ -105,7 +106,7 @@ namespace MySqlConnector {
             
             $colsAndValues = array_merge($columns, $values);
 
-            return $this->runActionQuery($sql, $colsAndValues);
+            return Query::runActionQuery($sql, $colsAndValues);
         } 
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
         public function update($columns, $values, $whereCondition) {
@@ -124,12 +125,12 @@ namespace MySqlConnector {
 
             array_push($colValuesAndWhere, $whereCondition);
             
-            return $this->runActionQuery($sql, $colValuesAndWhere);
+            return Query::runActionQuery($sql, $colValuesAndWhere);
         }
         //Delete a row where $whereCondition is satisfied
         public function delete($whereCondition) {
             $sql = "DELETE FROM `$this->name` WHERE %s";
-            return $this->runActionQuery($sql, [$whereCondition]);
+            return Query::runActionQuery($sql, [$whereCondition]);
         }
         //Select an object based on the provided SQLObjects columns and whereCondition()
         public function selectObject(SqlObject $sqlObj) {
@@ -160,7 +161,7 @@ namespace MySqlConnector {
                 default: throw new \Exception("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
             }
             $this->tableColumns == null;
-            return $this->runActionQuery($sql);
+            return Query::runActionQuery($sql);
         }
         //Alias's for the alter function
         public function addColumn($columnName, $columnDescription) { return $this->alter("ADD", $columnName, $columnDescription); }

@@ -18,6 +18,7 @@ namespace MySqlConnector {
             }
         }
 
+        //Append a query to this query
         public function appendQuery($sql_string, $params = null) {
             //Always put a semicolon at the end of a query
             $sql = $sql_string.";";
@@ -25,21 +26,35 @@ namespace MySqlConnector {
                 $this->sql_formated .= sprintf($sql, ...$params);
             } else $this->sql_formated .= $sql;
         }
-
+        //Tell the connection to use the given database
         public function useDatabase($database) {
-            $connection = Connection::useDatabase($database);
+            Connection::useDatabase($database);
         }
 
+        //Run this query
         public function execute() {
             $connection = Connection::getConnection();
             return new Result($connection->query($this->sql_formated));   
         }
-
+        //Run many queries that have already been appended
         public function executeMany() {
             $connection = Connection::getConnection();
             return new Result($connection->multi_query($this->sql_formated));   
         }
 
+
+
+        //For running  returing true or false (success values)
+        public static function runActionQuery($sql, $params = null) {
+            $result = (new Query($sql, $params))->execute();
+            return $result->success();
+        }
+        //For running queries that return rows
+        public static function runQuery($sql, $params = null) {
+            $query = new Query($sql, $params);
+            return $query->execute()->fetchAll();
+        }
+        //Build a formattable list with $numItems, like '(%s, %s, %s...)'
         public static function buildItemList($numItems, $withParens = true) {
             $sql = $withParens ? "(" : "";
             for ($i = 0;$i < $numItems;$i++) $sql .= $i < $numItems - 1 ? "%s, " : "%s";

@@ -9,19 +9,19 @@ namespace MySqlConnector {
                 array_push($this->columns, new Column($column));
         }
 
+
+
+        //Check if the given column is null
         public function columnCanBeNull($column) {
             $cols = $this->columns;
             for ($i = 0;$i < count($this->columns);$i++) 
                 if ($cols[$i]->name == $column)
                     return $cols[$i]->canBeNull;
         }
-        public function columnIsPrimary($column) {
-            $cols = $this->columns;
-            for ($i = 0;$i < count($this->columns);$i++) 
-                if ($cols[$i]->keyType == "PRI")
-                    return $cols[$i]->canBeNull;
-        }
 
+
+
+        //Return the names for each column
         public function names() {
             $names = array();
             $cols = $this->columns;
@@ -29,6 +29,7 @@ namespace MySqlConnector {
                 array_push($names, $cols[$i]->name);
             return $names;
         }
+        //Return the name=>type for each column
         public function namesAndTypes() {
             $namesAndTypes = array();
             $cols = $this->columns;
@@ -36,6 +37,7 @@ namespace MySqlConnector {
                 $namesAndTypes[$cols[$i]->name] = $cols[$i]->type;
             return $namesAndTypes;
         }
+        //Return the column objects
         public function list() { return $this->columns; }
     }
 

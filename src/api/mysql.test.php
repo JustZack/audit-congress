@@ -25,5 +25,13 @@ $table = new \MySqlConnector\Table("example1");
 //var_dump($table->alter("add", "test2", "varchar(123) NOT NULL"));//Should fail
 //var_dump($table->dropColumn("test"));
 //var_dump($table->select(["*"], "col2 = 2", "col2"));
+var_dump($table->select(["*"]));
+//var_dump($table::listTables());
+
+$db = new \MySqlConnector\Database("auditcongress");
+//var_dump($db->exists());
+//var_dump($db->create());
+//var_dump($db->drop());
+//var_dump($db::listDatabases());
 
 ?>
