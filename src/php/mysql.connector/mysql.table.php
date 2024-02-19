@@ -2,8 +2,6 @@
 
 namespace MySqlConnector {
 
-    use Exception;
-
     class Table {
         private 
             $tableExists = null,
@@ -12,19 +10,25 @@ namespace MySqlConnector {
         public $name;
         
 
+
         public function __construct($tableName) {
             $this->name = $tableName;
         }
 
+
+        
+        //For running  returing true or false (success values)
         public function runActionQuery($sql, $params = null) {
             $result = (new Query($sql, $params))->execute();
             return $result->success();
         }
-
+        //For running queries that return rows
         public function runQuery($sql, $params = null) {
             $query = new Query($sql, $params);
             return $query->execute()->fetchAll();
         }
+
+
 
         //Check if this table exists
         public function exists($useCache = true) {
@@ -55,19 +59,40 @@ namespace MySqlConnector {
             }
             return (int)$results[0][0];
         }
-
+        //Create this table with columns described by $sql_column_descriptions_array
         public function create($sql_column_descriptions_array) {
             $sql = "CREATE TABLE `$this->name` %s";
             $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array)));
             return $this->runActionQuery($sql, $sql_column_descriptions_array);
         }
-
+        //Drop this table
         public function drop() {
             $sql = "DROP TABLE `$this->name`";
             return $this->runActionQuery($sql);
         }
 
 
+
+        //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
+        public function select($selectColumns, $whereCondition = null, $orderBy = null) {
+            $sql = "SELECT %s FROM `$this->name`";
+            $selectList = Query::buildItemList(count($selectColumns), false);
+            $sql = sprintf($sql, $selectList);
+
+            $params = $selectColumns;
+            if ($whereCondition != null) {
+                $sql .= " WHERE %s";
+                array_push($params, $whereCondition);
+            }
+
+            if ($orderBy != null) {
+                $sql .= " ORDER BY %s";
+                array_push($params, $orderBy);
+            }
+            
+            return $this->runQuery($sql, $params);
+        }
+        //Insert a row with the provided $columns and $values
         public function insert($columns, $values) {
             $sql = "INSERT INTO `$this->name` %s VALUES %s";
 
@@ -81,12 +106,8 @@ namespace MySqlConnector {
             $colsAndValues = array_merge($columns, $values);
 
             return $this->runActionQuery($sql, $colsAndValues);
-        }
-
-        public function insertObject(SqlObject $sqlObj) {
-            return $this->insert($sqlObj->getColumns(), $sqlObj->getValues());
-        }
-
+        } 
+        //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
         public function update($columns, $values, $whereCondition) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
             $sql = "UPDATE `$this->name` SET %s WHERE %s";
@@ -105,15 +126,29 @@ namespace MySqlConnector {
             
             return $this->runActionQuery($sql, $colValuesAndWhere);
         }
-
-        public function updateObject(SqlObject $sqlObj, $whereCondition) {
-            return $this->update($sqlObj->getColumns(), $sqlObj->getValues(), $whereCondition);
-        }
-
+        //Delete a row where $whereCondition is satisfied
         public function delete($whereCondition) {
             $sql = "DELETE FROM `$this->name` WHERE %s";
             return $this->runActionQuery($sql, [$whereCondition]);
         }
+        //Select an object based on the provided SQLObjects columns and whereCondition()
+        public function selectObject(SqlObject $sqlObj) {
+            $this->select($sqlObj->getColumns(), $sqlObj->whereCondition());
+        }
+        //Insert a row with provided SQLObjects columns and values
+        public function insertObject(SqlObject $sqlObj) {
+            return $this->insert($sqlObj->getColumns(), $sqlObj->getValues());
+        }
+        //Update a row with provided SQLObjects columns, values, and whereCondition()
+        public function updateObject(SqlObject $sqlObj) {
+            return $this->update($sqlObj->getColumns(), $sqlObj->getValues(), $sqlObj->whereCondition());
+        }
+        //Delete a row where the SQLObjects whereCondition is satisfied
+        public function deleteObject(SqlObject $sqlObj) {
+            return $this->delete($sqlObj->whereCondition());
+        }
+
+
 
         //Where $type is one of: ADD, DROP, MODIFY
         public function alter($type, $columnName, $columnDescription = null) {
@@ -127,7 +162,7 @@ namespace MySqlConnector {
             $this->tableColumns == null;
             return $this->runActionQuery($sql);
         }
-
+        //Alias's for the alter function
         public function addColumn($columnName, $columnDescription) { return $this->alter("ADD", $columnName, $columnDescription); }
         public function dropColumn($columnName) { return $this->alter("DROP", $columnName); }
         public function modifyColumn($columnName, $columnDescription) { return $this->alter("MODIFY", $columnName, $columnDescription); }

@@ -24,5 +24,6 @@ $table = new \MySqlConnector\Table("example1");
 //var_dump($table->modifyColumn("test", "varchar(123) NOT NULL"));
 //var_dump($table->alter("add", "test2", "varchar(123) NOT NULL"));//Should fail
 //var_dump($table->dropColumn("test"));
+//var_dump($table->select(["*"], "col2 = 2", "col2"));
 
 ?>
