@@ -7,7 +7,18 @@ namespace APITest;
 require_once "test/autoload.php";
 
 //MySqlConnector::testTable("example");
+//MySqlConnector::testUpdateRow("example1");
+//MySqlConnector::testDeleteRow("example1");
+//MySqlConnector::testSelectRow("example1");
+//MySqlConnector::testInsertRow("example1");
+
 //MySqlConnector::testDatabase("auditcongress");
+
+
+
+
+
+
 
 //$query = new \MySqlConnector\Query("CREATE TABLE `auditcongress`.`example` ( `col1` INT NOT NULL , `col2` INT NOT NULL , `col3` INT NOT NULL , `col4` INT NOT NULL ) ENGINE = InnoDB; ");
 //$query = new \MySqlConnector\Query("show databases");
@@ -21,7 +32,7 @@ require_once "test/autoload.php";
 //var_dump($table->count());
 //var_dump($table->create(["id int not null primary key", "name varchar(100)"]));
 //var_dump($table->drop());
-//var_dump($table->insert(["col1", "col3", "col2", "col4"], [11, 22, 33, 44]));
+//var_dump($table->insert(["id", "name", "test", "tes3"], [11, "abba", "test", "x3"]));
 //var_dump($table->update(["col1", "col2"], [88, 99], "col1 = 11"));
 //var_dump($table->delete("col1 = 88"));
 //var_dump($table->addColumn("test", "varchar(123) NOT NULL"));

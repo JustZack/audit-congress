@@ -25,6 +25,26 @@ namespace APITest {
             print("DESCRIBE $databaseName:\n");
             var_dump(\MySqlConnector\Database::listDatabases());
         }
+
+        static function testInsertRow($tableName) {
+            $table = new \MySqlConnector\Table($tableName);
+            var_dump($table->insert(["id", "name", "test", "tes3"], [((int)rand()), "namehere", "test", "x3"]));
+        }
+
+        static function testUpdateRow($tableName) {
+            $table = new \MySqlConnector\Table($tableName);
+            var_dump($table->update(["id", "name", "test", "tes3"], [13, "dabba","updated","here"], "id = 13"));
+        }
+
+        static function testDeleteRow($tableName) {
+            $table = new \MySqlConnector\Table($tableName);
+            var_dump($table->delete("id = 13"));
+        }
+
+        static function testSelectRow($tableName) {
+            $table = new \MySqlConnector\Table($tableName);
+            var_dump($table->select(["*"], "id = 0"));
+        }
     }
 }
 ?>

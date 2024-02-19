@@ -37,7 +37,7 @@ namespace MySqlConnector {
         }
 
 
-        
+
         //Describe the columns in this table
         public function columns() {
             $sql = "DESCRIBE `$this->name`";
@@ -61,7 +61,7 @@ namespace MySqlConnector {
         //Create this table with columns described by $sql_column_descriptions_array
         public function create($sql_column_descriptions_array) {
             $sql = "CREATE TABLE `$this->name` %s";
-            $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array)));
+            $sql = sprintf($sql, Query::buildItemList(count($sql_column_descriptions_array), true, ""));
             $this->tableExists = null;
             return Query::runActionQuery($sql, $sql_column_descriptions_array);
         }
@@ -77,7 +77,7 @@ namespace MySqlConnector {
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
         public function select($selectColumns, $whereCondition = null, $orderBy = null) {
             $sql = "SELECT %s FROM `$this->name`";
-            $selectList = Query::buildItemList(count($selectColumns), false);
+            $selectList = Query::buildItemList(count($selectColumns), false, "");
             $sql = sprintf($sql, $selectList);
 
             $params = $selectColumns;
@@ -101,11 +101,11 @@ namespace MySqlConnector {
             if ($numCols != $numValues) 
                 throw new \Exception("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
             
-            $itemList = Query::buildItemList($numCols);
-            $sql = sprintf($sql, $itemList, $itemList);
+            $cols = Query::buildItemList($numCols, true, "`");
+            $vals = Query::buildItemList($numCols, true, "'");
+            $sql = sprintf($sql, $cols, $vals);
             
             $colsAndValues = array_merge($columns, $values);
-
             return Query::runActionQuery($sql, $colsAndValues);
         } 
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
@@ -118,9 +118,9 @@ namespace MySqlConnector {
                 throw new \Exception("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
             $colValuesAndWhere = array();
-            for ($i = 0;$i < $numCols;$i++) array_push($colValuesAndWhere, $columns[$i]." = ".$values[$i]);
+            for ($i = 0;$i < $numCols;$i++) array_push($colValuesAndWhere, "`".$columns[$i]."` = '".$values[$i]."'");
 
-            $itemList = Query::buildItemList($numCols, false);
+            $itemList = Query::buildItemList($numCols, false, "");
             $sql = sprintf($sql, $itemList, "%s");
 
             array_push($colValuesAndWhere, $whereCondition);
