@@ -42,7 +42,7 @@ namespace MySqlConnector {
                 $results = $this->runQuery($sql);
                 $this->columns = new Columns($results);
             }
-            return $this->columns->items();
+            return $this->columns;
         }
         //Count the number of rows in this table
         public function count($whereCondition = null) {

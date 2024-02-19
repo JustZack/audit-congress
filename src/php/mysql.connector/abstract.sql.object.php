@@ -13,6 +13,9 @@ namespace MySqlConnector {
             $this->values = $values;
         }
 
+        //Generate a condition that finds this object
+        abstract public function whereCondition();
+
         public function getColumns() { return $this->columns; }
         public function setColumns(array $newColumns) { return $this->columns = $newColumns; }
 
