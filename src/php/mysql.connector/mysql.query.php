@@ -3,19 +3,10 @@
 namespace MySqlConnector {
     class Query {
         public 
-            $sql, 
-            $params, 
+            $params = array(), 
             $sql_formated = "";
         public function __construct($sql_string = null, $params = null) {
-            if ($params != null) $this->params = $params;
-
-            if ($sql_string != null) {
-                $this->sql = $sql_string;
-                $this->appendQuery($this->sql, $this->params);
-                //if ($this->params != null) {
-                //    $this->sql_formated = sprintf($this->sql, ...$this->params);
-                //} else $this->sql_formated = $this->sql;
-            }
+            if ($sql_string != null) $this->appendQuery($sql_string, $params);
         }
 
         //Append a query to this query
@@ -24,6 +15,7 @@ namespace MySqlConnector {
             $sql = $sql_string.";";
             if ($params != null) {
                 $this->sql_formated .= sprintf($sql, ...$params);
+                array_merge($this->params, $params);
             } else $this->sql_formated .= $sql;
         }
         //Tell the connection to use the given database
