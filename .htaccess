@@ -3,4 +3,5 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/api.php
 RewriteCond %{REQUEST_URI} !^/api.test.php
+RewriteCond %{REQUEST_URI} !^/mysql.test.php
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
