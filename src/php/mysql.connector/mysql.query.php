@@ -36,15 +36,18 @@ namespace MySqlConnector {
 
 
 
+        //For running queries that should return a result
+        public static function getResult($sql, $params = null) {
+            $query = new Query($sql, $params);
+            return $query->execute();
+        }
         //For running  returing true or false (success values)
         public static function runActionQuery($sql, $params = null) {
-            $result = (new Query($sql, $params))->execute();
-            return $result->success();
+            return Query::getResult($sql, $params)->success();
         }
         //For running queries that return rows
         public static function runQuery($sql, $params = null) {
-            $query = new Query($sql, $params);
-            return $query->execute()->fetchAll();
+            return Query::getResult($sql, $params)->fetchAll();
         }
         //Build a formattable list with $numItems, like '(%s, %s, %s...)'
         public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {

@@ -75,7 +75,7 @@ namespace MySqlConnector {
 
 
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
-        public function select($selectColumns, $whereCondition = null, $orderBy = null) {
+        public function select($selectColumns, $whereCondition = null, $orderBy = null) : Result {
             $sql = "SELECT %s FROM `$this->name`";
             
             $colList = Query::buildList($selectColumns, false, "");
@@ -84,7 +84,7 @@ namespace MySqlConnector {
             if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
             if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
             
-            return Query::runQuery($sql);
+            return Query::getResult($sql);
         }
         //Insert a row with the provided $columns and $values
         public function insert($columns, $values) {
