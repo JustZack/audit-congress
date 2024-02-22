@@ -124,9 +124,10 @@ namespace MySqlConnector {
             $sql = "DELETE FROM `$this->name` WHERE %s";
             return Query::runActionQuery($sql, [$whereCondition]);
         }
+        
         //Select an object based on the provided SQLObjects columns and whereCondition()
         public function selectObject(SqlObject $sqlObj) {
-            $this->select($sqlObj->getColumns(), $sqlObj->whereCondition());
+            $this->select($sqlObj->getSelectColumns(), $sqlObj->whereCondition());
         }
         //Insert a row with provided SQLObjects columns and values
         public function insertObject(SqlObject $sqlObj) {

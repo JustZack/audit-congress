@@ -19,5 +19,6 @@ require_once "test/autoload.php";
 
 //MySqlConnector::testDatabase("auditcongress");
 
+MySqlConnector::testSqlObject("example1")
 
 ?>

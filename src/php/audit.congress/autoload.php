@@ -7,4 +7,6 @@ require_once AUDITCONGRESS_FOLDER."\..\propublica.api\autoload.php";
 require_once AUDITCONGRESS_FOLDER."\..\congress.api\autoload.php";
 require_once AUDITCONGRESS_FOLDER."\..\unitedstates.legislators.api\autoload.php";
 
+require_once AUDITCONGRESS_FOLDER."\objects\autoload.php";
+
 ?>

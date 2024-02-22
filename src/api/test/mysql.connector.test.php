@@ -70,6 +70,15 @@ namespace APITest {
             $result = $table->select(["*"]);
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
+
+        static function testSqlObject($tableName) {
+            $table = new \MySqlConnector\Table($tableName);
+
+            $obj = \AuditCongress\SQLBill::getSelectObject([118, "hr"]);
+            var_dump($obj->whereCondition());
+            //$result = $table->select();
+            //while ($row = $result->fetchColumn(1)) var_dump($row);
+        }
     }
 }
 ?>
