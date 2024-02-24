@@ -2,14 +2,24 @@
 
 namespace MySqlConnector {
 
-    use Exception;
-
     class Query {
         public 
             $params = array(), 
             $sql_formated = "";
         public function __construct($sql_string = null, $params = null) {
             if ($sql_string != null) $this->appendQuery($sql_string, $params);
+        }
+
+        //Get a Show Tables query with the where condition
+        public static function showTables($whereCondition = null) {
+            $sql = "SHOW TABLES";
+            if ($whereCondition != null) $sql .= " WHERE $whereCondition";
+            return new Query($sql);
+        }
+
+        //Get a Describe query with the table name
+        public static function describe($tableName) {
+            return new Query("DESCRIBE $tableName");
         }
 
         //Append a query to this query
@@ -28,20 +38,20 @@ namespace MySqlConnector {
 
         //Throw the SQL error if the result failed
         private static function throwIfError($result) {
-            if ($result->failure()) throw new Exception(Connection::lastError());
+            if ($result->failure()) throw new \Exception(Connection::lastError());
             return $result;   
         }
 
         //Run this query
         public function execute() {
             $connection = Connection::getConnection();
-            $result = new Result($connection->query($this->sql_formated));
+            $result = new Result($connection->query($this->sql_formated), $this->sql_formated);
             return Query::throwIfError($result);
         }
         //Run many queries that have already been appended
         public function executeMany() {
             $connection = Connection::getConnection();
-            $result = new Result($connection->multi_query($this->sql_formated));
+            $result = new Result($connection->multi_query($this->sql_formated), $this->sql_formated);
             return Query::throwIfError($result);
         }
 

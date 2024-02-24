@@ -34,7 +34,7 @@ namespace MySqlConnector {
             $namesAndTypes = array();
             $cols = $this->columns;
             for ($i = 0;$i < count($cols);$i++) 
-                $namesAndTypes[$cols[$i]->name] = $cols[$i]->type;
+                $namesAndTypes[$cols[$i]->name] = $cols[$i]->getTypeString();
             return $namesAndTypes;
         }
         //Return the column objects
@@ -45,6 +45,7 @@ namespace MySqlConnector {
         public 
             $name,
             $type,
+            $isPrimary,
             $canBeNull,
             $defaultvalue,
             $extra;
@@ -52,9 +53,14 @@ namespace MySqlConnector {
         public function __construct($obj) {
             $this->name = $obj[0];
             $this->type = $obj[1];
-            $this->canBeNull = $obj[2] = "YES" ? true : false;
+            $this->canBeNull = $obj[2] = "NO" ? "NOT NULL" : "NULL";
+            $this->isPrimary = $obj[3] == "PRI";
             $this->defaultvalue = $obj[4];
             $this->extra = $obj[5];
+        }
+
+        public function getTypeString() {
+            return "$this->type $this->canBeNull";
         }
     } 
 }

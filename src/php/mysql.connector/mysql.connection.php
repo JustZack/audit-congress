@@ -55,6 +55,7 @@ namespace MySqlConnector {
         }
 
         public static function getDatabase() {
+            if (!Connection::isOpen()) $connection = Connection::getConnection();
             return Connection::$database;
         }
         public static function useDatabase($database) {

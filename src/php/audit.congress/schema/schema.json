@@ -6,15 +6,27 @@
             {
                 "name": "Members",
                 "columns": [
-                        "`bioguideId` VARCHAR(20) NOT NULL COMMENT 'Bioguide IDs are uniquely assigned to congress members.'",
+                        "`bioguideId` VARCHAR(50) NOT NULL COMMENT 'Bioguide IDs are uniquely assigned to congress members.'",
+                        "`thomasId` VARCHAR(50)",
+                        "`listId` VARCHAR(50)",
+                        "`govTrackId` VARCHAR(50)",
+                        "`openSecretsId` VARCHAR(50)",
+                        "`voteSmartId` VARCHAR(50)",
+                        "`cspanId` VARCHAR(50)",
+                        "`mapLightId` VARCHAR(50)",
+                        "`icpsrId` VARCHAR(50)",
+                        "`googleEntityId` VARCHAR(50)",
+
+                        "`OfficialFullName` VARCHAR(250) NULL",
                         "`FirstName` VARCHAR(250) NOT NULL",
                         "`MiddleName` VARCHAR(250) NULL",
                         "`LastName` VARCHAR(250) NOT NULL",
-                        "`BirthYear` YEAR NOT NULL",
-                        "`DeathYear` YEAR NULL",
+                        "`Gender` VARCHAR(50) NULL",
+                        "`BirthYear` VARCHAR(4) NULL",
+                        "`DeathYear` VARCHAR(4) NULL",
                         "`imageUrl` VARCHAR(250) NULL",
-                        "`imageAttribution` INT NULL",
-                        "`lastUpdated` TIMESTAMP DEFAULT NOW() COMMENT 'The last time anything in this row was updated.'",
+                        "`imageAttribution` VARCHAR(500) NULL",
+                        "`lastUpdated` TIMESTAMP NOT NULL COMMENT 'The last time anything in this row was updated.'",
                         "PRIMARY KEY (`bioguideId`)"
                 ]
             }
