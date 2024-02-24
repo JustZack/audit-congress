@@ -63,7 +63,7 @@ namespace MySqlConnector {
             $sql = "CREATE TABLE `$this->name` %s";
             $list = Query::buildList($sql_column_descriptions_array, true, "");
             $this->tableExists = null;
-            return Query::runActionQuery($sql, $list);
+            return Query::runActionQuery($sql, [$list]);
         }
         //Drop this table
         public function drop() {

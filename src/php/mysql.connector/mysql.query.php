@@ -1,6 +1,9 @@
 <?php
 
 namespace MySqlConnector {
+
+    use Exception;
+
     class Query {
         public 
             $params = array(), 
@@ -23,15 +26,23 @@ namespace MySqlConnector {
             Connection::useDatabase($database);
         }
 
+        //Throw the SQL error if the result failed
+        private static function throwIfError($result) {
+            if ($result->failure()) throw new Exception(Connection::lastError());
+            return $result;   
+        }
+
         //Run this query
         public function execute() {
             $connection = Connection::getConnection();
-            return new Result($connection->query($this->sql_formated));   
+            $result = new Result($connection->query($this->sql_formated));
+            return Query::throwIfError($result);
         }
         //Run many queries that have already been appended
         public function executeMany() {
             $connection = Connection::getConnection();
-            return new Result($connection->multi_query($this->sql_formated));   
+            $result = new Result($connection->multi_query($this->sql_formated));
+            return Query::throwIfError($result);
         }
 
 

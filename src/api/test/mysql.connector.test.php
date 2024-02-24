@@ -70,6 +70,10 @@ namespace APITest {
             $result = $table->select(["*"]);
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
+
+        static function testEnforceSchema() {
+            $schema = new \AuditCongress\SchemaBuilder();
+        }
     }
 }
 ?>

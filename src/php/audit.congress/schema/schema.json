@@ -1,0 +1,22 @@
+{
+    "name": "Audit Congress Schema",
+    "version": ".1",
+    "tables": 
+        [
+            {
+                "name": "Members",
+                "columns": [
+                        "`bioguideId` VARCHAR(20) NOT NULL COMMENT 'Bioguide IDs are uniquely assigned to congress members.'",
+                        "`FirstName` VARCHAR(250) NOT NULL",
+                        "`MiddleName` VARCHAR(250) NULL",
+                        "`LastName` VARCHAR(250) NOT NULL",
+                        "`BirthYear` YEAR NOT NULL",
+                        "`DeathYear` YEAR NULL",
+                        "`imageUrl` VARCHAR(250) NULL",
+                        "`imageAttribution` INT NULL",
+                        "`lastUpdated` TIMESTAMP DEFAULT NOW() COMMENT 'The last time anything in this row was updated.'",
+                        "PRIMARY KEY (`bioguideId`)"
+                ]
+            }
+        ]
+}
