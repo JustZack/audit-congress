@@ -36,7 +36,7 @@ namespace MySqlConnector {
         public static function open($url, $user, $password, $database = null) {           
             Connection::$connection = new \mysqli($url, $user, $password);
             if (Connection::$connection->connect_errno) {
-                throw new \Exception("Failed to connect to ".$url." with information provided in config.");
+                throw new SqlException("Failed to connect to ".$url." with information provided in config.");
             } else if (isset($database)) {
                 Connection::useDatabase($database);
             }

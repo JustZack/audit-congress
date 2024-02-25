@@ -1,0 +1,28 @@
+{
+    "name": "MySql Connector Example Schema",
+    "version": "1",
+    "tables": 
+        [
+            {
+                "name": "PeopleJobs",
+                "columns": {
+                    "personId": { "type": "VARCHAR(50)", "null": "NO"},
+                    "jobId":  { "type": "VARCHAR(50)", "null": "NO" },
+                }
+            },
+            {
+                "name": "People",
+                "columns": {
+                    "personId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "fullName":  { "type": "VARCHAR(50)", "null": "NO" }
+                }
+            },
+            {
+                "name": "Jobs",
+                "columns": {
+                    "jobId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "title":  { "type": "VARCHAR(50)", "null": "NO" }
+                }
+            },
+        ]
+}
