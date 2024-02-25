@@ -1,0 +1,47 @@
+{
+    "name": "Audit Congress Schema",
+    "version": ".2",
+    "tables": 
+        [
+            {
+                "name": "Members",
+                "columns": {
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "thomasId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "listId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "govTrackId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "openSecretsId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "voteSmartId": {  "type": "VARCHAR(50)", "null": "YES" },
+                    "cspanId": {  "type": "VARCHAR(50)", "null": "YES" },
+                    "mapLightId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "icpsrId": {  "type": "VARCHAR(50)", "null": "YES" },
+                    "googleEntityId": { "type": "VARCHAR(50)", "null": "YES" },
+
+                    "OfficialFullName": { "type": "VARCHAR(150)", "null": "YES" },
+                    "FirstName": { "type": "VARCHAR(50)", "null": "NO" },
+                    "MiddleName": { "type": "VARCHAR(50)", "null": "YES" },
+                    "LastName": { "type": "VARCHAR(50)", "null": "NO" },
+                    "Gender": { "type": "VARCHAR(50)", "null": "YES" },
+                    "BirthYear": { "type": "VARCHAR(4)", "null": "YES" },
+                    "DeathYear": { "type": "VARCHAR(4)", "null": "YES" },
+                    "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
+                    "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
+                    "lastUpdated":  { "type": "TIMESTAMP", "null": "NO" }
+                }
+            },
+            {
+                "name": "MemberSocials",
+                "columns": {
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "twitter": { "type": "VARCHAR(250)", "null": "YES" },
+                    "twitterId": { "type": "VARCHAR(250)", "null": "YES" },
+                    "facebook": { "type": "VARCHAR(250)", "null": "YES" },
+                    "facebookId": { "type": "VARCHAR(250)", "null": "YES" },
+                    "youtube": { "type": "VARCHAR(250)", "null": "YES" },
+                    "youtubeId": { "type": "VARCHAR(250)", "null": "YES" },
+                    "instagram": { "type": "VARCHAR(250)", "null": "YES" },
+                    "instagramId": { "type": "VARCHAR(250)", "null": "YES" }   
+                }
+            }
+        ]
+}

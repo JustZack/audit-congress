@@ -27,9 +27,9 @@ namespace MySqlConnector {
             return $this->tableExists;
         }
         //List tables in the currently selection database
-        public static function listTables() {
-            $sql = "SHOW TABLES";
-            return Query::runQuery($sql);
+        //List tables in the currently selection database
+        public static function showTables() {
+            return (new Database(Connection::getDatabase()))->showTables();
         }
         //Change the database used by this connection
         public static function useDatabase($database) {
@@ -63,7 +63,7 @@ namespace MySqlConnector {
             $sql = "CREATE TABLE `$this->name` %s";
             $list = Query::buildList($sql_column_descriptions_array, true, "");
             $this->tableExists = null;
-            return Query::runActionQuery($sql, $list);
+            return Query::runActionQuery($sql, [$list]);
         }
         //Drop this table
         public function drop() {
@@ -92,7 +92,7 @@ namespace MySqlConnector {
 
             $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 
-                throw new \Exception("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
+                throw new SqlException("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
             
             $colList = Query::buildList($columns, true, "`");
             $valList = Query::buildList($values, true, "'");
@@ -108,7 +108,7 @@ namespace MySqlConnector {
 
             $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 
-                throw new \Exception("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
+                throw new SqlException("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
             $colsAndValues = array();
             for ($i = 0;$i < $numCols;$i++) array_push($colsAndValues, "`".$columns[$i]."` = '".$values[$i]."'");
@@ -150,7 +150,7 @@ namespace MySqlConnector {
                 case "ADD":    $sql .= " ADD $columnName $columnDescription"; break;
                 case "DROP":   $sql .= " DROP COLUMN $columnName"; break;
                 case "MODIFY": $sql .= " MODIFY COLUMN $columnName $columnDescription"; break;
-                default: throw new \Exception("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
+                default: throw new SqlException("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
             }
             $this->tableColumns == null;
             return Query::runActionQuery($sql);

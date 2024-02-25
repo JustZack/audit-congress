@@ -2,13 +2,17 @@
 
 namespace MySqlConnector {
     class Result {
-        private $mysqli_result;
+        private $mysqli_result, $sql_formated;
         
-        public function __construct($mysqli_result) {
+        public function __construct($mysqli_result, $sql_formated) {
             $this->mysqli_result = $mysqli_result;
+            $this->sql_formated = $sql_formated;
         }
 
 
+        public function getSql() {
+            return $this->sql_formated;
+        }
 
         //True if the query was a success
         public function success() {
