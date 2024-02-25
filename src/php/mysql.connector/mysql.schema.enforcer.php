@@ -70,9 +70,12 @@ namespace MySqlConnector {
 
         private static function handleEnforceColumnSchema($table, $name, $data) {
             //Break parts of the data into their own vars
-            list("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra) = $data;
-
+            $type = $data["type"];
+            $extra = $data["extra"];
+            $exists = $data["exists"];
+            $matches = $data["matches"];
             $debug_message = "";
+            
             //Drop extra columns
             if ($extra) { 
                 $table->dropColumn($name, $type);  
