@@ -13,17 +13,17 @@ namespace APITest {
 
             print("SELECT * FROM $tableName:\n");
             var_dump($table->select(["*"])->fetchAll());
-
-            print("SHOW TABLES:\n");
-            var_dump(\MySqlConnector\Table::listTables());
         }
-
+        
         static function testDatabase($databaseName) {
             $db = new \MySqlConnector\Database($databaseName);
             print("DATABASE $databaseName EXISTS: ".$db->exists()."\n");
-
+            
             print("DESCRIBE $databaseName:\n");
-            var_dump(\MySqlConnector\Database::listDatabases());
+            var_dump(\MySqlConnector\Database::showDatabases());
+
+            print("SHOW TABLES IN $databaseName:\n");
+            var_dump($db->showTables());
         }
 
         static function testInsertRow($tableName) {

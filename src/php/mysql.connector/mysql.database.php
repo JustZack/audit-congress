@@ -24,9 +24,20 @@ namespace MySqlConnector {
             return $this->databaseExists;
         }        
         //List accessible databases
-        public static function listDatabases() {
+        public static function showDatabases() {
             $sql = "SHOW DATABASES";
             return Query::runQuery($sql);
+        }
+
+        //List tables in the currently selection database
+        public function showTables() {
+            $sql = "SHOW TABLES";
+            Connection::useDatabase($this->name);
+            $allTableRows = Query::runQuery($sql);
+            $tables = array();
+            //Move the the found tables into a simple array instead of being split by row
+            foreach ($allTableRows as $tableRow) array_push($tables, $tableRow[0]);
+            return $tables;
         }
 
 

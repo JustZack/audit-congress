@@ -27,9 +27,9 @@ namespace MySqlConnector {
             return $this->tableExists;
         }
         //List tables in the currently selection database
-        public static function listTables() {
-            $sql = "SHOW TABLES";
-            return Query::runQuery($sql);
+        //List tables in the currently selection database
+        public static function showTables() {
+            return (new Database(Connection::getDatabase()))->showTables();
         }
         //Change the database used by this connection
         public static function useDatabase($database) {
