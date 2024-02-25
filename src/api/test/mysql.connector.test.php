@@ -72,7 +72,7 @@ namespace APITest {
         }
 
         static function testEnforceSchema() {
-            $schema = new \AuditCongress\SchemaBuilder();
+            $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }
     }
 }
