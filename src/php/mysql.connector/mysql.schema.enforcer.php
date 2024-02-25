@@ -10,7 +10,7 @@ namespace MySqlConnector {
             $this->enforceSchema();
         }
 
-        public static function debugPrint($message) {
+        private static function debugPrint($message) {
             if (SchemaEnforcer::$debug_log && strlen($message) > 0) 
                 echo $message;
         }
@@ -62,21 +62,34 @@ namespace MySqlConnector {
         }
 
         //For the given $table, Check which columns need updated, modified, or dropped
-        public static function enforceColumnSchema($table, $columnsExpected, $columnsExisting) {
+        private static function enforceColumnSchema($table, $columnsExpected, $columnsExisting) {
             $columnsDiff = $columnsExpected->compareEach($columnsExisting);
-            foreach ($columnsDiff as $name=>$data) {
-                list("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra) = $data;
+            foreach ($columnsDiff as $name=>$data) //Broken into handler to simplify
+                SchemaEnforcer::handleEnforceColumnSchema($table, $name, $data);
+        }
 
-                $debug_message = "";
-                //Drop extra columns
-                if ($extra) { $table->dropColumn($name, $type);  $debug_message = "Drop $name=>$type\n"; }
-                //Add missing columns
-                else if (!$exists) { $table->addColumn($name, $type);  $debug_message = "Add $name=>$type\n"; }
-                //Modify column mismatches
-                else if (!$matches) { $table->modifyColumn($name, $type); $debug_message = "Modify $name=>$type\n"; }
+        private static function handleEnforceColumnSchema($table, $name, $data) {
+            //Break parts of the data into their own vars
+            list("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra) = $data;
 
-                SchemaEnforcer::debugPrint($debug_message);
+            $debug_message = "";
+            //Drop extra columns
+            if ($extra) { 
+                $table->dropColumn($name, $type);  
+                $debug_message = "Drop $name=>$type\n"; 
             }
+            //Add missing columns
+            else if (!$exists) { 
+                $table->addColumn($name, $type);  
+                $debug_message = "Add $name=>$type\n"; 
+            }
+            //Modify column mismatches
+            else if (!$matches) { 
+                $table->modifyColumn($name, $type); 
+                $debug_message = "Modify $name=>$type\n"; 
+            }
+
+            SchemaEnforcer::debugPrint($debug_message);
         }
 
         //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
