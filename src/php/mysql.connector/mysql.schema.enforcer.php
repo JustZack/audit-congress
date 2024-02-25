@@ -20,43 +20,52 @@ namespace MySqlConnector {
             //First pass to iterate over tables that should exist in the schema
             foreach ($this->schema["tables"] as $tableSchema) {
                 //Fetch the name, columns, and a Columns object for this table in the schema
-                $name = $tableSchema["name"];
-                $columns = $tableSchema["columns"];
-                //Pushback this table name as a known table;
+                list("name"=>$name, "columns"=>$columns) = $tableSchema;
+                //Add this table name as a known table
                 $schemaTableNames[strtolower($name)] = true;
-
-                //Get the schemas columns in the form of a \MySqlConnector\Columns object
-                $columnsExpected = SchemaEnforcer::getSchemaColumnsAsObject($columns);
-                //Create an object for this table
-                $table = new Table($name);
-
-                //If the table doesnt exist, create the table
-                if (!$table->exists()) {
-                    $table->create($columnsExpected->getSqlCreateStrings());
-                    SchemaEnforcer::debugPrint("Create Table $name");
-                }
-                //Otherwise enforce the schema for this table
-                else SchemaEnforcer::enforceColumnSchema($table, $columnsExpected, $table->columns());
+                //Enforce the known schema onto this table
+                SchemaEnforcer::enforceTableSchema($name, $columns);
             }
+            //Second pass to drop all tables not listed in the schema
+            SchemaEnforcer::dropUnknownTables($schemaTableNames);
 
+        }
+
+        //For the given table $name, enforce the given $columns onto its schema
+        private static function enforceTableSchema($name, $columns) {
+            //Get the schemas columns in the form of a \MySqlConnector\Columns object
+            $columnsExpected = SchemaEnforcer::getSchemaColumnsAsObject($columns);
+            //Create an object for this table
+            $table = new Table($name);
+
+            //If the table doesnt exist, create the table
+            if (!$table->exists()) {
+                $columnCreateSqlArr = $columnsExpected->getSqlCreateStrings();
+                $table->create($columnCreateSqlArr);
+                SchemaEnforcer::debugPrint("Create Table $name\n");
+            }
+            //Otherwise enforce the schema for this table
+            else SchemaEnforcer::enforceColumnSchema($table, $columnsExpected, $table->columns());
+        }
+
+        //Given the $schemaKnownTables, drop all tables outside of this list
+        private static function dropUnknownTables($schemaKnownTables) {
             //Get all tables in the database (according to the current connection)
             $knownTables = Table::showTables();
-            //Second pass to drop tables that should not exist
+            //Drop tables not in the given list
             foreach ($knownTables as $name)
-                if (!isset($schemaTableNames[strtolower($name)])) {
+                if (!isset($schemaKnownTables[strtolower($name)])) {
                     $table = new Table($name);
                     $table->drop();
                     SchemaEnforcer::debugPrint("Drop Table $name\n");
                 }
         }
 
+        //For the given $table, Check which columns need updated, modified, or dropped
         public static function enforceColumnSchema($table, $columnsExpected, $columnsExisting) {
             $columnsDiff = $columnsExpected->compareEach($columnsExisting);
             foreach ($columnsDiff as $name=>$data) {
-                $type = $data["type"];
-                $exists = $data["exists"];
-                $matches = $data["matches"];
-                $extra = $data["extra"];
+                list("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra) = $data;
 
                 $debug_message = "";
                 //Drop extra columns
@@ -70,6 +79,7 @@ namespace MySqlConnector {
             }
         }
 
+        //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
         public static function getSchemaColumnsAsObject($schemaColumns) : Columns {
             $columnsInDescribeFormat = array();
             foreach ($schemaColumns as $name=>$data) {

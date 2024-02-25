@@ -73,7 +73,7 @@ namespace MySqlConnector {
                 //Check if this column matches the $otherColumn
                 $matches = $thisColumn->typeMatches($otherColumn);
                 //Define this column in the $columnDifferences
-                $columnDifferences[$name] = Columns::createColumnDifference($name, $thisColumn->getTypeString(), $exists, $matches, false);
+                $columnDifferences[$name] = Columns::createColumnDifference($thisColumn->getTypeString(), $exists, $matches, false);
             }
 
             //Second pass to catch any columns in the other object that dont exist in this one
@@ -81,12 +81,12 @@ namespace MySqlConnector {
                 //Only if this column isnt set in $columnDifferences already
                 if (!isset($columnDifferences[$name]))
                     //Define this as an extra column in the $columnDifferences
-                    $columnDifferences[$name] = Columns::createColumnDifference($name, $otherColumn->getTypeString(), false, false, true);
+                    $columnDifferences[$name] = Columns::createColumnDifference($otherColumn->getTypeString(), false, false, true);
 
             return $columnDifferences;
         }
 
-        private static function createColumnDifference($key, $type, $exists, $matches, $extra) {
+        private static function createColumnDifference($type, $exists, $matches, $extra) {
             return array("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra);
         }
         
