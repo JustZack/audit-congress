@@ -19,8 +19,9 @@ require_once "test/autoload.php";
 
 //MySqlConnector::testDatabase("auditcongress");
 
-MySqlConnector::testSqlObject("example1")
-//MySqlConnector::testEnforceSchema();
+MySqlConnector::testEnforceSchema();
+//MySqlConnector::testSqlMemberById("A5");
+MySqlConnector::testSqlMemberByName(null, null,"es");
 
 
 ?>

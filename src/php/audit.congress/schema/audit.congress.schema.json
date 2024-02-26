@@ -4,6 +4,14 @@
     "tables": 
         [
             {
+                "name": "CacheStatus",
+                "columns": {
+                    "DataSource": { "type": "VARCHAR(100)", "null": "NO", "primary": true },
+                    "LastCache": { "type": "VARCHAR(250)", "null": "NO" },
+                    "CacheIntervalHours": { "type": "int(11)", "null": "NO" }
+                }
+            },
+            {
                 "name": "Members",
                 "columns": {
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },

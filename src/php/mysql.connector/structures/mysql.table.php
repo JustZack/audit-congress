@@ -127,7 +127,7 @@ namespace MySqlConnector {
         
         //Select an object based on the provided SQLObjects columns and whereCondition()
         public function selectObject(SqlObject $sqlObj) {
-            $this->select($sqlObj->getSelectColumns(), $sqlObj->whereCondition());
+            return $this->select($sqlObj->getSelectColumns(), $sqlObj->whereCondition());
         }
         //Insert a row with provided SQLObjects columns and values
         public function insertObject(SqlObject $sqlObj) {

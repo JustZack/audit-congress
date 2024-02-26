@@ -15,7 +15,7 @@ namespace AuditCongress {
         //Expects [$congress, $type, $number]
         public static function getSelectObject($values) {
             list(0=>$congress, 1=>$type, 2=>$number) = $values;
-            $selectObj = new SQLBill();
+            $selectObj = new SQLBill("bills");
             $selectObj->setColumns(["congress", "type", "number"]);
             $selectObj->setValues([$congress, $type, $number]);
             $selectObj->setSelectColumns(["congress", "type", "number", "title", ""]);
@@ -25,13 +25,11 @@ namespace AuditCongress {
         //Expects [$congress, $type, $number, $title, $sponsorBioguideID]
         public static function getManipulateObject($values) {
             list("congres"=>$congress, "type"=>$type, "number"=>$number, "title"=>$title, "sponsor"=>$sponsorBioguideID) = $values;
-            $manipObj = new SQLBill();
+            $manipObj = new SQLBill("bills");
             $manipObj->setColumns(["congress", "type", "number", "title", "sponsor"]);
             $manipObj->setValues([$congress, $type, $number, $title, $sponsorBioguideID]);
             return $manipObj;
         }
-        //Generate a condition that matches to this object
-        public function whereCondition() { return $this->buildORConditon(); }
     }
 }
 

@@ -71,15 +71,18 @@ namespace APITest {
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
 
-        static function testSqlObject($tableName) {
-            $table = new \MySqlConnector\Table($tableName);
-
-            $obj = \AuditCongress\SQLBill::getSelectObject([118, "hr"]);
-            var_dump($obj->whereCondition());
-            //$result = $table->select();
-            //while ($row = $result->fetchColumn(1)) var_dump($row);
+        static function testSqlMemberById($memberid) {
+            $obj = \AuditCongress\Member::getByBioguideId($memberid);
+            $result = $obj->fetch();
+            var_dump($result);
         }
-        
+
+        static function testSqlMemberByName($fname, $middle, $lname) {
+            $obj = \AuditCongress\Member::getByName($fname, $middle, $lname);
+            $result = $obj->fetch();
+            var_dump($result);
+        }
+
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }
