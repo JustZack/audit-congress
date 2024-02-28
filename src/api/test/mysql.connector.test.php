@@ -72,15 +72,15 @@ namespace APITest {
         }
 
         static function testSqlMemberById($memberid) {
-            $obj = \AuditCongress\Member::getByBioguideId($memberid);
+            $obj = \AuditCongress\Members::getByBioguideId($memberid);
             $result = $obj->fetch();
             var_dump($result);
         }
 
         static function testSqlMemberByName($fname, $middle, $lname) {
-            $obj = \AuditCongress\Member::getByName($fname, $middle, $lname);
+            $obj = \AuditCongress\Members::getByName($fname, $middle, $lname);
             $result = $obj->fetch();
-            var_dump($result);
+            //var_dump($result);
         }
 
         static function testEnforceSchema() {

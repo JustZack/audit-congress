@@ -7,6 +7,7 @@
                 "name": "CacheStatus",
                 "columns": {
                     "DataSource": { "type": "VARCHAR(100)", "null": "NO", "primary": true },
+                    "DataType": { "type": "VARCHAR(100)", "null": "NO" },
                     "LastCache": { "type": "VARCHAR(250)", "null": "NO" },
                     "CacheIntervalHours": { "type": "int(11)", "null": "NO" }
                 }
@@ -23,6 +24,7 @@
                     "cspanId": {  "type": "VARCHAR(50)", "null": "YES" },
                     "mapLightId": { "type": "VARCHAR(50)", "null": "YES" },
                     "icpsrId": {  "type": "VARCHAR(50)", "null": "YES" },
+                    "wikidata": {  "type": "VARCHAR(50)", "null": "YES" },
                     "googleEntityId": { "type": "VARCHAR(50)", "null": "YES" },
 
                     "OfficialFullName": { "type": "VARCHAR(150)", "null": "YES" },
@@ -34,7 +36,8 @@
                     "DeathYear": { "type": "VARCHAR(4)", "null": "YES" },
                     "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
-                    "lastUpdated":  { "type": "TIMESTAMP", "null": "NO" }
+                    "lastUpdate":  { "type": "TIMESTAMP", "null": "YES" },
+                    "nextUpdate":  { "type": "TIMESTAMP", "null": "YES" }
                 }
             },
             {

@@ -6,16 +6,16 @@ namespace MySqlConnector {
             $columns = array(), 
             $values = array(),
             $selectColumns = array(),
-            $tableName,
-            $table;
-        private $booleanConditon = "AND", $useLike = false;
+            $tableName;
+        private Table $table;
+        private $booleanConditon = "AND", $equalityOperator = false;
 
-        public function __construct($tableName, $booleanOperator = "AND", $useLike = false) {
+        public function __construct($tableName, $equalityOperator = "=", $booleanOperator = "AND") {
             $this->tableName = $tableName;
             $this->table = new Table($this->tableName);
 
+            $this->equalityOperator = $equalityOperator;
             $this->booleanConditon = $booleanOperator;
-            $this->useLike = $useLike;
         }
 
         public function selectFromDB() { return $this->table->selectObject($this); }
@@ -32,18 +32,26 @@ namespace MySqlConnector {
         //Use OR to separate condtions
         public function useOr() { $this->booleanConditon = "AND"; }
         //Use '=' sign to check equality
-        public function useEquals() { $this->useLike = false; }
+        public function useEquals() { $this->equalityOperator = "="; }
         //Use 'like' to check equality, also appending % to start and end of values 
-        public function useLike() { $this->useLike = true; }
+        public function useLike() { $this->equalityOperator = "like"; }
+        //Use '>' sign to check equality
+        public function useGreaterThan() { $this->equalityOperator = ">"; }
+        //Use '>=' sign to check equality
+        public function useGreaterThanEquals() { $this->equalityOperator = ">="; }
+        //Use '<' sign to check equality
+        public function useLessThan() { $this->equalityOperator = "<"; }
+        //Use '<=' sign to check equality
+        public function useLessThanEquals() { $this->equalityOperator = "<="; }
 
         //Check that the number of columns matches the number of values
         private function sameNumberOfColumnsAndValues() {
             return count($this->columns) == count($this->values);
         }
         //Return a SQL string with the propper `column` = 'value' syntax
-        private static function getColumnEqualsValueSql($column, $value, $isLike) {
-            if ($isLike) return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
-            else         return sprintf("`%s` = '%s'", $column, $value);
+        private static function getColumnEqualsValueSql($column, $value, $equalityOperator) {
+            if ($equalityOperator == "like") return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
+            else         return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
         }
         //Return a SQL string containing the given logical operator
         private static function getLogicalOperatorSql($operator) {
@@ -74,7 +82,7 @@ namespace MySqlConnector {
                 $numColumns = count($columns);
                 for ($i = 0;$i < $numColumns;$i++) {
                     //Set column = value sql string
-                    $condition .= SqlObject::getColumnEqualsValueSql($columns[$i], $values[$i], $this->useLike);
+                    $condition .= SqlObject::getColumnEqualsValueSql($columns[$i], $values[$i], $this->equalityOperator);
                     if ($i < $numColumns-1) //If we are not on the last condition, add the operator
                         $condition .= SqlObject::getLogicalOperatorSql($this->booleanConditon);
                 }
