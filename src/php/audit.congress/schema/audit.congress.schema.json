@@ -4,15 +4,6 @@
     "tables": 
         [
             {
-                "name": "CacheStatus",
-                "columns": {
-                    "DataSource": { "type": "VARCHAR(100)", "null": "NO", "primary": true },
-                    "DataType": { "type": "VARCHAR(100)", "null": "NO" },
-                    "LastCache": { "type": "VARCHAR(250)", "null": "NO" },
-                    "CacheIntervalHours": { "type": "int(11)", "null": "NO" }
-                }
-            },
-            {
                 "name": "Members",
                 "columns": {
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
@@ -52,6 +43,49 @@
                     "youtubeId": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagram": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagramId": { "type": "VARCHAR(250)", "null": "YES" }   
+                }
+            },
+            {
+                "name": "MemberTerms",
+                "columns": {
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "type": { "type": "VARCHAR(25)", "null": "YES" },
+                    "start": { "type": "VARCHAR(12)", "null": "YES" },
+                    "end": { "type": "VARCHAR(12)", "null": "YES" },
+                    
+                    "state": { "type": "VARCHAR(50)", "null": "YES" },
+                    "district": { "type": "INT(11)", "null": "YES" },
+                    "party": { "type": "VARCHAR(100)", "null": "YES" },
+                    "class": { "type": "VARCHAR(100)", "null": "YES" },
+                    "how": { "type": "VARCHAR(250)", "null": "YES" },
+
+                    "state_rank": { "type": "VARCHAR(100)", "null": "YES" },
+                    "url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "rss_url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "contact_form": { "type": "VARCHAR(100)", "null": "YES" },
+                    "address": { "type": "VARCHAR(100)", "null": "YES" },
+                    "office": { "type": "VARCHAR(100)", "null": "YES" },
+                    "phone": { "type": "VARCHAR(25)", "null": "YES" }
+                }
+            },
+            {
+                "name": "MemberOffices",
+                "columns": {
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "officeId": { "type": "VARCHAR(100)", "null": "YES" },
+                    
+                    "address": { "type": "VARCHAR(250)", "null": "YES" },
+                    "suite": { "type": "VARCHAR(250)", "null": "YES" },
+                    "building": { "type": "VARCHAR(250)", "null": "YES" },
+                    "city": { "type": "VARCHAR(250)", "null": "YES" },
+                    "state": { "type": "VARCHAR(50)", "null": "YES" },
+                    "zip": { "type": "VARCHAR(12)", "null": "YES" },
+                    
+                    "latitude": { "type": "FLOAT", "null": "YES" },
+                    "longitude": { "type": "FLOAT", "null": "YES" },
+                    
+                    "phone": { "type": "VARCHAR(25)", "null": "YES" },
+                    "fax": { "type": "VARCHAR(25)", "null": "YES" }
                 }
             }
         ]

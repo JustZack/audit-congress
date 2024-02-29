@@ -12,7 +12,7 @@ namespace AuditCongress {
             $deathYear;
         private SQLMembers $sqlObject;
 
-        private static $memberTables = ["members", "membersocials", "memberterms", "memberoffices"]
+        private static $memberTables = ["members", "membersocials", "memberterms", "memberoffices"];
 
         private static $cacheIsValid = null;
         private static function cacheIsValid() {
@@ -51,14 +51,24 @@ namespace AuditCongress {
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
             $historical->fetchFromApi();
 
-            var_dump($current->currentMembers[0]);
-            var_dump($historical->historicalMembers[0]);
-            
-            //Insert current members and their terms
 
-            //Insert current members offices
+            /*
+                Iterate over each current & historical member...
+                    Insert member into Members table
+                    Iterate over member terms
+                        Insert term into MemberTerms table
+                
+                Iterate over each member social...
+                    Insert into MemberSocials table
+                
+                Iterate over each member office...
+                    Insert into MemberOffices table
+                
+            */
+            //var_dump($current->currentMembers[0]);
+            //var_dump($currentOffices->currentOffices[0]);
+            //var_dump($historical->historicalMembers[0]);
 
-            //Insert historical members and their terms
 
             Members::$cacheIsValid = true;
         }
