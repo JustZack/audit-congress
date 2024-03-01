@@ -18,7 +18,7 @@ namespace MySqlConnector {
             return Connection::$config;            
         }
 
-        public static function getConnection() {
+        public static function getConnection() : \mysqli {
             if (Connection::$connection == false) {
                 $config = Connection::getConfig();
                 

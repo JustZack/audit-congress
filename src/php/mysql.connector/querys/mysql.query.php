@@ -82,7 +82,10 @@ namespace MySqlConnector {
         //Build a list with the given items, parenthesis, and quote character
         public static function buildList($items, $withParens = true, $quoteChar = "'") {
             $listFormat = Query::buildFormattableList(count($items), $withParens, $quoteChar);
-            $sql = sprintf($listFormat, ...$items);
+            $cleanItems = array();
+            $conn = Connection::getConnection();
+            foreach ($items as $item) array_push($cleanItems, $conn->real_escape_string($item));
+            $sql = sprintf($listFormat, ...$cleanItems);
             return $sql;
         }
     }

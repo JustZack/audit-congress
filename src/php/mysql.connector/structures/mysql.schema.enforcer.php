@@ -12,7 +12,7 @@ namespace MySqlConnector {
 
         private static function debugPrint($message) {
             if (SchemaEnforcer::$debug_log && strlen($message) > 0) 
-                echo $message;
+                echo $message."\n";
         }
 
         public function enforceSchema() {

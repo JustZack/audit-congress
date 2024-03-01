@@ -27,8 +27,9 @@
                     "DeathYear": { "type": "VARCHAR(4)", "null": "YES" },
                     "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
-                    "lastUpdate":  { "type": "TIMESTAMP", "null": "YES" },
-                    "nextUpdate":  { "type": "TIMESTAMP", "null": "YES" }
+                    
+                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
                 }
             },
             {
@@ -42,7 +43,10 @@
                     "youtube": { "type": "VARCHAR(250)", "null": "YES" },
                     "youtubeId": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagram": { "type": "VARCHAR(250)", "null": "YES" },
-                    "instagramId": { "type": "VARCHAR(250)", "null": "YES" }   
+                    "instagramId": { "type": "VARCHAR(250)", "null": "YES" },
+
+                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
                 }
             },
             {
@@ -65,14 +69,17 @@
                     "contact_form": { "type": "VARCHAR(100)", "null": "YES" },
                     "address": { "type": "VARCHAR(100)", "null": "YES" },
                     "office": { "type": "VARCHAR(100)", "null": "YES" },
-                    "phone": { "type": "VARCHAR(25)", "null": "YES" }
+                    "phone": { "type": "VARCHAR(25)", "null": "YES" },
+
+                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
                 }
             },
             {
                 "name": "MemberOffices",
                 "columns": {
-                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
-                    "officeId": { "type": "VARCHAR(100)", "null": "YES" },
+                    "officeId": { "type": "VARCHAR(100)", "null": "NO", "primary": true  },
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
                     
                     "address": { "type": "VARCHAR(250)", "null": "YES" },
                     "suite": { "type": "VARCHAR(250)", "null": "YES" },
@@ -85,7 +92,10 @@
                     "longitude": { "type": "FLOAT", "null": "YES" },
                     
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
-                    "fax": { "type": "VARCHAR(25)", "null": "YES" }
+                    "fax": { "type": "VARCHAR(25)", "null": "YES" },
+
+                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
                 }
             }
         ]

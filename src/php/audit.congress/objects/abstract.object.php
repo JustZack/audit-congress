@@ -1,8 +1,8 @@
 <?php
 
 namespace AuditCongress {
-    abstract class ACObject {
-        
+    abstract class TableObject extends \MySqlConnector\SqlObject {
+
     }
 }
 

@@ -1,7 +1,6 @@
 <?php
 
 require_once AUDITCONGRESS_FOLDER."\objects\abstract.object.php";
-require_once AUDITCONGRESS_FOLDER."\objects\sql.row.result.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\class.bill.php";
 require_once AUDITCONGRESS_FOLDER."\objects\members\class.member.term.php";
 require_once AUDITCONGRESS_FOLDER."\objects\members\class.member.socials.php";

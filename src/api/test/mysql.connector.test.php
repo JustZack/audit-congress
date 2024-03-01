@@ -83,6 +83,12 @@ namespace APITest {
             //var_dump($result);
         }
 
+        static function testSqlMemberOfficeById($id) {
+            $result = \AuditCongress\MemberOffices::getByBioguideId($id);
+            var_dump($result->fetchAllAssoc());
+            
+        }
+
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }

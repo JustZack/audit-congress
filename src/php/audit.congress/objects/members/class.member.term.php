@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class MemberTerm extends SqlRow {
+    class MemberTerm extends \MySqlConnector\SqlRow {
         public
             $bioguideId,
             $type,
@@ -21,6 +21,14 @@ namespace AuditCongress {
             $address,
             $office,
             $phone;
+
+            public function getColumns() {
+                return ["bioguideId"];
+            }
+        
+            public function getValues() {
+                return [$this->bioguideId];
+            }
 
     }
 }
