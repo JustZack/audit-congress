@@ -9,6 +9,8 @@ namespace UnitedStatesLegislators {
             $this->id = new PersonIdShort($socialPersonObj["id"]);
             $this->socials = new PersonSocials($socialPersonObj["social"]);
         }
+
+        public function getSocials() { return $this->socials; }
     }
 }
 

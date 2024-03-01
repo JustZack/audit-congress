@@ -7,13 +7,11 @@ namespace MySqlConnector {
             $values = array(),
             $selectColumns = array(),
             $tableName;
-        private Table $table;
+        protected Table $table;
         private $booleanConditon = "AND", $equalityOperator = false;
 
         public function __construct($tableName, $equalityOperator = "=", $booleanOperator = "AND") {
-            $this->tableName = $tableName;
-            $this->table = new Table($this->tableName);
-
+            $this->setTableName($tableName);
             $this->equalityOperator = $equalityOperator;
             $this->booleanConditon = $booleanOperator;
         }
@@ -110,7 +108,10 @@ namespace MySqlConnector {
         //Get the tablename used by this object
         public function getTableName() { return $this->tableName; }
         //Set the tablename used by this object
-        public function setTableName($tableName) { $this->tableName = $tableName; }
+        public function setTableName($tableName) { 
+            $this->tableName = $tableName; 
+            $this->table = new Table($tableName);
+        }
     }
 }
 

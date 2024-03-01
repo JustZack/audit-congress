@@ -125,6 +125,11 @@ namespace MySqlConnector {
             $sql = "DELETE FROM `$this->name` WHERE %s";
             return Query::runActionQuery($sql, [$whereCondition]);
         }
+
+        public function truncate() {
+            $sql = "TRUNCATE `$this->name`";
+            return Query::runActionQuery($sql);
+        }
         
         //Select an object based on the provided SQLObjects columns and whereCondition()
         public function selectObject(SqlObject $sqlObj) {

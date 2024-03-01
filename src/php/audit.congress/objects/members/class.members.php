@@ -1,105 +1,118 @@
-<?php
+<?php 
 
 namespace AuditCongress {
-    class Members {
-        public 
-            $bioguideId,
-            $firstName,
-            $middleName,
-            $lastName,
-            $gender,
-            $birthYear,
-            $deathYear;
-        private SQLMembers $sqlObject;
 
-        private static $memberTables = ["members", "membersocials", "memberterms", "memberoffices"];
+    class MemberRow extends \MySqlConnector\SqlRow {
+        public
+            $bioguideId,
+            $thomasId,
+            $listId,
+            $govTrackId,
+            $openSecretsId,
+            $voteSmartId,
+            $cspanId,
+            $mapLightId,
+            $icpsrId,
+            $wikidata,
+            $googleEntityId,
+
+            $OfficialFullName,
+            $FirstName,
+            $MiddleName,
+            $LastName,
+            $Gender,
+            $BirthYear,
+            $DeathYear,
+            $imageUrl,
+            $imageAttribution,
+            $lastUpdate,
+            $nextUpdate;
+    
+        public function getColumns() {
+            return ["bioguideId","thomasId","listId","govTrackId",
+            "openSecretsId","voteSmartId","cspanId","mapLightId","icpsrId",
+            "wikidata","googleEntityId","OfficialFullName","FirstName",
+            "MiddleName","LastName","Gender","BirthYear","DeathYear",
+            "imageUrl","imageAttribution","lastUpdate","nextUpdate"];
+        }
+
+        public function getValues() {
+            return [$this->bioguideId,$this->thomasId,$this->listId,$this->govTrackId,
+            $this->openSecretsId,$this->voteSmartId,$this->cspanId,$this->mapLightId,
+            $this->icpsrId,$this->wikidata,$this->googleEntityId,
+            $this->OfficialFullName,$this->FirstName,$this->MiddleName,
+            $this->LastName,$this->Gender,$this->BirthYear,$this->DeathYear,
+            $this->imageUrl,$this->imageAttribution,$this->lastUpdate,$this->nextUpdate];
+        }
+    }
+
+    class Members extends \MySqlConnector\SqlObject {
+        private static $tableName = "Members";
+        private static ?\MySqlConnector\Table $staticTable = null;
+        public function __construct($equalityOperator = "=", $booleanCondition = "AND") {
+            parent::__construct(self::$tableName, $equalityOperator, $booleanCondition);
+            if (self::$staticTable == null) self::$staticTable = $this->table;
+            self::enforceCache();
+        }
+
+        private function enforceCache() {
+            if (!self::cacheIsValid()) self::updateCache();
+        }
+
+        public static function getTable() { return self::$staticTable; }
 
         private static $cacheIsValid = null;
         private static function cacheIsValid() {
-            if (Members::$cacheIsValid != null) return Members::$cacheIsValid;
+            if (self::$cacheIsValid != null) return self::$cacheIsValid;
 
-            $table = new \MySqlConnector\Table("members");
+            $table = self::getTable();
             $topRow = $table->select(["lastUpdate", "nextUpdate"], null, null, 1)->fetchAssoc();
             if ($topRow != null) {
-                $next = strtotime($topRow["nextUpdate"]);
-                if ($next == false || $next < time()) return false;
-                else return true;
-                return true;
+                $next = (int)$topRow["nextUpdate"]-100000000;
+                return !($next == false || $next < time());
             } else return false;
-        }
-
-        private static function clearCache() {
-            //Foreach known table name
-            foreach (Members::$memberTables as $name) {
-                $table = new \MySqlConnector\Table($name);
-                //Drop all rows with a bioguideId (thats all of them)
-                if ($table->exists()) $table->delete("bioguideId is not null");
-            }
         }
 
         private static function updateCache() {
             //Clear out all data associated with members
-            Members::clearCache();
+            self::getTable()->truncate();
 
-            //Collect live data
             $current = new \UnitedStatesLegislators\CurrentMembers();
             $current->fetchFromApi();
-
-            $currentOffices = new \UnitedStatesLegislators\CurrentDistrictOffices();
-            $currentOffices->fetchFromApi();
-
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
             $historical->fetchFromApi();
 
+            $allMembers = array_merge($current->currentMembers, $historical->historicalMembers);
 
-            /*
-                Iterate over each current & historical member...
-                    Insert member into Members table
-                    Iterate over member terms
-                        Insert term into MemberTerms table
-                
-                Iterate over each member social...
-                    Insert into MemberSocials table
-                
-                Iterate over each member office...
-                    Insert into MemberOffices table
-                
-            */
-            //var_dump($current->currentMembers[0]);
-            //var_dump($currentOffices->currentOffices[0]);
-            //var_dump($historical->historicalMembers[0]);
+            $table = self::getTable();
 
-
-            Members::$cacheIsValid = true;
+            foreach ($allMembers as $person) {
+                $terms = $person->getTerms();
+                $personArr = array_merge($person->id->toArray(), 
+                                         $person->name->toArray(),
+                                         $person->bio->toArray());
+                var_dump($personArr);
+                var_dump($terms);
+                return;
+                /*$bioId = $person->id->bioguide;
+                $social = $personWithSocials->getSocials()->toArray();
+                $social["bioguideId"] = $bioId;
+                $social["lastUpdate"] = time();
+                $social["nextUpdate"] = time()+(60*60*24*7);
+                $row = new MemberSocialsRow($social);
+                $table->insert($row->getColumns(), $row->getValues());*/
+            }
+            self::$cacheIsValid = true;
         }
-
-        public function fetch() {
-            //
-            if(!Members::cacheIsValid()) Members::updateCache();
-            //first, Can we find this member in the DB?
-            $result = $this->sqlObject->selectFromDB();
-            $rowsFound = $result->fetchAllAssoc();
-            //If found no members, the search was likely no good.
-            if (count($rowsFound) == 0) {
-                //$currentMembers = new \UnitedStatesLegislators\CurrentMembers();
-                //$currentMembers->fetchFromApi();
-                //$currentMembers->printAsJson();
-
-            } else return $rowsFound;
-        }
-
         /*
             Fetch members by their exact bioguideId
         */
         public static function getByBioguideId($bioguideId) {
-            if (empty($bioguideId)) 
-                throw new ACException("Members::getByBioguideId() Must provide a bioguideid.");
-            
-            $members = new Members();
-            $members->bioguideId = $bioguideId;
-            $members->sqlObject = SQLMembers::getByBioguideId($bioguideId);
-
-            return $members;
+            $offices = new Members();
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["bioguideId"]);
+            $offices->setValues([$bioguideId]);
+            return $offices->selectFromDB();
         }
 
         /*
@@ -107,81 +120,66 @@ namespace AuditCongress {
                 Must provide atleast one of the names.
         */
         public static function getByName($firstName, $middleName = null, $lastName = null) {
-            if (empty($firstName) && empty($middleName) && empty($lastName)) 
-                throw new ACException("Members::getByName() Must provide atleast one name.");
-                      
-            $members = new Members();
-            $members->firstName = $firstName;
-            $members->middleName = $middleName;
-            $members->lastName = $lastName;
-            $members->sqlObject = SQLMembers::getByName($firstName, $middleName, $lastName);
-
-            return $members;
+            $offices = new Members();
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["FirstName", "MiddleName", "LastName"]);
+            $offices->setValues([$firstName, $lastName, $middleName]);
+            return $offices->selectFromDB();
         }
 
         /*
             Fetch members with the given gender (M or F at this time)
         */
         public static function getByGender($gender) {
-            if (empty($gender)) throw new ACException("Members::getByGender() Must provide a gender.");
-
-            $members = new Members();
-            $members->gender = $gender;
-            $members->sqlObject = SQLMembers::getByGender($gender);
-
-            return $members;
+            $offices = new Members();
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["Gender"]);
+            $offices->setValues([$gender]);
+            return $offices->selectFromDB();
         }
 
         /*
             Fetch members who where born before or on the given birth year
         */
         public static function getBornBy($birthYear) {
-            if (empty($birthYear)) throw new ACException("Members::getBornBy() Must provide a birth year.");
-
-            $members = new Members();
-            $members->birthYear = $birthYear;
-            $members->sqlObject = SQLMembers::getBornBy($birthYear);
-
-            return $members;
+            $offices = new Members("<=");
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["BirthYear"]);
+            $offices->setValues([$birthYear]);
+            return $offices->selectFromDB();
         }
 
         /*
             Fetch members who where born after the given birth year
         */
         public static function getBornAfter($birthYear) {
-            if (empty($birthYear)) throw new ACException("Members::getBornAfter() Must provide a birth year.");
-
-            $members = new Members();
-            $members->birthYear = $birthYear;
-            $members->sqlObject = SQLMembers::getBornAfter($birthYear);
-
-            return $members;
+            $offices = new Members(">");
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["BirthYear"]);
+            $offices->setValues([$birthYear]);
+            return $offices->selectFromDB();
         }
 
         /*
             Fetch members who died by or on the given death year
         */
         public static function getDeadBy($deathYear) {
-            if (empty($deathYear)) throw new ACException("Members::getDeadBy() Must provide a death year.");
-        
-            $members = new Members();
-            $members->deathYear = $deathYear;
-            $members->sqlObject = SQLMembers::getDeadBy($deathYear);
-
-            return $members;
+            $offices = new Members("<=");
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["DeathYear"]);
+            $offices->setValues([$deathYear]);
+            return $offices->selectFromDB();
         }
 
         /*
             Fetch members who died after the given death year
         */
         public static function getDeadAfter($deathYear) {
-           if (empty($deathYear)) throw new ACException("Members::getDeadAfter() Must provide a death year.");
-           
-           $members = new Members();
-           $members->deathYear = $deathYear;
-           $members->sqlObject = SQLMembers::getDeadAfter($deathYear);
-
-           return $members;
+            $offices = new Members(">");
+            $offices->setSelectColumns(["*"]);
+            $offices->setColumns(["DeathYear"]);
+            $offices->setValues([$deathYear]);
+            return $offices->selectFromDB();
         }
     }
 }

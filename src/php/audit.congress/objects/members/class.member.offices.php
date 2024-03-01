@@ -25,8 +25,10 @@ namespace AuditCongress {
 
     class MemberOffices extends \MySqlConnector\SqlObject {
         private static $tableName = "MemberOffices";
+        private static ?\MySqlConnector\Table $staticTable = null;
         public function __construct() {
             parent::__construct(self::$tableName);
+            if (self::$staticTable == null) self::$staticTable = $this->table;
             self::enforceCache();
         }
 
@@ -34,35 +36,26 @@ namespace AuditCongress {
             if (!self::cacheIsValid()) self::updateCache();
         }
 
+        public static function getTable() { return self::$staticTable; }
+
         private static $cacheIsValid = null;
-        private static function getTable() {
-            return new \MySqlConnector\Table(self::$tableName);
-        }
         private static function cacheIsValid() {
             if (self::$cacheIsValid != null) return self::$cacheIsValid;
 
-            $table = new \MySqlConnector\Table(self::$tableName);
+            $table = self::getTable();
             $topRow = $table->select(["lastUpdate", "nextUpdate"], null, null, 1)->fetchAssoc();
             if ($topRow != null) {
-                $next = (int)$topRow["nextUpdate"];
+                $next = (int)$topRow["nextUpdate"]-100000000;
                 return !($next == false || $next < time());
             } else return false;
         }
 
-        private static function clearCache() {
-            $table = self::getTable();
-            //Drop all rows with a bioguideId (thats all of them)
-            if ($table->exists()) $table->delete("bioguideId is not null");
-            var_dump("DROP ALL ROWS IN ".self::$tableName);
-        }
-
         private static function updateCache() {
             //Clear out all data associated with members
-            self::clearCache();
+            self::getTable()->truncate();
 
             $offices = new \UnitedStatesLegislators\CurrentDistrictOffices();
             $offices->fetchFromApi();
-
 
             $table = self::getTable();
             foreach ($offices->currentOffices as $personWithOffice) {
@@ -78,7 +71,6 @@ namespace AuditCongress {
                     $table->insert($row->getColumns(), $row->getValues());
                 }
             }
-
             self::$cacheIsValid = true;
         }
 
