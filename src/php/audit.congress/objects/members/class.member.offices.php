@@ -64,9 +64,10 @@ namespace AuditCongress {
                     $office = self::apiOfficeToRow($office->toArray(), $bioguideId);
                     $office = self::setUpdateTimes($office);
                     $row = new MemberOfficesRow($office);
-                    $this->insertRow($row);
+                    $this->queueInsert($row);
                 }
             }
+            $this->commitInsert();
             $this->cacheIsValid = true;
         }
 

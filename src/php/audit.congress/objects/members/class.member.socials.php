@@ -64,8 +64,9 @@ namespace AuditCongress {
                 $social = self::apiSocialToRow($social, $bioguideId);
                 $social = self::setUpdateTimes($social);
                 $row = new MemberSocialsRow($social);
-                $this->insertRow($row);
+                $this->queueInsert($row);
             }
+            $this->commitInsert();
             $this->cacheIsValid = true;
         }
 

@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class MemberTerm extends \MySqlConnector\SqlRow {
+    class MemberTermRow extends \MySqlConnector\SqlRow {
         public
             $bioguideId,
             $type,
@@ -88,7 +88,7 @@ namespace AuditCongress {
                 $termArr = $term->toArray();
                 $termArr["bioguideId"] = $bioguideId;
                 $termArr = self::setUpdateTimes($termArr);
-                $termRow = new MemberTerm($termArr);
+                $termRow = new MemberTermRow($termArr);
                 $this->queueInsert($termRow);
             }
         }

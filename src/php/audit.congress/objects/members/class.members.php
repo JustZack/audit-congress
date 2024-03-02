@@ -88,17 +88,26 @@ namespace AuditCongress {
         }
 
         protected function updateCache() {
+            //Get instances for member data within this route
+            $memberTerms = MemberTerms::getInstance();
+            $memberElections = MemberElections::getInstance();
+            
             //Clear out all data associated with members
+            $memberTerms->clearRows();
+            $memberElections->clearRows();
             $this->clearRows();
 
+            //Update the cache for member data outside this route
+            MemberOffices::getInstance()->updateCache();
+            MemberSocials::getInstance()->updateCache();
+
+            //Get updated member data from API routes (member/terms/elections)
             $current = new \UnitedStatesLegislators\CurrentMembers();
             $current->fetchFromApi();
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
             $historical->fetchFromApi();
 
             $allMembers = array_merge($current->currentMembers,$historical->historicalMembers);
-            
-            $memberTerms = MemberTerms::getInstance();
 
             foreach ($allMembers as $person) {
                 $personArr = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
@@ -107,11 +116,10 @@ namespace AuditCongress {
                 $this->queueInsert($memberRow);
                 
                 $memberTerms->insertPersonTerms($person);
-                /*
-                $elections = $person->id->fec;
-                var_dump($elections);*/
+                $memberElections->insertPersonElections($person);
             }
             $memberTerms->commitInsert();
+            $memberElections->commitInsert();
             $this->commitInsert();
             $this->cacheIsValid = true;
         }
