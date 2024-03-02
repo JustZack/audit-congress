@@ -87,21 +87,52 @@ namespace MySqlConnector {
           
             return Query::getResult($sql);
         }
-        //Insert a row with the provided $columns and $values
-        public function insert($columns, $values) {
-            $sql = "INSERT INTO `$this->name` %s VALUES %s";
 
-            $numCols = count($columns); $numValues = count($values);
-            if ($numCols != $numValues) 
-                throw new SqlException("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
+        //Build an insert statement for the columns and values
+        private static function buildInsert($table, $columns, $values) {
+            $sql = "INSERT INTO `$table` %s VALUES %s";
             
             $colList = Query::buildList($columns, true, "`");
             $valList = Query::buildList($values, true, "'");
 
             $sql = sprintf($sql, $colList, $valList);
+
+            return $sql;
+        }
+        private function throwIfColValMismatch($columns, $values) {
+            $numCols = count($columns); $numValues = count($values);
+            if ($numCols != $numValues) {
+                throw new SqlException("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
+            }
+        }
+        //Insert a row with the provided $columns and $values
+        public function insert($columns, $values) {
+            $this->throwIfColValMismatch($columns, $values);
+
+            $sql = self::buildInsert($this->name, $columns, $values);
             
             return Query::runActionQuery($sql);
-        } 
+        }
+
+        private $insertQueue = null;
+        //Queue an insert to be run
+        public function queueInsert($columns, $values) {
+            $this->throwIfColValMismatch($columns, $values);
+
+            if ($this->insertQueue == null)
+                $this->insertQueue = self::buildInsert($this->name, $columns, $values);
+            else 
+                $this->insertQueue .= ",".Query::buildList($values, true, "'");
+        }
+        //Commit queued inserts
+        public function commitInsert() {
+            if ($this->insertQueue == null) return false;
+            $result = Query::runActionQuery($this->insertQueue);
+
+            $this->insertQueue = null;
+            return $result;
+        }
+        
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
         public function update($columns, $values, $whereCondition) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;

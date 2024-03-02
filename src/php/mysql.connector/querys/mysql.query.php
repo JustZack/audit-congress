@@ -25,7 +25,7 @@ namespace MySqlConnector {
         //Append a query to this query
         public function appendQuery($sql_string, $params = null) {
             //Always put a semicolon at the end of a query
-            $sql = $sql_string.";";
+            $sql = $sql_string.";\n";
             if ($params != null) {
                 $this->sql_formated .= sprintf($sql, ...$params);
                 array_merge($this->params, $params);

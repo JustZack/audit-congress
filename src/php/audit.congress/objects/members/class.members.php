@@ -4,111 +4,53 @@ namespace AuditCongress {
 
     class MemberRow extends \MySqlConnector\SqlRow {
         public
-            $bioguideId,
-            $thomasId,
-            $listId,
-            $govTrackId,
-            $openSecretsId,
-            $voteSmartId,
-            $cspanId,
-            $mapLightId,
-            $icpsrId,
+            $bioguide,
+            $thomas,
+            $lis,
+            $govtrack,
+            $opensecrets,
+            $votesmart,
+            $cspan,
+            $maplight,
+            $icpsr,
             $wikidata,
-            $googleEntityId,
+            $google_entity_id,
 
-            $OfficialFullName,
-            $FirstName,
-            $MiddleName,
-            $LastName,
-            $Gender,
-            $BirthYear,
-            $DeathYear,
+            $official_full,
+            $first,
+            $last,
+            $gender,
+            $birthday,
+
             $imageUrl,
             $imageAttribution,
             $lastUpdate,
             $nextUpdate;
     
         public function getColumns() {
-            return ["bioguideId","thomasId","listId","govTrackId",
+            return ["bioguideId","thomasId","lisId","govTrackId",
             "openSecretsId","voteSmartId","cspanId","mapLightId","icpsrId",
-            "wikidata","googleEntityId","OfficialFullName","FirstName",
-            "MiddleName","LastName","Gender","BirthYear","DeathYear",
-            "imageUrl","imageAttribution","lastUpdate","nextUpdate"];
+            "wikidata","google_entity_id","official_full","first","last",
+            "gender","birthday","imageUrl","imageAttribution",
+            "lastUpdate","nextUpdate"];
         }
 
         public function getValues() {
-            return [$this->bioguideId,$this->thomasId,$this->listId,$this->govTrackId,
-            $this->openSecretsId,$this->voteSmartId,$this->cspanId,$this->mapLightId,
-            $this->icpsrId,$this->wikidata,$this->googleEntityId,
-            $this->OfficialFullName,$this->FirstName,$this->MiddleName,
-            $this->LastName,$this->Gender,$this->BirthYear,$this->DeathYear,
-            $this->imageUrl,$this->imageAttribution,$this->lastUpdate,$this->nextUpdate];
+            return [$this->bioguide,$this->thomas,$this->lis,$this->govtrack,
+            $this->opensecrets,$this->votesmart,$this->cspan,$this->maplight,
+            $this->icpsr,$this->wikidata,$this->google_entity_id,
+            $this->official_full,$this->first,$this->last,
+            $this->gender,$this->birthday,$this->imageUrl,$this->imageAttribution,
+            $this->lastUpdate,$this->nextUpdate];
         }
     }
-
-    class Members extends \MySqlConnector\SqlObject {
-        private static $tableName = "Members";
-        private static ?\MySqlConnector\Table $staticTable = null;
-        public function __construct($equalityOperator = "=", $booleanCondition = "AND") {
-            parent::__construct(self::$tableName, $equalityOperator, $booleanCondition);
-            if (self::$staticTable == null) self::$staticTable = $this->table;
-            self::enforceCache();
+    class MembersQuery extends \MySqlConnector\SqlObject {
+        public function __construct() {
+            parent::__construct("Members");
         }
 
-        private function enforceCache() {
-            if (!self::cacheIsValid()) self::updateCache();
-        }
-
-        public static function getTable() { return self::$staticTable; }
-
-        private static $cacheIsValid = null;
-        private static function cacheIsValid() {
-            if (self::$cacheIsValid != null) return self::$cacheIsValid;
-
-            $table = self::getTable();
-            $topRow = $table->select(["lastUpdate", "nextUpdate"], null, null, 1)->fetchAssoc();
-            if ($topRow != null) {
-                $next = (int)$topRow["nextUpdate"]-100000000;
-                return !($next == false || $next < time());
-            } else return false;
-        }
-
-        private static function updateCache() {
-            //Clear out all data associated with members
-            self::getTable()->truncate();
-
-            $current = new \UnitedStatesLegislators\CurrentMembers();
-            $current->fetchFromApi();
-            $historical = new \UnitedStatesLegislators\HistoricalMembers();
-            $historical->fetchFromApi();
-
-            $allMembers = array_merge($current->currentMembers, $historical->historicalMembers);
-
-            $table = self::getTable();
-
-            foreach ($allMembers as $person) {
-                $terms = $person->getTerms();
-                $personArr = array_merge($person->id->toArray(), 
-                                         $person->name->toArray(),
-                                         $person->bio->toArray());
-                var_dump($personArr);
-                var_dump($terms);
-                return;
-                /*$bioId = $person->id->bioguide;
-                $social = $personWithSocials->getSocials()->toArray();
-                $social["bioguideId"] = $bioId;
-                $social["lastUpdate"] = time();
-                $social["nextUpdate"] = time()+(60*60*24*7);
-                $row = new MemberSocialsRow($social);
-                $table->insert($row->getColumns(), $row->getValues());*/
-            }
-            self::$cacheIsValid = true;
-        }
-        /*
-            Fetch members by their exact bioguideId
-        */
         public static function getByBioguideId($bioguideId) {
-            $offices = new Members();
+            $offices = new MembersQuery();
             $offices->setSelectColumns(["*"]);
             $offices->setColumns(["bioguideId"]);
             $offices->setValues([$bioguideId]);
@@ -119,11 +61,11 @@ namespace AuditCongress {
             Fetch members whose names contain the given first, middle, or last name
                 Must provide atleast one of the names.
         */
-        public static function getByName($firstName, $middleName = null, $lastName = null) {
-            $offices = new Members();
+        public static function getByName($firstName = null, $lastName = null) {
+            $offices = new MembersQuery();
             $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["FirstName", "MiddleName", "LastName"]);
-            $offices->setValues([$firstName, $lastName, $middleName]);
+            $offices->setColumns(["first", "last"]);
+            $offices->setValues([$firstName, $lastName]);
             return $offices->selectFromDB();
         }
 
@@ -131,55 +73,68 @@ namespace AuditCongress {
             Fetch members with the given gender (M or F at this time)
         */
         public static function getByGender($gender) {
-            $offices = new Members();
+            $offices = new MembersQuery();
             $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["Gender"]);
+            $offices->setColumns(["gender"]);
             $offices->setValues([$gender]);
             return $offices->selectFromDB();
         }
+    }
 
-        /*
-            Fetch members who where born before or on the given birth year
-        */
-        public static function getBornBy($birthYear) {
-            $offices = new Members("<=");
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["BirthYear"]);
-            $offices->setValues([$birthYear]);
-            return $offices->selectFromDB();
+    class Members extends MemberTables {
+        
+        private function __construct() {
+            parent::__construct("Members");
         }
 
-        /*
-            Fetch members who where born after the given birth year
-        */
-        public static function getBornAfter($birthYear) {
-            $offices = new Members(">");
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["BirthYear"]);
-            $offices->setValues([$birthYear]);
-            return $offices->selectFromDB();
+        protected function updateCache() {
+            //Clear out all data associated with members
+            $this->clearRows();
+
+            $current = new \UnitedStatesLegislators\CurrentMembers();
+            $current->fetchFromApi();
+            $historical = new \UnitedStatesLegislators\HistoricalMembers();
+            $historical->fetchFromApi();
+
+            $allMembers = array_merge($current->currentMembers,$historical->historicalMembers);
+            
+            $memberTerms = MemberTerms::getInstance();
+
+            foreach ($allMembers as $person) {
+                $personArr = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
+                $personArr = self::setUpdateTimes($personArr);
+                $memberRow = new MemberRow($personArr);
+                $this->queueInsert($memberRow);
+                
+                $memberTerms->insertPersonTerms($person);
+                /*
+                $elections = $person->id->fec;
+                var_dump($elections);*/
+            }
+            $memberTerms->commitInsert();
+            $this->commitInsert();
+            $this->cacheIsValid = true;
+        }
+        private static $membersObject = null;
+        public static function getInstance() {
+            if (self::$membersObject == null) 
+                self::$membersObject = new Members();
+            return self::$membersObject;
         }
 
-        /*
-            Fetch members who died by or on the given death year
-        */
-        public static function getDeadBy($deathYear) {
-            $offices = new Members("<=");
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["DeathYear"]);
-            $offices->setValues([$deathYear]);
-            return $offices->selectFromDB();
+        public static function getByBioguideId($bioguideId) {
+            self::enforceCache();
+            return MembersQuery::getByBioguideId($bioguideId);
         }
 
-        /*
-            Fetch members who died after the given death year
-        */
-        public static function getDeadAfter($deathYear) {
-            $offices = new Members(">");
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["DeathYear"]);
-            $offices->setValues([$deathYear]);
-            return $offices->selectFromDB();
+        public static function getByName($firstName = null, $lastName = null) {
+            self::enforceCache();
+            return MembersQuery::getByName($firstName, $lastName);
+        }
+
+        public static function getByGender($gender) {
+            self::enforceCache();
+            return MembersQuery::getByGender($gender);
         }
     }
 }
