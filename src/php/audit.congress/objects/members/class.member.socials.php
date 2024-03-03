@@ -66,7 +66,6 @@ namespace AuditCongress {
                 $bioguideId = $personWithSocials->id->bioguide;
                 $social = $personWithSocials->getSocials()->toArray();
                 $social = self::apiSocialToRow($social, $bioguideId);
-                $social = self::setUpdateTimes($social);
                 $row = new MemberSocialsRow($social);
                 $this->queueInsert($row);
             }
@@ -76,6 +75,7 @@ namespace AuditCongress {
 
         private static function apiSocialToRow($rowArray, $bioguideId) {
             $rowArray["bioguideId"] = $bioguideId;
+            $rowArray = self::setUpdateTimes($rowArray);
             return $rowArray;
         }
 

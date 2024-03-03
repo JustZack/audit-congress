@@ -128,16 +128,21 @@ namespace AuditCongress {
         }
         //Insert current or historical member rows
         private function insertMembers($members, $isCurrent) {
-            foreach ($members as $person) {
-                $personArr = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
-                $personArr = self::setUpdateTimes($personArr);
-                $personArr["isCurrent"] = $isCurrent;
-                $memberRow = new MemberRow($personArr);
-                
+            foreach ($members as $person) {                
                 $this->termsInstance->insertPersonTerms($person);
                 $this->electionsInstance->insertPersonElections($person);
-                $this->queueInsert($memberRow);
+
+                $member = self::apiPersonToRow($person, $isCurrent);
+                $member = new MemberRow($member);
+                $this->queueInsert($member);
             }
+        }
+
+        private static function apiPersonToRow($person, $isCurrent) {
+            $rowArray = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
+            $rowArray["isCurrent"] = $isCurrent;
+            $rowArray = self::setUpdateTimes($rowArray);
+            return $rowArray;
         }
 
         private static $membersObject = null;

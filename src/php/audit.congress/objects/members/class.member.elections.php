@@ -56,14 +56,19 @@ namespace AuditCongress {
             $fecIds = $person->id->fec;
             if (is_array($fecIds)) {
                 foreach ($fecIds as $fecId) {
-                    $electionArr = array();
-                    $electionArr["fecId"] = $fecId;
-                    $electionArr["bioguideId"] = $bioguideId;
-                    $electionArr = self::setUpdateTimes($electionArr);
-                    $electionArr = new MemberElectionRow($electionArr);
-                    $this->queueInsert($electionArr);
+                    $election = self::apiElectionToRow($fecId, $bioguideId);
+                    $election = new MemberElectionRow($election);
+                    $this->queueInsert($election);
                 }
             }
+        }
+
+        private static function apiElectionToRow($fecId, $bioguideId) {
+            $rowArray = array();
+            $rowArray["fecId"] = $fecId;
+            $rowArray["bioguideId"] = $bioguideId;
+            $rowArray = self::setUpdateTimes($rowArray);
+            return $rowArray;
         }
 
         private static $memberTermsTable = null;

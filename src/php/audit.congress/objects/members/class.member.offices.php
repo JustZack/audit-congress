@@ -66,8 +66,8 @@ namespace AuditCongress {
             foreach ($offices->currentOffices as $personWithOffice) {
                 $bioguideId = $personWithOffice->id->bioguide;
                 foreach ($personWithOffice->getOffices() as $office) {
-                    $office = self::apiOfficeToRow($office->toArray(), $bioguideId);
-                    $office = self::setUpdateTimes($office);
+                    $office = $office->toArray();
+                    $office = self::apiOfficeToRow($office, $bioguideId);
                     $row = new MemberOfficesRow($office);
                     $this->queueInsert($row);
                 }
@@ -79,6 +79,7 @@ namespace AuditCongress {
         private static function apiOfficeToRow($rowArray, $bioguideId) {
             $rowArray["bioguideId"] = $bioguideId;
             $rowArray["officeId"] = $rowArray["id"];
+            $rowArray = self::setUpdateTimes($rowArray);
             return $rowArray;
         }
 

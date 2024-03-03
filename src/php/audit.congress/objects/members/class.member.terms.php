@@ -84,12 +84,17 @@ namespace AuditCongress {
             $bioguideId = $person->id->bioguide;
             $terms = $person->getTerms();
             foreach ($terms as $term) {
-                $termArr = $term->toArray();
-                $termArr["bioguideId"] = $bioguideId;
-                $termArr = self::setUpdateTimes($termArr);
-                $termRow = new MemberTermRow($termArr);
-                $this->queueInsert($termRow);
+                $term = $term->toArray();
+                $term = self::apiTermToRow($term, $bioguideId);
+                $term = new MemberTermRow($term);
+                $this->queueInsert($term);
             }
+        }
+
+        private static function apiTermToRow($rowArray, $bioguideId) {
+            $rowArray["bioguideId"] = $bioguideId;
+            $rowArray = self::setUpdateTimes($rowArray);
+            return $rowArray;
         }
 
         private static $memberTermsTable = null;
