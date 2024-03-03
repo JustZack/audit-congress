@@ -58,7 +58,6 @@ namespace AuditCongress {
             $this->clearRows();
 
             $socials = new \UnitedStatesLegislators\Socials();
-            $socials->fetchFromApi();
 
             foreach ($socials->legislatorSocialMedia as $personWithSocials) {
                 $bioguideId = $personWithSocials->id->bioguide;

@@ -58,8 +58,7 @@ namespace AuditCongress {
             $this->clearRows();
 
             $offices = new \UnitedStatesLegislators\CurrentDistrictOffices();
-            $offices->fetchFromApi();
-            
+
             foreach ($offices->currentOffices as $personWithOffice) {
                 $bioguideId = $personWithOffice->id->bioguide;
                 foreach ($personWithOffice->getOffices() as $office) {

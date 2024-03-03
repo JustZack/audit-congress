@@ -16,6 +16,8 @@ namespace UnitedStatesLegislators {
             $this->route = "legislators-social-media";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

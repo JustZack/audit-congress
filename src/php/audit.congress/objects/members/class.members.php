@@ -104,11 +104,9 @@ namespace AuditCongress {
 
             //Get updated member data from API routes (member/terms/elections)
             $current = new \UnitedStatesLegislators\CurrentMembers();
-            $current->fetchFromApi();
             $this->insertMembers($current->currentMembers, true);
 
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
-            $historical->fetchFromApi();
             $this->insertMembers($historical->historicalMembers, false);
 
             $this->cacheIsValid = true;
