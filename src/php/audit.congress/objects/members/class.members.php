@@ -84,8 +84,13 @@ namespace AuditCongress {
     }
 
     class Members extends MemberTable {
+        private static ?MemberElections $electionsInstance = null;
+        private static ?MemberTerms $termsInstance = null;
+
         private function __construct() {
             parent::__construct("Members");
+            $termsInstance = MemberElections::getInstance();
+            $electionsInstance = MemberElections::getInstance();
         }
 
         public function beforeUpdateCache() {
@@ -96,11 +101,13 @@ namespace AuditCongress {
 
             //Clear rows for elections, terms, and member bios
             //These tables contain information from the members route only
-            MemberElections::getInstance()->clearRows();
-            MemberTerms::getInstance()->clearRows();
+            $this->termsInstance->clearRows();
+            $this->electionsInstance->clearRows();
             $this->clearRows();
         }
 
+        //Update the members cache
+        //Note that this updates ALL member tables
         public function updateCache() {
             var_dump("Update cache for: ".$this->name);
             var_dump("Update cache for: MemberTerms");
@@ -115,27 +122,24 @@ namespace AuditCongress {
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
             $this->insertMembers($historical->historicalMembers, false);
 
+            $this->termsInstance->commitInsert();
+            $this->electionsInstance->commitInsert();
+            $this->commitInsert();
+
             $this->cacheIsValid = true;
         }
         //Insert current or historical member rows
         private function insertMembers($members, $isCurrent) {
-            //Get instances for member data within this route
-            $memberTerms = MemberTerms::getInstance();
-            $memberElections = MemberElections::getInstance();
-
             foreach ($members as $person) {
                 $personArr = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
                 $personArr = self::setUpdateTimes($personArr);
                 $personArr["isCurrent"] = $isCurrent;
                 $memberRow = new MemberRow($personArr);
-                $this->queueInsert($memberRow);
                 
-                $memberTerms->insertPersonTerms($person);
-                $memberElections->insertPersonElections($person);
+                $this->termsInstance->insertPersonTerms($person);
+                $this->electionsInstance->insertPersonElections($person);
+                $this->queueInsert($memberRow);
             }
-            $memberTerms->commitInsert();
-            $memberElections->commitInsert();
-            $this->commitInsert();
         }
 
         private static $membersObject = null;
