@@ -1,8 +1,11 @@
 <?php 
 
 namespace AuditCongress {
-
-    class MemberSocialsRow extends \MySqlConnector\SqlRow {
+    use \MySqlConnector\SqlRow;
+    use \MySqlConnector\SqlObject;
+    use \UnitedStatesLegislators\Socials;
+    
+    class MemberSocialsRow extends SqlRow {
         public
             $bioguideId,
             $twitter,
@@ -31,7 +34,7 @@ namespace AuditCongress {
             }
     }
 
-    class MemberSocialsQuery extends \MySqlConnector\SqlObject {
+    class MemberSocialsQuery extends SqlObject {
         public function __construct() {
             parent::__construct("MemberSocials");
         }
@@ -57,7 +60,7 @@ namespace AuditCongress {
             //Clear out all data associated with socials
             $this->clearRows();
 
-            $socials = new \UnitedStatesLegislators\Socials();
+            $socials = new Socials();
 
             foreach ($socials->legislatorSocialMedia as $personWithSocials) {
                 $bioguideId = $personWithSocials->id->bioguide;

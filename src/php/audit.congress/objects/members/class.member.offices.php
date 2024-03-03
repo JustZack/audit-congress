@@ -2,7 +2,11 @@
 
 namespace AuditCongress {
 
-    class MemberOfficesRow extends \MySqlConnector\SqlRow {
+    use \MySqlConnector\SqlRow;
+    use \MySqlConnector\SqlObject;
+    use \UnitedStatesLegislators\CurrentDistrictOffices;
+
+    class MemberOfficesRow extends SqlRow {
         public
             $bioguideId,$officeId,
             $address,$suite,$building,$city,$state,$zip,
@@ -23,7 +27,7 @@ namespace AuditCongress {
             }
     }
 
-    class MemberOfficesQuery extends \MySqlConnector\SqlObject {
+    class MemberOfficesQuery extends SqlObject {
         public function __construct() {
             parent::__construct("MemberOffices");
         }
@@ -57,7 +61,7 @@ namespace AuditCongress {
             //Clear out all data associated with socials
             $this->clearRows();
 
-            $offices = new \UnitedStatesLegislators\CurrentDistrictOffices();
+            $offices = new CurrentDistrictOffices();
 
             foreach ($offices->currentOffices as $personWithOffice) {
                 $bioguideId = $personWithOffice->id->bioguide;

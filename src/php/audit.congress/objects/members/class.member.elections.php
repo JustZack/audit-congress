@@ -2,7 +2,10 @@
 
 namespace AuditCongress {
 
-    class MemberElectionRow extends \MySqlConnector\SqlRow {
+    use \MySqlConnector\SqlRow;
+    use \MySqlConnector\SqlObject;
+
+    class MemberElectionRow extends SqlRow {
         public
             $fecId,
             $bioguideId,
@@ -20,7 +23,7 @@ namespace AuditCongress {
             }
     }
 
-    class MemberElectionsQuery extends \MySqlConnector\SqlObject {
+    class MemberElectionsQuery extends SqlObject {
         public function __construct() {
             parent::__construct("MemberElections");
         }

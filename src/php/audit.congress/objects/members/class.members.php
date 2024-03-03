@@ -2,7 +2,12 @@
 
 namespace AuditCongress {
 
-    class MemberRow extends \MySqlConnector\SqlRow {
+    use UnitedStatesLegislators\HistoricalMembers;
+    use UnitedStatesLegislators\CurrentMembers;
+    use \MySqlConnector\SqlRow;
+    use \MySqlConnector\SqlObject;
+
+    class MemberRow extends SqlRow {
         public
             $bioguide,
             $thomas,
@@ -46,7 +51,7 @@ namespace AuditCongress {
             $this->isCurrent, $this->lastUpdate,$this->nextUpdate];
         }
     }
-    class MembersQuery extends \MySqlConnector\SqlObject {
+    class MembersQuery extends SqlObject {
         public function __construct() {
             parent::__construct("Members");
         }
@@ -112,10 +117,10 @@ namespace AuditCongress {
             $this->clearRows();
 
             //Get updated member data from API routes (member/terms/elections)
-            $current = new \UnitedStatesLegislators\CurrentMembers();
+            $current = new CurrentMembers();
             $this->insertMembers($current->currentMembers, true);
 
-            $historical = new \UnitedStatesLegislators\HistoricalMembers();
+            $historical = new HistoricalMembers();
             $this->insertMembers($historical->historicalMembers, false);
 
             $this->termsInstance->commitInsert();

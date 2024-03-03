@@ -2,9 +2,6 @@
 
 namespace AuditCongress {
 
-    use MySqlConnector\SqlRow;
-    use MySqlConnector\Table;
-
     abstract class MemberTable extends AuditCongressTable {
 
         private function getTopRow() {
