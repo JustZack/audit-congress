@@ -93,7 +93,13 @@ namespace AuditCongress {
             $electionsInstance = MemberElections::getInstance();
         }
 
-        public function beforeUpdateCache() {
+        //Update the members cache
+        //Note that this updates ALL member tables
+        public function updateCache() {
+            var_dump("Update cache for: ".$this->name);
+            var_dump("Update cache for: MemberTerms");
+            var_dump("Update cache for: MemberElections");
+            
             //Force update cache for Offices and Socials
             //These tables contain information from OTHER api routes
             MemberOffices::getInstance()->updateCache();
@@ -104,16 +110,6 @@ namespace AuditCongress {
             $this->termsInstance->clearRows();
             $this->electionsInstance->clearRows();
             $this->clearRows();
-        }
-
-        //Update the members cache
-        //Note that this updates ALL member tables
-        public function updateCache() {
-            var_dump("Update cache for: ".$this->name);
-            var_dump("Update cache for: MemberTerms");
-            var_dump("Update cache for: MemberElections");
-            
-            $this->beforeUpdateCache();
 
             //Get updated member data from API routes (member/terms/elections)
             $current = new \UnitedStatesLegislators\CurrentMembers();

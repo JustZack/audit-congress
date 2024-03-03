@@ -50,10 +50,6 @@ namespace AuditCongress {
             $this->cacheIsValid = true;
         }
 
-        public function beforeUpdateCache() { return false; }
-
-        public function updateCache() { return false; }
-
         public function insertPersonElections($person) {
             $bioguideId = $person->id->bioguide;
             $fecIds = $person->id->fec;
