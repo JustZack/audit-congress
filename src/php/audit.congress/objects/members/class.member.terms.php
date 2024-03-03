@@ -78,8 +78,6 @@ namespace AuditCongress {
         
         private function __construct() {
             parent::__construct("MemberTerms");
-            //Terms table is valid by default b/c its updated by the Members table
-            $this->cacheIsValid = true;
         }
 
         public function insertPersonTerms($person) {
@@ -102,6 +100,7 @@ namespace AuditCongress {
         }
 
         public static function getByBioguideId($bioguideId) {
+            self::enforceCache();
             return MemberTermsQuery::getByBioguideId($bioguideId);
         }
     }

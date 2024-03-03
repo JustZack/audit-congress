@@ -10,23 +10,21 @@ namespace AuditCongress {
 
         public function cacheIsValid() {
             if ($this->cacheIsValid != null) return $this->cacheIsValid;
-
+            
             $row = $this->getTopRow();
             $this->cacheIsValid = $this->nextUpdateIsLater($row);
 
             return $this->cacheIsValid;
         }
 
-        public static function enforceCache() {
-            $tableObj = static::getInstance();
-            if (!$tableObj->cacheIsValid()) {
-                $tableObj->updateCache();
-            }
-        }
-
-        public static abstract function getInstance();
+        //By default, use the members Table to enforce cache
+        //B/C this keeps ALL member data up to date
+        public static function enforceCache() { Members::enforceCache(); }
 
         public function updateCache() { return false; }
+        
+        public static abstract function getInstance();
+
 
     }
 }

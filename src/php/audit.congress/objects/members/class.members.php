@@ -89,13 +89,13 @@ namespace AuditCongress {
     }
 
     class Members extends MemberTable {
-        private static ?MemberElections $electionsInstance = null;
-        private static ?MemberTerms $termsInstance = null;
+        private ?MemberTerms $termsInstance = null;
+        private ?MemberElections $electionsInstance = null;
 
         private function __construct() {
             parent::__construct("Members");
-            $termsInstance = MemberElections::getInstance();
-            $electionsInstance = MemberElections::getInstance();
+            $this->termsInstance = MemberTerms::getInstance();
+            $this->electionsInstance = MemberElections::getInstance();
         }
 
         //Update the members cache
@@ -104,29 +104,26 @@ namespace AuditCongress {
             var_dump("Update cache for: ".$this->name);
             var_dump("Update cache for: MemberTerms");
             var_dump("Update cache for: MemberElections");
-            
             //Force update cache for Offices and Socials
             //These tables contain information from OTHER api routes
             MemberOffices::getInstance()->updateCache();
             MemberSocials::getInstance()->updateCache();
-
             //Clear rows for elections, terms, and member bios
             //These tables contain information from the members route only
             $this->termsInstance->clearRows();
             $this->electionsInstance->clearRows();
             $this->clearRows();
-
             //Get updated member data from API routes (member/terms/elections)
             $current = new CurrentMembers();
-            $this->insertMembers($current->currentMembers, true);
-
             $historical = new HistoricalMembers();
+            //Queue up inserting members, their terms, and elections
+            $this->insertMembers($current->currentMembers, true);
             $this->insertMembers($historical->historicalMembers, false);
-
+            //Commit the insert for all tables
             $this->termsInstance->commitInsert();
             $this->electionsInstance->commitInsert();
             $this->commitInsert();
-
+            //Aftering updating member tables, the cache is valid
             $this->cacheIsValid = true;
         }
         //Insert current or historical member rows
@@ -148,6 +145,21 @@ namespace AuditCongress {
             if (self::$membersObject == null) 
                 self::$membersObject = new Members();
             return self::$membersObject;
+        }
+
+        //Check every member relevent table for cache validity
+        //Update members cache if needed
+        public static function enforceCache() {
+            $members = Members::getInstance();
+            $terms = MemberElections::getInstance();
+            $elections = MemberTerms::getInstance();
+            $socials = MemberSocials::getInstance();
+            $offices = MemberOffices::getInstance();
+            $allCachesValid = $members->cacheIsValid() 
+                            && $terms->cacheIsValid() && $elections->cacheIsValid()
+                            && $socials->cacheIsValid() && $offices->cacheIsValid();
+
+            if (!$allCachesValid) $members->updateCache();
         }
 
         public static function getByBioguideId($bioguideId) {

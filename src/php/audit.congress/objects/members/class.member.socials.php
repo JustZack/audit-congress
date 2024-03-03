@@ -4,7 +4,7 @@ namespace AuditCongress {
     use \MySqlConnector\SqlRow;
     use \MySqlConnector\SqlObject;
     use \UnitedStatesLegislators\Socials;
-    
+
     class MemberSocialsRow extends SqlRow {
         public
             $bioguideId,
