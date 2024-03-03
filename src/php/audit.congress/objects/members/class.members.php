@@ -88,19 +88,25 @@ namespace AuditCongress {
             parent::__construct("Members");
         }
 
-        public function updateCache() {
-            //Update the cache for member data outside this route
+        public function beforeUpdateCache() {
+            //Force update cache for Offices and Socials
+            //These tables contain information from OTHER api routes
             MemberOffices::getInstance()->updateCache();
             MemberSocials::getInstance()->updateCache();
 
-            //Clear out all data associated with members
+            //Clear rows for elections, terms, and member bios
+            //These tables contain information from the members route only
             MemberElections::getInstance()->clearRows();
             MemberTerms::getInstance()->clearRows();
             $this->clearRows();
-            
+        }
+
+        public function updateCache() {
             var_dump("Update cache for: ".$this->name);
             var_dump("Update cache for: MemberTerms");
             var_dump("Update cache for: MemberElections");
+            
+            $this->beforeUpdateCache();
 
             //Get updated member data from API routes (member/terms/elections)
             $current = new \UnitedStatesLegislators\CurrentMembers();

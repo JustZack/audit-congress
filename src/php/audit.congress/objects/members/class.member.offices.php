@@ -51,11 +51,15 @@ namespace AuditCongress {
             parent::__construct("MemberOffices");
         }
 
+        public function beforeUpdateCache() { 
+            //Clear out all data associated with socials
+            $this->clearRows();
+        }
+
         public function updateCache() {
             var_dump("Update cache for: ".$this->name);
 
-            //Clear out all data associated with offices
-            $this->clearRows();
+            $this->beforeUpdateCache();
 
             $offices = new \UnitedStatesLegislators\CurrentDistrictOffices();
 

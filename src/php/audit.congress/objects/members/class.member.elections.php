@@ -50,6 +50,8 @@ namespace AuditCongress {
             $this->cacheIsValid = true;
         }
 
+        public function beforeUpdateCache() { return false; }
+
         public function updateCache() { return false; }
 
         public function insertPersonElections($person) {
