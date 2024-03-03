@@ -5,8 +5,8 @@ namespace AuditCongress {
     use MySqlConnector\SqlRow;
     use MySqlConnector\Table;
 
-    abstract class MemberTables {
-        private $name;
+    abstract class AuditCongressTable {
+        protected $name;
         private ?Table $table = null;
         protected $cacheIsValid = null;
 
@@ -18,29 +18,6 @@ namespace AuditCongress {
             if ($this->table == null) $this->table = new Table($this->name);
             return $this->table; 
         }
-
-        private function getTopRow() {
-            $table = $this->getTable();
-            return $table->select(["lastUpdate", "nextUpdate"], null, null, 1)->fetchAssoc();
-        }
-
-        private function rowIsValid($row) {
-            if ($row != null) {
-                $next = (int)$row["nextUpdate"];
-                return !($next == false || $next < time());
-            } else return false;
-        }
-
-        public function cacheIsValid() {
-            if ($this->cacheIsValid != null) return $this->cacheIsValid;
-
-            $row = $this->getTopRow();
-            $this->cacheIsValid = $this->rowIsValid($row);
-
-            return $this->cacheIsValid;
-        }
-
-        protected abstract function updateCache();
 
         protected function clearRows() {
             //Clear out all data associated with this table
@@ -60,7 +37,6 @@ namespace AuditCongress {
         public static function enforceCache() {
             $tableObj = static::getInstance();
             if (!$tableObj->cacheIsValid()) {
-                var_dump("Update cache for: ".$tableObj->name);
                 $tableObj->updateCache();
             }
         }
@@ -71,7 +47,18 @@ namespace AuditCongress {
             return $rowArray;
         }
 
+        protected function nextUpdateIsLater($row) {
+            if ($row != null) {
+                $next = (int)$row["nextUpdate"];
+                return !($next == false || $next < time());
+            } else return false;
+        }
+
         public static abstract function getInstance();
+
+        public abstract function cacheIsValid();
+
+        public abstract function updateCache();
 
     }
 }

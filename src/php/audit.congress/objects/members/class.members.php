@@ -24,6 +24,8 @@ namespace AuditCongress {
 
             $imageUrl,
             $imageAttribution,
+            $isCurrent,
+
             $lastUpdate,
             $nextUpdate;
     
@@ -31,7 +33,7 @@ namespace AuditCongress {
             return ["bioguideId","thomasId","lisId","govTrackId",
             "openSecretsId","voteSmartId","cspanId","mapLightId","icpsrId",
             "wikidata","google_entity_id","official_full","first","last",
-            "gender","birthday","imageUrl","imageAttribution",
+            "gender","birthday","imageUrl","imageAttribution","isCurrent",
             "lastUpdate","nextUpdate"];
         }
 
@@ -41,7 +43,7 @@ namespace AuditCongress {
             $this->icpsr,$this->wikidata,$this->google_entity_id,
             $this->official_full,$this->first,$this->last,
             $this->gender,$this->birthday,$this->imageUrl,$this->imageAttribution,
-            $this->lastUpdate,$this->nextUpdate];
+            $this->isCurrent, $this->lastUpdate,$this->nextUpdate];
         }
     }
     class MembersQuery extends \MySqlConnector\SqlObject {
@@ -81,37 +83,46 @@ namespace AuditCongress {
         }
     }
 
-    class Members extends MemberTables {
-        
+    class Members extends MemberTable {
         private function __construct() {
             parent::__construct("Members");
         }
 
-        protected function updateCache() {
-            //Get instances for member data within this route
-            $memberTerms = MemberTerms::getInstance();
-            $memberElections = MemberElections::getInstance();
-            
-            //Clear out all data associated with members
-            $memberTerms->clearRows();
-            $memberElections->clearRows();
-            $this->clearRows();
-
+        public function updateCache() {
             //Update the cache for member data outside this route
             MemberOffices::getInstance()->updateCache();
             MemberSocials::getInstance()->updateCache();
 
+            //Clear out all data associated with members
+            MemberElections::getInstance()->clearRows();
+            MemberTerms::getInstance()->clearRows();
+            $this->clearRows();
+            
+            var_dump("Update cache for: ".$this->name);
+            var_dump("Update cache for: MemberTerms");
+            var_dump("Update cache for: MemberElections");
+
             //Get updated member data from API routes (member/terms/elections)
             $current = new \UnitedStatesLegislators\CurrentMembers();
             $current->fetchFromApi();
+            $this->insertMembers($current->currentMembers, true);
+
             $historical = new \UnitedStatesLegislators\HistoricalMembers();
             $historical->fetchFromApi();
+            $this->insertMembers($historical->historicalMembers, false);
 
-            $allMembers = array_merge($current->currentMembers,$historical->historicalMembers);
+            $this->cacheIsValid = true;
+        }
+        //Insert current or historical member rows
+        private function insertMembers($members, $isCurrent) {
+            //Get instances for member data within this route
+            $memberTerms = MemberTerms::getInstance();
+            $memberElections = MemberElections::getInstance();
 
-            foreach ($allMembers as $person) {
+            foreach ($members as $person) {
                 $personArr = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
                 $personArr = self::setUpdateTimes($personArr);
+                $personArr["isCurrent"] = $isCurrent;
                 $memberRow = new MemberRow($personArr);
                 $this->queueInsert($memberRow);
                 
@@ -121,8 +132,8 @@ namespace AuditCongress {
             $memberTerms->commitInsert();
             $memberElections->commitInsert();
             $this->commitInsert();
-            $this->cacheIsValid = true;
         }
+
         private static $membersObject = null;
         public static function getInstance() {
             if (self::$membersObject == null) 

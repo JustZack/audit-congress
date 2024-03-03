@@ -71,7 +71,7 @@ namespace AuditCongress {
         }
     }
 
-    class MemberTerms extends MemberTables {
+    class MemberTerms extends MemberTable {
         
         private function __construct() {
             parent::__construct("MemberTerms");
@@ -79,7 +79,7 @@ namespace AuditCongress {
             $this->cacheIsValid = true;
         }
 
-        protected function updateCache() { return false; }
+        public function updateCache() { return false; }
 
         public function insertPersonTerms($person) {
             $bioguideId = $person->id->bioguide;

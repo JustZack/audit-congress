@@ -45,13 +45,15 @@ namespace AuditCongress {
         }
     }
 
-    class MemberOffices extends MemberTables {
+    class MemberOffices extends MemberTable {
 
         private function __construct() {
             parent::__construct("MemberOffices");
         }
 
-        protected function updateCache() {
+        public function updateCache() {
+            var_dump("Update cache for: ".$this->name);
+
             //Clear out all data associated with offices
             $this->clearRows();
 

@@ -42,7 +42,7 @@ namespace AuditCongress {
         }
     }
 
-    class MemberElections extends MemberTables {
+    class MemberElections extends MemberTable {
         
         private function __construct() {
             parent::__construct("MemberElections");
@@ -50,7 +50,7 @@ namespace AuditCongress {
             $this->cacheIsValid = true;
         }
 
-        protected function updateCache() { return false; }
+        public function updateCache() { return false; }
 
         public function insertPersonElections($person) {
             $bioguideId = $person->id->bioguide;

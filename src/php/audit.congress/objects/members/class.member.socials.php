@@ -45,13 +45,15 @@ namespace AuditCongress {
         }
     }
 
-    class MemberSocials extends MemberTables {
+    class MemberSocials extends MemberTable {
         
         private function __construct() {
             parent::__construct("MemberSocials");
         }
 
-        protected function updateCache() {
+        public function updateCache() {
+            var_dump("Update cache for: ".$this->name);
+
             //Clear out all data associated with socials
             $this->clearRows();
 

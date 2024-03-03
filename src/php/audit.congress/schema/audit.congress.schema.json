@@ -25,7 +25,8 @@
                     "birthday": { "type": "VARCHAR(20)", "null": "YES" },
                     "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
-                    
+                    "isCurrent": { "type": "TINYINT(1)", "null": "NO" },
+
                     "lastUpdate":  { "type": "int(11)", "null": "YES" },
                     "nextUpdate":  { "type": "int(11)", "null": "YES" }
                 }
