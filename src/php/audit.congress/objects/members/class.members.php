@@ -137,7 +137,7 @@ namespace AuditCongress {
                 $this->queueInsert($member);
             }
         }
-
+        
         private static function apiPersonToRow($person, $isCurrent) {
             $rowArray = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
             $rowArray["isCurrent"] = $isCurrent;

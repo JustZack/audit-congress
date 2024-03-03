@@ -64,8 +64,8 @@ namespace AuditCongress {
 
             foreach ($socials->legislatorSocialMedia as $personWithSocials) {
                 $bioguideId = $personWithSocials->id->bioguide;
-                $social = $personWithSocials->getSocials()->toArray();
-                $social = self::apiSocialToRow($social, $bioguideId);
+                
+                $social = self::apiSocialToRow($personWithSocials, $bioguideId);
                 $row = new MemberSocialsRow($social);
                 $this->queueInsert($row);
             }
@@ -73,7 +73,8 @@ namespace AuditCongress {
             $this->cacheIsValid = true;
         }
 
-        private static function apiSocialToRow($rowArray, $bioguideId) {
+        private static function apiSocialToRow($socialPerson, $bioguideId) {
+            $rowArray = $socialPerson->getSocials()->toArray();
             $rowArray["bioguideId"] = $bioguideId;
             $rowArray = self::setUpdateTimes($rowArray);
             return $rowArray;
