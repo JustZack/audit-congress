@@ -53,21 +53,37 @@ namespace AuditCongress {
             $terms = new MemberTermsQuery();
             $terms->setSearchColumns(["bioguideId"]);
             $terms->setSearchValues([$bioguideId]);
-            return $terms->selectFromDB();
+            return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByBioguideIdByType($bioguideId, $type) {
             $terms = new MemberTermsQuery();
             $terms->setSearchColumns(["bioguideId", "type"]);
             $terms->setSearchValues([$bioguideId, $type]);
-            return $terms->selectFromDB();
+            return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByBioguideIdByState($bioguideId, $state) {
             $terms = new MemberTermsQuery();
             $terms->setSearchColumns(["bioguideId", "state"]);
             $terms->setSearchValues([$bioguideId, $state]);
-            return $terms->selectFromDB();
+            return $terms->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getByState($state, $year = null) {
+            $terms = new MemberTermsQuery();
+            $terms->setEqualityOperator("like");
+            $terms->setSearchColumns(["state", "start"]);
+            $terms->setSearchValues([$state, $year]);
+            return $terms->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getByParty($party, $year = null) {
+            $terms = new MemberTermsQuery();
+            $terms->setEqualityOperator("like");
+            $terms->setSearchColumns(["party", "start"]);
+            $terms->setSearchValues([$party, $year]);
+            return $terms->selectFromDB()->fetchAllAssoc();
         }
     }
 
@@ -108,8 +124,31 @@ namespace AuditCongress {
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $terms = MemberTermsQuery::getByBioguideId($bioguideId);
-            $rows = $terms->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($terms);
+        }
+
+        public static function getByBioguideIdByType($bioguideId, $type) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getByBioguideIdByType($bioguideId, $type);
+            return self::parseResult($terms);
+        }
+
+        public static function getByBioguideIdByState($bioguideId, $stateAbbr) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getByBioguideIdByState($bioguideId, $stateAbbr);
+            return self::parseResult($terms);
+        }
+
+        public static function getByState($state, $year = null) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getByState($state, $year);
+            return self::parseResult($terms);
+        }
+
+        public static function getByParty($party, $year = null) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getByParty($party, $year);
+            return self::parseResult($terms);
         }
     }
 }

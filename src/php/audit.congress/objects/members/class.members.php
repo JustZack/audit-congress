@@ -60,31 +60,28 @@ namespace AuditCongress {
             $members = new MembersQuery();
             $members->setSearchColumns(["bioguideId"]);
             $members->setSearchValues([$bioguideId]);
-            return $members->selectFromDB();
+            return $members->selectFromDB()->fetchAllAssoc();
         }
 
-        /*
-            Fetch members whose names contain the given first, middle, or last name
-                Must provide atleast one of the names.
-        */
+        /*Fetch members whose names contain the given first, middle, or last name
+                Must provide atleast one of the names.*/
         public static function getByName($firstName = null, $lastName = null) {
             $members = new MembersQuery();
             $members->setEqualityOperator("like");
             $members->setSearchColumns(["first", "last"]);
             $members->setSearchValues([$firstName, $lastName]);
-            return $members->selectFromDB();
+            return $members->selectFromDB()->fetchAllAssoc();
         }
 
-        /*
-            Fetch members with the given gender (M or F at this time)
-        */
+        //Fetch members with the given gender (M or F at this time)
         public static function getByGender($gender) {
             $members = new MembersQuery();
             $members->setSearchColumns(["gender"]);
             $members->setSearchValues([$gender]);
-            return $members->selectFromDB();
+            return $members->selectFromDB()->fetchAllAssoc();
         }
 
+        //Update a members image url with the provided url and attribution
         public static function updateMemberImage($bioguideId, $imageUrl, $imageAttribution) {
             $members = new MembersQuery();
             $members->setSearchColumns(["bioguideId"]);
@@ -209,22 +206,19 @@ namespace AuditCongress {
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $members = MembersQuery::getByBioguideId($bioguideId);
-            $rows = $members->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($members);
         }
 
         public static function getByName($firstName = null, $lastName = null) {
             self::enforceCache();
             $members = MembersQuery::getByName($firstName, $lastName);
-            $rows = $members->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($members);
         }
 
         public static function getByGender($gender) {
             self::enforceCache();
             $members = MembersQuery::getByGender($gender);
-            $rows = $members->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($members);
         }
     }
 }

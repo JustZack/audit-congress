@@ -32,14 +32,14 @@ namespace AuditCongress {
             $terms = new MemberElectionsQuery();
             $terms->setSearchColumns(["bioguideId"]);
             $terms->setSearchValues([$bioguideId]);
-            return $terms->selectFromDB();
+            return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByFecId($fecId) {
             $terms = new MemberElectionsQuery();
             $terms->setSearchColumns(["fecId"]);
             $terms->setSearchValues([$fecId]);
-            return $terms->selectFromDB();
+            return $terms->selectFromDB()->fetchAllAssoc();
         }
     }
 
@@ -83,8 +83,13 @@ namespace AuditCongress {
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $elections = MemberElectionsQuery::getByBioguideId($bioguideId);
-            $rows = $elections->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($elections);
+        }
+
+        public static function getByFecId($fecId) {
+            self::enforceCache();
+            $elections = MemberElectionsQuery::getByFecId($fecId);
+            return self::parseResult($elections);
         }
     }
 }

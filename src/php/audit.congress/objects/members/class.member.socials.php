@@ -43,7 +43,7 @@ namespace AuditCongress {
             $socials = new MemberSocialsQuery();
             $socials->setSearchColumns(["bioguideId"]);
             $socials->setSearchValues([$bioguideId]);
-            return $socials->selectFromDB();
+            return $socials->selectFromDB()->fetchAllAssoc();
         }
     }
 
@@ -93,8 +93,7 @@ namespace AuditCongress {
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $socials = MemberSocialsQuery::getByBioguideId($bioguideId);
-            $rows = $socials->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($socials);
         }
     }
 }

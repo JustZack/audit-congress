@@ -91,6 +91,16 @@ namespace APITest {
             var_dump($rows);
         }
 
+        static function testSqTermsByPartyByYear($party, $year = null) {
+            $rows = \AuditCongress\MemberTerms::getByParty($party, $year);
+            var_dump($rows);
+        }
+
+        static function testSqTermsByStateByYear($state, $year = null) {
+            $rows = \AuditCongress\MemberTerms::getByState($state, $year);
+            var_dump($rows);
+        }
+
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }

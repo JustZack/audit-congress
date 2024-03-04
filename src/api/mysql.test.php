@@ -21,10 +21,12 @@ require_once "test/autoload.php";
 
 MySqlConnector::testEnforceSchema();
 //MySqlConnector::testSqlMemberById("A5");
-MySqlConnector::testSqlMemberByName("bob");
+//MySqlConnector::testSqlMemberByName("bob");
 //MySqlConnector::testSqlMemberOfficeById("A000055");
 //MySqlConnector::testSqlMemberSocialsById("A000055");
 //MySqlConnector::testSqlMemberById("A000055");
+//MySqlConnector::testSqTermsByPartyByYear("dem", "2020");
+MySqlConnector::testSqTermsByStateByYear("co", "2023");
 
 
 ?>

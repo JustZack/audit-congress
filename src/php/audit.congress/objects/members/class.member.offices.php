@@ -36,14 +36,14 @@ namespace AuditCongress {
             $offices = new MemberOfficesQuery();
             $offices->setSearchColumns(["bioguideId"]);
             $offices->setSearchValues([$bioguideId]);
-            return $offices->selectFromDB();
+            return $offices->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByOfficeId($officeId) {
             $offices = new MemberOfficesQuery();
             $offices->setSearchColumns(["officeId"]);
             $offices->setSearchValues([$officeId]);
-            return $offices->selectFromDB();
+            return $offices->selectFromDB()->fetchAllAssoc();
         }
     }
 
@@ -94,15 +94,13 @@ namespace AuditCongress {
 
         public static function getByBioguideId($bioguideId) {
             $offices = MemberOfficesQuery::getByBioguideId($bioguideId);
-            $rows = $offices->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($offices);
         }
 
         public static function getByOfficeId($officeId) {
             self::enforceCache();
             $offices = MemberOfficesQuery::getByOfficeId($officeId);
-            $rows = $offices->fetchAllAssoc();
-            return self::parseResult($rows);
+            return self::parseResult($offices);
         }
     }
 }
