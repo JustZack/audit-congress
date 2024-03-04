@@ -31,11 +31,6 @@ namespace MySqlConnector {
         public static function showTables() {
             return (new Database(Connection::getDatabase()))->showTables();
         }
-        //Change the database used by this connection
-        public static function useDatabase($database) {
-            Connection::useDatabase($database);
-        }
-
 
 
         //Describe the columns in this table
@@ -61,7 +56,7 @@ namespace MySqlConnector {
         //Create this table with columns described by $sql_column_descriptions_array
         public function create($sql_column_descriptions_array) {
             $sql = "CREATE TABLE `$this->name` %s";
-            $list = Query::buildItemList($sql_column_descriptions_array, true, "");
+            $list = QueryBuilder::buildItemList($sql_column_descriptions_array, true, "");
             $this->tableExists = null;
             return Query::runActionQuery($sql, [$list]);
         }
@@ -78,7 +73,7 @@ namespace MySqlConnector {
         public function select($selectColumns, $whereCondition = null, $orderBy = null, $limit = null) : Result {
             $sql = "SELECT %s FROM `$this->name`";
             
-            $colList = Query::buildItemList($selectColumns, false, "");
+            $colList = QueryBuilder::buildItemList($selectColumns, false, "");
             $sql = sprintf($sql, $colList);
 
             if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
@@ -88,28 +83,10 @@ namespace MySqlConnector {
             return Query::getResult($sql);
         }
 
-        //Build an insert statement for the columns and values
-        private static function buildInsert($table, $columns, $values) {
-            $sql = "INSERT INTO `$table` %s VALUES %s";
-            
-            $colList = Query::buildItemList($columns, true, "`");
-            $valList = Query::buildItemList($values, true, "'");
 
-            $sql = sprintf($sql, $colList, $valList);
-
-            return $sql;
-        }
-        private function throwIfColValMismatch($columns, $values) {
-            $numCols = count($columns); $numValues = count($values);
-            if ($numCols != $numValues) {
-                throw new SqlException("$this->name INSERT: Column count ($numCols) doesnt match value count ($numValues)");
-            }
-        }
         //Insert a row with the provided $columns and $values
         public function insert($columns, $values) {
-            $this->throwIfColValMismatch($columns, $values);
-
-            $sql = self::buildInsert($this->name, $columns, $values);
+            $sql = QueryBuilder::buildInsert($this->name, $columns, $values);
             
             return Query::runActionQuery($sql);
         }
@@ -117,12 +94,10 @@ namespace MySqlConnector {
         private $insertQueue = null;
         //Queue an insert to be run
         public function queueInsert($columns, $values) {
-            $this->throwIfColValMismatch($columns, $values);
-
             if ($this->insertQueue == null)
-                $this->insertQueue = self::buildInsert($this->name, $columns, $values);
+                $this->insertQueue = QueryBuilder::buildInsert($this->name, $columns, $values);
             else 
-                $this->insertQueue .= ",".Query::buildItemList($values, true, "'");
+                $this->insertQueue .= ",".QueryBuilder::buildItemList($values, true, "'");
         }
         //Commit queued inserts
         public function commitInsert() {
@@ -143,12 +118,12 @@ namespace MySqlConnector {
                 throw new SqlException("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
             $colsAndValues = array();
-            $values = Query::escapeStrings($values);
+            $values = QueryBuilder::escapeStrings($values);
             for ($i = 0;$i < $numCols;$i++) 
                 array_push($colsAndValues, "`".$columns[$i]."` = '".$values[$i]."'");
 
             
-            $colsAndValuesList = Query::buildSetList($colsAndValues);
+            $colsAndValuesList = QueryBuilder::buildSetList($colsAndValues);
 
             $sql = sprintf($sql, $colsAndValuesList, $whereCondition);
             var_dump($sql);
@@ -159,24 +134,8 @@ namespace MySqlConnector {
             $sql = "DELETE FROM `$this->name` WHERE %s";
             return Query::runActionQuery($sql, [$whereCondition]);
         }
-       
-        //Select an object based on the provided SQLObjects columns and whereCondition()
-        public function selectObject(SqlObject $sqlObj) {
-            return $this->select($sqlObj->getSelectColumns(), $sqlObj->whereCondition());
-        }
-        //Insert a row with provided SQLObjects columns and values
-        public function insertObject(SqlObject $sqlObj) {
-            return $this->insert($sqlObj->getColumns(), $sqlObj->getValues());
-        }
-        //Update a row with provided SQLObjects columns, values, and whereCondition()
-        public function updateObject(SqlObject $sqlObj) {
-            return $this->update($sqlObj->getColumns(), $sqlObj->getValues(), $sqlObj->whereCondition());
-        }
-        //Delete a row where the SQLObjects whereCondition is satisfied
-        public function deleteObject(SqlObject $sqlObj) {
-            return $this->delete($sqlObj->whereCondition());
-        }
 
+        //Truncate (drop) all rows in this table
         public function truncate() {
             $sql = "TRUNCATE `$this->name`";
             return Query::runActionQuery($sql);

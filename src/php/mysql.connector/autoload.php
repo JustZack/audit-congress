@@ -8,6 +8,7 @@ require_once MYSQLCONNECTOR_FOLDER."\\mysql.row.php";
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.connection.php";
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.exception.php";
 
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.builder.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.result.php";
 

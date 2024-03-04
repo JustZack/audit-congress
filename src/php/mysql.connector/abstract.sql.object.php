@@ -18,13 +18,23 @@ namespace MySqlConnector {
             $this->setConditionOperator($booleanOperator);
         }
 
-        public function selectFromDB() { return $this->table->selectObject($this); }
+        public function selectFromDB() { 
+            return $this->table->select($this->getSelectColumns(), $this->whereCondition());
+        }
 
-        public function deleteFromDb() { return $this->table->deleteObject($this); }
+        public function deleteFromDb() { 
+            return $this->table->delete($this->whereCondition());
+        }
 
-        public function insertIntoDB() { return $this->table->insertObject($this); }
+        public function insertIntoDB() { 
+            return $this->table->insert($this->getColumns(), $this->getValues());
 
-        public function updateInDb() { return $this->table->updateObject($this); }
+        }
+
+        public function updateInDb() { 
+            return $this->table->update($this->getColumns(), $this->getValues(), 
+                                        $this->whereCondition());
+        }
 
         //Set the boolean operator to use in the WHERE condition
         public function setConditionOperator($condition) {
@@ -49,10 +59,10 @@ namespace MySqlConnector {
             
             $sColumns = $this->getSearchColumns();
             $sValues = $this->getSearchValues();
-            if (!Query::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
+            if (!QueryBuilder::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
                 throw new SqlException("SqlObject: Column/Value set length mismatch");
             else 
-                $condition = Query::buildWhereCondition($sColumns, $sValues,
+                $condition = QueryBuilder::buildWhereCondition($sColumns, $sValues,
                                     $this->equalityOperator, $this->booleanConditon);
             return $condition;
         }
