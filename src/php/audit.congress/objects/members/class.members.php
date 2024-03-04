@@ -58,9 +58,8 @@ namespace AuditCongress {
 
         public static function getByBioguideId($bioguideId) {
             $offices = new MembersQuery();
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["bioguideId"]);
-            $offices->setValues([$bioguideId]);
+            $offices->setSearchColumns(["bioguideId"]);
+            $offices->setSearchValues([$bioguideId]);
             return $offices->selectFromDB();
         }
 
@@ -70,9 +69,8 @@ namespace AuditCongress {
         */
         public static function getByName($firstName = null, $lastName = null) {
             $offices = new MembersQuery();
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["first", "last"]);
-            $offices->setValues([$firstName, $lastName]);
+            $offices->setSearchColumns(["first", "last"]);
+            $offices->setSearchValues([$firstName, $lastName]);
             return $offices->selectFromDB();
         }
 
@@ -81,10 +79,18 @@ namespace AuditCongress {
         */
         public static function getByGender($gender) {
             $offices = new MembersQuery();
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["gender"]);
-            $offices->setValues([$gender]);
+            $offices->setSearchColumns(["gender"]);
+            $offices->setSearchValues([$gender]);
             return $offices->selectFromDB();
+        }
+
+        public static function updateMemberImage($bioguideId, $imageUrl, $imageAttribution) {
+            $offices = new MembersQuery();
+            $offices->setSearchColumns(["bioguideId"]);
+            $offices->setSearchValues([$bioguideId]);
+            $offices->setColumns(["imageUrl", "imageAttribution"]);
+            $offices->setValues([$imageUrl, $imageAttribution]);
+            return $offices->updateInDb();
         }
     }
 
@@ -137,7 +143,7 @@ namespace AuditCongress {
                 $this->queueInsert($member);
             }
         }
-        
+
         private static function apiPersonToRow($person, $isCurrent) {
             $rowArray = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
             $rowArray["isCurrent"] = $isCurrent;
@@ -167,9 +173,38 @@ namespace AuditCongress {
             if (!$allCachesValid) $members->updateCache();
         }
 
+        public static function ensureMembersHaveImage($rows) {
+            for ($i = 0;$i < count($rows);$i++) {
+                $row = $rows[$i];
+                if ($row["imageUrl"] == '') {
+                    $bioguideId = $row["bioguideId"];
+                    $congressMember = new \CongressGov\Member($bioguideId);
+                    $congressMember->fetchFromApi();
+                    $depiction = $congressMember->depiction;
+                    $imageUrl = false;
+                    $imageAttribution = false;
+                    if (is_array($depiction)) {
+                        $imageUrl = $depiction["imageUrl"];
+                        $imageAttribution = $depiction["attribution"];
+                    }
+                    var_dump($imageUrl);
+                    var_dump($imageAttribution);
+                    MembersQuery::updateMemberImage($bioguideId, $imageUrl, $imageAttribution);
+                    $row["imageUrl"] = $imageUrl;
+                    $row["imageAttribution"] = $imageAttribution;
+                }
+                $rows[$i] = $row;
+            }
+            return $rows;
+        }
+
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            return MembersQuery::getByBioguideId($bioguideId);
+            $member = MembersQuery::getByBioguideId($bioguideId);
+            $rows = $member->fetchAllAssoc();
+            $rows = self::ensureMembersHaveImage($rows);
+            var_dump($rows);
+            return $member;
         }
 
         public static function getByName($firstName = null, $lastName = null) {

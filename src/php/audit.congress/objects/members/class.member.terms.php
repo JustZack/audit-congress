@@ -51,25 +51,22 @@ namespace AuditCongress {
 
         public static function getByBioguideId($bioguideId) {
             $terms = new MemberTermsQuery();
-            $terms->setSelectColumns(["*"]);
-            $terms->setColumns(["bioguideId"]);
-            $terms->setValues([$bioguideId]);
+            $terms->setSearchColumns(["bioguideId"]);
+            $terms->setSearchValues([$bioguideId]);
             return $terms->selectFromDB();
         }
 
         public static function getByBioguideIdByType($bioguideId, $type) {
             $terms = new MemberTermsQuery();
-            $terms->setSelectColumns(["*"]);
-            $terms->setColumns(["bioguideId", "type"]);
-            $terms->setValues([$bioguideId, $type]);
+            $terms->setSearchColumns(["bioguideId", "type"]);
+            $terms->setSearchValues([$bioguideId, $type]);
             return $terms->selectFromDB();
         }
 
         public static function getByBioguideIdByState($bioguideId, $state) {
             $terms = new MemberTermsQuery();
-            $terms->setSelectColumns(["*"]);
-            $terms->setColumns(["bioguideId", "state"]);
-            $terms->setValues([$bioguideId, $state]);
+            $terms->setSearchColumns(["bioguideId", "state"]);
+            $terms->setSearchValues([$bioguideId, $state]);
             return $terms->selectFromDB();
         }
     }

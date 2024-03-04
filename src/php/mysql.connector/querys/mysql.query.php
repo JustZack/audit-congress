@@ -6,6 +6,7 @@ namespace MySqlConnector {
         public 
             $params = array(), 
             $sql_formated = "";
+            static $allowedOperators = array("=", "like", "<", "<=", "=>", ">");
         public function __construct($sql_string = null, $params = null) {
             if ($sql_string != null) $this->appendQuery($sql_string, $params);
         }
@@ -46,13 +47,13 @@ namespace MySqlConnector {
         public function execute() {
             $connection = Connection::getConnection();
             $result = new Result($connection->query($this->sql_formated), $this->sql_formated);
-            return Query::throwIfError($result);
+            return self::throwIfError($result);
         }
         //Run many queries that have already been appended
         public function executeMany() {
             $connection = Connection::getConnection();
             $result = new Result($connection->multi_query($this->sql_formated), $this->sql_formated);
-            return Query::throwIfError($result);
+            return self::throwIfError($result);
         }
 
 
@@ -64,11 +65,11 @@ namespace MySqlConnector {
         }
         //For running  returing true or false (success values)
         public static function runActionQuery($sql, $params = null) {
-            return Query::getResult($sql, $params)->success();
+            return self::getResult($sql, $params)->success();
         }
         //For running queries that return rows
         public static function runQuery($sql, $params = null) {
-            return Query::getResult($sql, $params)->fetchAll();
+            return self::getResult($sql, $params)->fetchAll();
         }
         //Build a formattable list with $numItems, like '(%s, %s, %s...)'
         public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {
@@ -79,14 +80,53 @@ namespace MySqlConnector {
             return $sql;
         }
 
-        //Build a list with the given items, parenthesis, and quote character
-        public static function buildList($items, $withParens = true, $quoteChar = "'") {
-            $listFormat = Query::buildFormattableList(count($items), $withParens, $quoteChar);
-            $cleanItems = array();
+        //Escape any special MySql chars in the given set of strings
+        public static function escapeStrings($strings) {
             $conn = Connection::getConnection();
-            foreach ($items as $item) array_push($cleanItems, $conn->real_escape_string($item));
-            $sql = sprintf($listFormat, ...$cleanItems);
+            $escaped = array();
+            foreach ($strings as $string) 
+                array_push($escaped, $conn->real_escape_string($string));
+            return $escaped;
+        }
+
+        //Build a list with the given items, parenthesis, and quote character
+        public static function buildItemList($items, $withParens = true, $quoteChar = "'", $escapeItems = true) {
+            $listFormat = self::buildFormattableList(count($items), $withParens, $quoteChar);
+            if ($escapeItems) $items = self::escapeStrings($items);
+            $sql = sprintf($listFormat, ...$items);
             return $sql;
+        }
+        //Build a list with the given items, parenthesis, and quote character
+        public static function buildSetList($items, $withParens = false, $quoteChar = "") {
+            return self::buildItemList($items, $withParens, $quoteChar, false);
+        }
+
+        //Check that the number of columns matches the number of values
+        public static function sameNumberOfColumnsAndValues($columns, $values) {
+            return count($columns) == count($values);
+        }
+        //Return a SQL string with the propper `column` = 'value' syntax
+        public static function getColumnEqualsValueSql($column, $value, $equalityOperator) {
+            if ($equalityOperator == "like") return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
+            else         return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
+        }
+        //Return a SQL string containing the given logical operator
+        public static function getLogicalOperatorSql($operator) {
+            return sprintf(" %s ", $operator);
+        }
+        //Get all columns and values with a non null value
+        public static function getUseableColumnsAndValues($columns, $values) {
+            $nonNullValues = array();
+            $nonNullColumns = array();
+
+            for ($i = 0;$i < count($columns);$i++) {
+                if (!empty($values[$i])) {
+                    array_push($nonNullValues, $values[$i]);
+                    array_push($nonNullColumns, $columns[$i]);
+                }
+            }
+
+            return ["columns" => $nonNullColumns, "values" => $nonNullValues];
         }
     }
 }

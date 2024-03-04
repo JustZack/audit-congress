@@ -16,8 +16,8 @@ namespace AuditCongress {
         public static function getSelectObject($values) {
             list(0=>$congress, 1=>$type, 2=>$number) = $values;
             $selectObj = new SQLBill("bills");
-            $selectObj->setColumns(["congress", "type", "number"]);
-            $selectObj->setValues([$congress, $type, $number]);
+            $selectObj->setSearchColumns(["congress", "type", "number"]);
+            $selectObj->setSearchValues([$congress, $type, $number]);
             $selectObj->setSelectColumns(["congress", "type", "number", "title", ""]);
             return $selectObj;
         }
@@ -26,8 +26,8 @@ namespace AuditCongress {
         public static function getManipulateObject($values) {
             list("congres"=>$congress, "type"=>$type, "number"=>$number, "title"=>$title, "sponsor"=>$sponsorBioguideID) = $values;
             $manipObj = new SQLBill("bills");
-            $manipObj->setColumns(["congress", "type", "number", "title", "sponsor"]);
-            $manipObj->setValues([$congress, $type, $number, $title, $sponsorBioguideID]);
+            $manipObj->setSearchColumns(["congress", "type", "number", "title", "sponsor"]);
+            $manipObj->setSearchValues([$congress, $type, $number, $title, $sponsorBioguideID]);
             return $manipObj;
         }
     }

@@ -41,9 +41,8 @@ namespace AuditCongress {
 
         public static function getByBioguideId($bioguideId) {
             $socials = new MemberSocialsQuery();
-            $socials->setSelectColumns(["*"]);
-            $socials->setColumns(["bioguideId"]);
-            $socials->setValues([$bioguideId]);
+            $socials->setSearchColumns(["bioguideId"]);
+            $socials->setSearchValues([$bioguideId]);
             return $socials->selectFromDB();
         }
     }

@@ -34,17 +34,15 @@ namespace AuditCongress {
 
         public static function getByBioguideId($bioguideId) {
             $offices = new MemberOfficesQuery();
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["bioguideId"]);
-            $offices->setValues([$bioguideId]);
+            $offices->setSearchColumns(["bioguideId"]);
+            $offices->setSearchValues([$bioguideId]);
             return $offices->selectFromDB();
         }
 
         public static function getByOfficeId($officeId) {
             $offices = new MemberOfficesQuery();
-            $offices->setSelectColumns(["*"]);
-            $offices->setColumns(["officeId"]);
-            $offices->setValues([$officeId]);
+            $offices->setSearchColumns(["officeId"]);
+            $offices->setSearchValues([$officeId]);
             return $offices->selectFromDB();
         }
     }
