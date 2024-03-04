@@ -174,7 +174,7 @@ namespace AuditCongress {
         }
 
         //Set the given members image if available (false if not)
-        public static function setMemberImage($bioguideId) {
+        public static function getMemberImage($bioguideId) {
             $congressMember = new \CongressGov\Member($bioguideId);
             $depiction = $congressMember->depiction;
             $imageUrl = $imageAttribution = false;
@@ -182,7 +182,6 @@ namespace AuditCongress {
                 $imageUrl = $depiction["imageUrl"];
                 $imageAttribution = $depiction["attribution"];
             }
-            MembersQuery::updateMemberImage($bioguideId, $imageUrl, $imageAttribution);
             return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
         }
         //Make sure the given array of members have image urls set
@@ -190,9 +189,9 @@ namespace AuditCongress {
             $members = array();
             foreach ($rows as $row) {
                 if ($row["imageUrl"] == '') {
-                    $result = self::setMemberImage($row["bioguideId"]);
-                    $row["imageUrl"] = $result["imageUrl"];
-                    $row["imageAttribution"] = $result["imageAttribution"];
+                    list("imageUrl"=>$imgUrl, "imageAttribution"=>$imgAttr) = self::getMemberImage($row["bioguideId"]);
+                    $row["imageUrl"] = $imgUrl; $row["imageAttribution"] = $imgAttr;
+                    MembersQuery::updateMemberImage($row["bioguideId"], $imgUrl, $imgAttr);
                 }
                 array_push($members, $row);
             }
