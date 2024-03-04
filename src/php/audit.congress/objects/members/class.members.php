@@ -178,7 +178,7 @@ namespace AuditCongress {
         public static function getMemberImage($bioguideId) {
             $congressMember = new \CongressGov\Member($bioguideId);
             $depiction = $congressMember->depiction;
-            $imageUrl = $imageAttribution = false;
+            $imageUrl = $imageAttribution = 'false';
             if (is_array($depiction)) {
                 $imageUrl = $depiction["imageUrl"];
                 $imageAttribution = $depiction["attribution"];
