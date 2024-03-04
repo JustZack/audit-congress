@@ -19,6 +19,8 @@ namespace CongressGov {
 
             $this->route = "member/$this->bioguideId/cosponsored-legislation";
             $this->setUidFromRoute();
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

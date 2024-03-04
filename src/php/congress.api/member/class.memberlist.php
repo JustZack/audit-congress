@@ -26,6 +26,8 @@ namespace CongressGov {
             $this->setUidFromRoute();
             
             $this->route = "member/";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {
