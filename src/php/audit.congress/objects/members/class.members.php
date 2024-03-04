@@ -9,15 +9,15 @@ namespace AuditCongress {
 
     class MemberRow extends SqlRow {
         public
-            $bioguide,
-            $thomas,
-            $lis,
-            $govtrack,
-            $opensecrets,
-            $votesmart,
-            $cspan,
-            $maplight,
-            $icpsr,
+            $bioguideId,
+            $thomasId,
+            $lisId,
+            $govTrackId,
+            $openSecretsId,
+            $voteSmartId,
+            $cspanId,
+            $mapLightId,
+            $icpsrId,
             $wikidata,
             $google_entity_id,
 
@@ -43,9 +43,9 @@ namespace AuditCongress {
         }
 
         public function getValues() {
-            return [$this->bioguide,$this->thomas,$this->lis,$this->govtrack,
-            $this->opensecrets,$this->votesmart,$this->cspan,$this->maplight,
-            $this->icpsr,$this->wikidata,$this->google_entity_id,
+            return [$this->bioguideId,$this->thomasId,$this->lisId,$this->govTrackId,
+            $this->openSecretsId,$this->voteSmartId,$this->cspanId,$this->mapLightId,
+            $this->icpsrId,$this->wikidata,$this->google_entity_id,
             $this->official_full,$this->first,$this->last,
             $this->gender,$this->birthday,$this->imageUrl,$this->imageAttribution,
             $this->isCurrent, $this->lastUpdate,$this->nextUpdate];
@@ -57,10 +57,10 @@ namespace AuditCongress {
         }
 
         public static function getByBioguideId($bioguideId) {
-            $offices = new MembersQuery();
-            $offices->setSearchColumns(["bioguideId"]);
-            $offices->setSearchValues([$bioguideId]);
-            return $offices->selectFromDB();
+            $members = new MembersQuery();
+            $members->setSearchColumns(["bioguideId"]);
+            $members->setSearchValues([$bioguideId]);
+            return $members->selectFromDB();
         }
 
         /*
@@ -68,29 +68,30 @@ namespace AuditCongress {
                 Must provide atleast one of the names.
         */
         public static function getByName($firstName = null, $lastName = null) {
-            $offices = new MembersQuery();
-            $offices->setSearchColumns(["first", "last"]);
-            $offices->setSearchValues([$firstName, $lastName]);
-            return $offices->selectFromDB();
+            $members = new MembersQuery();
+            $members->setEqualityOperator("like");
+            $members->setSearchColumns(["first", "last"]);
+            $members->setSearchValues([$firstName, $lastName]);
+            return $members->selectFromDB();
         }
 
         /*
             Fetch members with the given gender (M or F at this time)
         */
         public static function getByGender($gender) {
-            $offices = new MembersQuery();
-            $offices->setSearchColumns(["gender"]);
-            $offices->setSearchValues([$gender]);
-            return $offices->selectFromDB();
+            $members = new MembersQuery();
+            $members->setSearchColumns(["gender"]);
+            $members->setSearchValues([$gender]);
+            return $members->selectFromDB();
         }
 
         public static function updateMemberImage($bioguideId, $imageUrl, $imageAttribution) {
-            $offices = new MembersQuery();
-            $offices->setSearchColumns(["bioguideId"]);
-            $offices->setSearchValues([$bioguideId]);
-            $offices->setColumns(["imageUrl", "imageAttribution"]);
-            $offices->setValues([$imageUrl, $imageAttribution]);
-            return $offices->updateInDb();
+            $members = new MembersQuery();
+            $members->setSearchColumns(["bioguideId"]);
+            $members->setSearchValues([$bioguideId]);
+            $members->setColumns(["imageUrl", "imageAttribution"]);
+            $members->setValues([$imageUrl, $imageAttribution]);
+            return $members->updateInDb();
         }
     }
 
@@ -189,32 +190,41 @@ namespace AuditCongress {
             $members = array();
             foreach ($rows as $row) {
                 if ($row["imageUrl"] == '') {
-                    list("imageUrl"=>$imgUrl, "imageAttribution"=>$imgAttr) = self::getMemberImage($row["bioguideId"]);
-                    $row["imageUrl"] = $imgUrl; $row["imageAttribution"] = $imgAttr;
-                    MembersQuery::updateMemberImage($row["bioguideId"], $imgUrl, $imgAttr);
+                    $bioguideId = $row["bioguideId"];
+                    list("imageUrl"=>$imgUrl, "imageAttribution"=>$imgAttr) = self::getMemberImage($bioguideId);
+                    $row["imageUrl"] = $imgUrl; 
+                    $row["imageAttribution"] = $imgAttr;
+                    MembersQuery::updateMemberImage($bioguideId, $imgUrl, $imgAttr);
                 }
                 array_push($members, $row);
             }
             return $members;
         }
 
+        protected static function parseResult($resultRows) {
+            $rows = self::ensureMembersHaveImage($resultRows);
+            return MemberRow::rowsToObjects($rows);
+        }
+
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            $member = MembersQuery::getByBioguideId($bioguideId);
-            $rows = $member->fetchAllAssoc();
-            $rows = self::ensureMembersHaveImage($rows);
-            var_dump($rows);
-            return $member;
+            $members = MembersQuery::getByBioguideId($bioguideId);
+            $rows = $members->fetchAllAssoc();
+            return self::parseResult($rows);
         }
 
         public static function getByName($firstName = null, $lastName = null) {
             self::enforceCache();
-            return MembersQuery::getByName($firstName, $lastName);
+            $members = MembersQuery::getByName($firstName, $lastName);
+            $rows = $members->fetchAllAssoc();
+            return self::parseResult($rows);
         }
 
         public static function getByGender($gender) {
             self::enforceCache();
-            return MembersQuery::getByGender($gender);
+            $members = MembersQuery::getByGender($gender);
+            $rows = $members->fetchAllAssoc();
+            return self::parseResult($rows);
         }
     }
 }

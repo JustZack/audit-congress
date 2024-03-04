@@ -13,6 +13,16 @@ namespace MySqlConnector {
                 if (($keyMustExist && property_exists($this, $key)) || !$keyMustExist) 
                     $this->{$key} = $value;
         }
+
+        
+        public static function rowsToObjects($rows) {
+            $rowObjects = array();
+            $objectType = static::class;
+            foreach ($rows as $row) {
+                array_push($rowObjects, new $objectType($row));
+            }
+            return $rowObjects;
+        }
     }
 }
 

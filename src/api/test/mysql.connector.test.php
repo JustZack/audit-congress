@@ -71,25 +71,24 @@ namespace APITest {
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
 
-        static function testSqlMemberByName($fname, $middle, $lname) {
-            $result = \AuditCongress\Members::getByName($fname, $middle, $lname);
-            var_dump($result->fetchAllAssoc());
-            //var_dump($result);
+        static function testSqlMemberByName($fname = null, $lname = null) {
+            $rows = \AuditCongress\Members::getByName($fname, $lname);
+            var_dump($rows);
         }
 
         static function testSqlMemberOfficeById($id) {
-            $result = \AuditCongress\MemberOffices::getByBioguideId($id);
-            var_dump($result->fetchAllAssoc());
+            $rows = \AuditCongress\MemberOffices::getByBioguideId($id);
+            var_dump($rows);
         }
 
         static function testSqlMemberSocialsById($id) {
-            $result = \AuditCongress\MemberSocials::getByBioguideId($id);
-            var_dump($result->fetchAllAssoc());
+            $rows = \AuditCongress\MemberSocials::getByBioguideId($id);
+            var_dump($rows);
         }
 
         static function testSqlMemberById($id) {
-            $result = \AuditCongress\Members::getByBioguideId($id);
-            var_dump($result->fetchAllAssoc());
+            $rows = \AuditCongress\Members::getByBioguideId($id);
+            var_dump($rows);
         }
 
         static function testEnforceSchema() {

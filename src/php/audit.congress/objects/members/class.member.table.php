@@ -25,7 +25,7 @@ namespace AuditCongress {
         
         public static abstract function getInstance();
 
-
+        protected static abstract function parseResult($resultRows);
     }
 }
 

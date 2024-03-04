@@ -88,14 +88,21 @@ namespace AuditCongress {
             return self::$memberOfficesTable;
         }
 
+        protected static function parseResult($resultRows) {
+            return MemberOfficesRow::rowsToObjects($resultRows);
+        }
+
         public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            return MemberOfficesQuery::getByBioguideId($bioguideId);
+            $offices = MemberOfficesQuery::getByBioguideId($bioguideId);
+            $rows = $offices->fetchAllAssoc();
+            return self::parseResult($rows);
         }
 
         public static function getByOfficeId($officeId) {
             self::enforceCache();
-            return MemberOfficesQuery::getByOfficeId($officeId);
+            $offices = MemberOfficesQuery::getByOfficeId($officeId);
+            $rows = $offices->fetchAllAssoc();
+            return self::parseResult($rows);
         }
     }
 }

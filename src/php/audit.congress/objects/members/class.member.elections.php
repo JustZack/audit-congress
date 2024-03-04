@@ -76,9 +76,15 @@ namespace AuditCongress {
             return self::$memberTermsTable;
         }
 
+        protected static function parseResult($resultRows) {
+            return MemberElectionRow::rowsToObjects($resultRows);
+        }
+
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            return MemberTermsQuery::getByBioguideId($bioguideId);
+            $elections = MemberElectionsQuery::getByBioguideId($bioguideId);
+            $rows = $elections->fetchAllAssoc();
+            return self::parseResult($rows);
         }
     }
 }

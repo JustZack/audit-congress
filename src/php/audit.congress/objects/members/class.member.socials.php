@@ -86,9 +86,15 @@ namespace AuditCongress {
             return self::$memberSocialsTable;
         }
 
+        protected static function parseResult($resultRows) {
+            return MemberSocialsRow::rowsToObjects($resultRows);
+        }
+
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            return MemberSocialsQuery::getByBioguideId($bioguideId);
+            $socials = MemberSocialsQuery::getByBioguideId($bioguideId);
+            $rows = $socials->fetchAllAssoc();
+            return self::parseResult($rows);
         }
     }
 }

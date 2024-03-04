@@ -101,9 +101,15 @@ namespace AuditCongress {
             return self::$memberTermsTable;
         }
 
+        protected static function parseResult($resultRows) {
+            return MemberTermRow::rowsToObjects($resultRows);
+        }
+
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            return MemberTermsQuery::getByBioguideId($bioguideId);
+            $terms = MemberTermsQuery::getByBioguideId($bioguideId);
+            $rows = $terms->fetchAllAssoc();
+            return self::parseResult($rows);
         }
     }
 }
