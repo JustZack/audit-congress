@@ -11,7 +11,7 @@ namespace MySqlConnector {
         }
 
         private static function debugPrint($message) {
-            if (SchemaEnforcer::$debug_log && strlen($message) > 0) 
+            if (self::$debug_log && strlen($message) > 0) 
                 echo $message."\n";
         }
 
@@ -24,17 +24,17 @@ namespace MySqlConnector {
                 //Add this table name as a known table
                 $schemaTableNames[strtolower($name)] = true;
                 //Enforce the known schema onto this table
-                SchemaEnforcer::enforceTableSchema($name, $columns);
+                self::enforceTableSchema($name, $columns);
             }
             //Second pass to drop all tables not listed in the schema
-            SchemaEnforcer::dropUnknownTables($schemaTableNames);
+            self::dropUnknownTables($schemaTableNames);
 
         }
 
         //For the given table $name, enforce the given $columns onto its schema
         private static function enforceTableSchema($name, $columns) {
             //Get the schemas columns in the form of a \MySqlConnector\Columns object
-            $columnsExpected = SchemaEnforcer::getSchemaColumnsAsObject($columns);
+            $columnsExpected = self::getSchemaColumnsAsObject($columns);
             //Create an object for this table
             $table = new Table($name);
 
@@ -42,10 +42,10 @@ namespace MySqlConnector {
             if (!$table->exists()) {
                 $columnCreateSqlArr = $columnsExpected->getSqlCreateStrings();
                 $table->create($columnCreateSqlArr);
-                SchemaEnforcer::debugPrint("Create Table $name\n");
+                self::debugPrint("Create Table $name\n");
             }
             //Otherwise enforce the schema for this table
-            else SchemaEnforcer::enforceColumnSchema($table, $columnsExpected, $table->columns());
+            else self::enforceColumnSchema($table, $columnsExpected, $table->columns());
         }
 
         //Given the $schemaKnownTables, drop all tables outside of this list
@@ -57,7 +57,7 @@ namespace MySqlConnector {
                 if (!isset($schemaKnownTables[strtolower($name)])) {
                     $table = new Table($name);
                     $table->drop();
-                    SchemaEnforcer::debugPrint("Drop Table $name\n");
+                    self::debugPrint("Drop Table $name\n");
                 }
         }
 
@@ -65,8 +65,24 @@ namespace MySqlConnector {
         private static function enforceColumnSchema($table, $columnsExpected, $columnsExisting) {
             $columnsDiff = $columnsExpected->compareEach($columnsExisting);
             foreach ($columnsDiff as $name=>$data) //Broken into handler to simplify
-                SchemaEnforcer::handleEnforceColumnSchema($table, $name, $data);
+                self::handleEnforceColumnSchema($table, $name, $data);
         }
+
+        private static function dropColumn($table, $name, $type) {
+            $table->dropColumn($name, $type);  
+            self::debugPrint("Drop $name=>$type"); 
+        }
+
+        private static function addColumn($table, $name, $type) {
+            $table->addColumn($name, $type);  
+            self::debugPrint("Add $name=>$type"); 
+        }
+
+        private static function modifyColumn($table, $name, $type) {
+            $table->modifyColumn($name, $type);  
+            self::debugPrint("Add $name=>$type"); 
+        }
+
 
         private static function handleEnforceColumnSchema($table, $name, $data) {
             //Break parts of the data into their own vars
@@ -74,25 +90,13 @@ namespace MySqlConnector {
             $extra = $data["extra"];
             $exists = $data["exists"];
             $matches = $data["matches"];
-            $debug_message = "";
             
             //Drop extra columns
-            if ($extra) { 
-                $table->dropColumn($name, $type);  
-                $debug_message = "Drop $name=>$type\n"; 
-            }
+            if ($extra) self::dropColumn($table, $name, $type);
             //Add missing columns
-            else if (!$exists) { 
-                $table->addColumn($name, $type);  
-                $debug_message = "Add $name=>$type\n"; 
-            }
+            else if (!$exists) self::addColumn($table, $name, $type);
             //Modify column mismatches
-            else if (!$matches) { 
-                $table->modifyColumn($name, $type); 
-                $debug_message = "Modify $name=>$type\n"; 
-            }
-
-            SchemaEnforcer::debugPrint($debug_message);
+            else if (!$matches) self::modifyColumn($table, $name, $type);
         }
 
         //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
