@@ -179,7 +179,6 @@ namespace AuditCongress {
                 if ($row["imageUrl"] == '') {
                     $bioguideId = $row["bioguideId"];
                     $congressMember = new \CongressGov\Member($bioguideId);
-                    $congressMember->fetchFromApi();
                     $depiction = $congressMember->depiction;
                     $imageUrl = false;
                     $imageAttribution = false;
