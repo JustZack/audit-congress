@@ -67,6 +67,8 @@ namespace ProPublica {
             $this->route = "$this->congress/bills/$this->bill_slug";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

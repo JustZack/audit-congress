@@ -16,6 +16,8 @@ namespace ProPublica {
             $this->route = "$this->congress/$this->chamber/committees/$this->committeeId";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {
