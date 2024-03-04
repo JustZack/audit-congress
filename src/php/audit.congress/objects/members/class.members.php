@@ -173,28 +173,30 @@ namespace AuditCongress {
             if (!$allCachesValid) $members->updateCache();
         }
 
-        public static function ensureMembersHaveImage($rows) {
-            for ($i = 0;$i < count($rows);$i++) {
-                $row = $rows[$i];
-                if ($row["imageUrl"] == '') {
-                    $bioguideId = $row["bioguideId"];
-                    $congressMember = new \CongressGov\Member($bioguideId);
-                    $depiction = $congressMember->depiction;
-                    $imageUrl = false;
-                    $imageAttribution = false;
-                    if (is_array($depiction)) {
-                        $imageUrl = $depiction["imageUrl"];
-                        $imageAttribution = $depiction["attribution"];
-                    }
-                    var_dump($imageUrl);
-                    var_dump($imageAttribution);
-                    MembersQuery::updateMemberImage($bioguideId, $imageUrl, $imageAttribution);
-                    $row["imageUrl"] = $imageUrl;
-                    $row["imageAttribution"] = $imageAttribution;
-                }
-                $rows[$i] = $row;
+        //Set the given members image if available (false if not)
+        public static function setMemberImage($bioguideId) {
+            $congressMember = new \CongressGov\Member($bioguideId);
+            $depiction = $congressMember->depiction;
+            $imageUrl = $imageAttribution = false;
+            if (is_array($depiction)) {
+                $imageUrl = $depiction["imageUrl"];
+                $imageAttribution = $depiction["attribution"];
             }
-            return $rows;
+            MembersQuery::updateMemberImage($bioguideId, $imageUrl, $imageAttribution);
+            return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
+        }
+        //Make sure the given array of members have image urls set
+        public static function ensureMembersHaveImage($rows) {
+            $members = array();
+            foreach ($rows as $row) {
+                if ($row["imageUrl"] == '') {
+                    $result = self::setMemberImage($row["bioguideId"]);
+                    $row["imageUrl"] = $result["imageUrl"];
+                    $row["imageAttribution"] = $result["imageAttribution"];
+                }
+                array_push($members, $row);
+            }
+            return $members;
         }
 
         public static function getByBioguideId($bioguideId) {
