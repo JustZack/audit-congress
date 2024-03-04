@@ -14,8 +14,8 @@ namespace MySqlConnector {
 
         public function __construct($tableName, $equalityOperator = "=", $booleanOperator = "AND") {
             $this->setTableName($tableName);
-            $this->equalityOperator = $equalityOperator;
-            $this->booleanConditon = $booleanOperator;
+            $this->setEqualityOperator($equalityOperator);
+            $this->setConditionOperator($booleanOperator);
         }
 
         public function selectFromDB() { return $this->table->selectObject($this); }
@@ -26,38 +26,34 @@ namespace MySqlConnector {
 
         public function updateInDb() { return $this->table->updateObject($this); }
 
-        //Use AND to separate condtions
-        public function useAnd() { $this->booleanConditon = "AND"; }
-        //Use OR to separate condtions
-        public function useOr() { $this->booleanConditon = "OR"; }
-
+        //Set the boolean operator to use in the WHERE condition
+        public function setConditionOperator($condition) {
+            $condition = strtolower($condition);
+            if (in_array($condition, Query::$allowedConditions))
+                $this->booleanConditon = $condition;
+            else throw new SqlException("SQLObject: Tried using an unsupported condition '$condition'");
+        }
         //Set the equality oeprator to use in the WHERE condition        
         public function setEqualityOperator($operator) {
             $operator = strtolower($operator);
             if (in_array($operator, Query::$allowedOperators))
                 $this->equalityOperator = $operator;
-            else throw new SqlException("SQLObject: Tried using an unknown operator '$operator'");
+            else throw new SqlException("SQLObject: Tried using an unsupported operator '$operator'");
         }
        
+
+
         //Return a condtion for this sql object with the set boolean operator and '=' or 'like'
         public function whereCondition() {
             $condition = "";
             
             $sColumns = $this->getSearchColumns();
             $sValues = $this->getSearchValues();
-            if (!Query::sameNumberOfColumnsAndValues($sColumns, $sValues)) throw new \Exception("Column/Value set length mismatch");
-            else {
-                list("columns" => $columns, "values" => $values) = Query::getUseableColumnsAndValues($sColumns, $sValues);
-                //For each column
-                $numColumns = count($columns);
-                for ($i = 0;$i < $numColumns;$i++) {
-                    //Set column = value sql string
-                    $condition .= Query::getColumnEqualsValueSql($columns[$i], $values[$i], $this->equalityOperator);
-                    if ($i < $numColumns-1) //If we are not on the last condition, add the operator
-                        $condition .= Query::getLogicalOperatorSql($this->booleanConditon);
-                }
-            }
-            var_dump($condition);
+            if (!Query::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
+                throw new SqlException("SqlObject: Column/Value set length mismatch");
+            else 
+                $condition = Query::buildWhereCondition($sColumns, $sValues,
+                                    $this->equalityOperator, $this->booleanConditon);
             return $condition;
         }
 

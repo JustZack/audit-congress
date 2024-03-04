@@ -6,7 +6,8 @@ namespace MySqlConnector {
         public 
             $params = array(), 
             $sql_formated = "";
-            static $allowedOperators = array("=", "like", "<", "<=", "=>", ">");
+            static $allowedOperators = array("=", "like", "<", "<=", "=>", ">"),
+            $allowedConditions = array("and", "or");
         public function __construct($sql_string = null, $params = null) {
             if ($sql_string != null) $this->appendQuery($sql_string, $params);
         }
@@ -101,6 +102,7 @@ namespace MySqlConnector {
             return self::buildItemList($items, $withParens, $quoteChar, false);
         }
 
+
         //Check that the number of columns matches the number of values
         public static function sameNumberOfColumnsAndValues($columns, $values) {
             return count($columns) == count($values);
@@ -127,6 +129,22 @@ namespace MySqlConnector {
             }
 
             return ["columns" => $nonNullColumns, "values" => $nonNullValues];
+        }
+        //Build the where condition for a query
+        public static function buildWhereCondition($columns, $values, $equalityOperator, $booleanConditon) {
+            $useable = Query::getUseableColumnsAndValues($columns, $values);
+            $values = Query::escapeStrings($useable["values"]);
+            $columns = $useable["columns"];
+
+            $condition = "";
+            $numColumns = count($columns);
+            for ($i = 0;$i < $numColumns;$i++) {
+                //Set column = value sql string
+                $condition .= Query::getColumnEqualsValueSql($columns[$i], $values[$i], $equalityOperator);
+                if ($i < $numColumns-1) //If we are not on the last condition, add the operator
+                    $condition .= Query::getLogicalOperatorSql($booleanConditon);
+            }
+            return $condition;
         }
     }
 }
