@@ -18,8 +18,8 @@ namespace AuditCongress {
             $cspanId,
             $mapLightId,
             $icpsrId,
-            $wikidata,
-            $google_entity_id,
+            $wikidataId,
+            $googleEntityId,
 
             $official_full,
             $first,
@@ -37,7 +37,7 @@ namespace AuditCongress {
         public function getColumns() {
             return ["bioguideId","thomasId","lisId","govTrackId",
             "openSecretsId","voteSmartId","cspanId","mapLightId","icpsrId",
-            "wikidata","google_entity_id","official_full","first","last",
+            "wikidataId","googleEntityId","official_full","first","last",
             "gender","birthday","imageUrl","imageAttribution","isCurrent",
             "lastUpdate","nextUpdate"];
         }
@@ -45,7 +45,7 @@ namespace AuditCongress {
         public function getValues() {
             return [$this->bioguideId,$this->thomasId,$this->lisId,$this->govTrackId,
             $this->openSecretsId,$this->voteSmartId,$this->cspanId,$this->mapLightId,
-            $this->icpsrId,$this->wikidata,$this->google_entity_id,
+            $this->icpsrId,$this->wikidataId,$this->googleEntityId,
             $this->official_full,$this->first,$this->last,
             $this->gender,$this->birthday,$this->imageUrl,$this->imageAttribution,
             $this->isCurrent, $this->lastUpdate,$this->nextUpdate];
@@ -143,7 +143,18 @@ namespace AuditCongress {
         }
 
         private static function apiPersonToRow($person, $isCurrent) {
-            $rowArray = array_merge($person->id->toArray(), $person->name->toArray(), $person->bio->toArray());
+            $rowArray["bioguideId"] = $person->id->bioguide;
+            $rowArray["thomasId"] = $person->id->thomas;
+            $rowArray["lisId"] = $person->id->lis;
+            $rowArray["govTrackId"] = $person->id->govtrack;
+            $rowArray["openSecretsId"] = $person->id->opensecrets;
+            $rowArray["voteSmartId"] = $person->id->votesmart;
+            $rowArray["cspanId"] = $person->id->cspan;
+            $rowArray["mapLightId"] = $person->id->maplight;
+            $rowArray["icpsrId"] = $person->id->icpsr;
+            $rowArray["wikidataId"] = $person->id->wikidata;
+            $rowArray["googleEntityId"] = $person->id->google_entity_id;
+            $rowArray = array_merge($rowArray, $person->name->toArray(), $person->bio->toArray());
             $rowArray["isCurrent"] = $isCurrent;
             $rowArray = self::setUpdateTimes($rowArray);
             return $rowArray;

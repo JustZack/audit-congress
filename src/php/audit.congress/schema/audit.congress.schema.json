@@ -15,20 +15,20 @@
                     "cspanId": {  "type": "VARCHAR(50)", "null": "YES" },
                     "mapLightId": { "type": "VARCHAR(50)", "null": "YES" },
                     "icpsrId": {  "type": "VARCHAR(50)", "null": "YES" },
-                    "wikidata": {  "type": "VARCHAR(50)", "null": "YES" },
-                    "google_entity_id": { "type": "VARCHAR(50)", "null": "YES" },
+                    "wikidataId": {  "type": "VARCHAR(50)", "null": "YES" },
+                    "googleEntityId": { "type": "VARCHAR(50)", "null": "YES" },
 
                     "official_full": { "type": "VARCHAR(150)", "null": "YES" },
                     "first": { "type": "VARCHAR(50)", "null": "NO" },
                     "last": { "type": "VARCHAR(50)", "null": "NO" },
                     "gender": { "type": "VARCHAR(50)", "null": "YES" },
-                    "birthday": { "type": "VARCHAR(20)", "null": "YES" },
+                    "birthday": { "type": "DATE", "null": "YES" },
                     "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
                     "isCurrent": { "type": "TINYINT(1)", "null": "NO" },
 
-                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
                 }
             },
             {
@@ -36,8 +36,9 @@
                 "columns": {
                     "fecId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
-                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
+                    
+                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
                 }
             },
             {
@@ -53,8 +54,8 @@
                     "instagram": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagramId": { "type": "VARCHAR(250)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
                 }
             },
             {
@@ -62,8 +63,8 @@
                 "columns": {
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
                     "type": { "type": "VARCHAR(25)", "null": "YES" },
-                    "start": { "type": "VARCHAR(12)", "null": "YES" },
-                    "end": { "type": "VARCHAR(12)", "null": "YES" },
+                    "start": { "type": "DATE", "null": "YES" },
+                    "end": { "type": "DATE", "null": "YES" },
                     
                     "state": { "type": "VARCHAR(50)", "null": "YES" },
                     "district": { "type": "INT(11)", "null": "YES" },
@@ -79,8 +80,8 @@
                     "office": { "type": "VARCHAR(100)", "null": "YES" },
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
                 }
             },
             {
@@ -102,8 +103,8 @@
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
                     "fax": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "int(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "int(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
+                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
                 }
             }
         ]

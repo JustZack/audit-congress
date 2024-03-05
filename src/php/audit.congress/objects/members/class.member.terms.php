@@ -94,6 +94,7 @@ namespace AuditCongress {
         }
 
         public function insertPersonTerms($person) {
+            //TODO: Split member term "start" and "end" into year/month/day columns for easier selecting
             $bioguideId = $person->id->bioguide;
             $terms = $person->getTerms();
             foreach ($terms as $term) {
