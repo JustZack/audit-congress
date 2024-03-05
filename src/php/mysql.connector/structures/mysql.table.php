@@ -77,7 +77,7 @@ namespace MySqlConnector {
             $sql = sprintf($sql, $colList);
 
             if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
-            if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
+            if ($orderBy != null)        $sql .= sprintf(" ORDER BY `%s`", $orderBy);
             if ($limit != null)          $sql .= sprintf(" LIMIT %s", $limit);
           
             return Query::getResult($sql);
