@@ -7,7 +7,9 @@ namespace MySqlConnector {
             $searchColumns = array(), 
             $searchValues = array(),  
             $columns = array(), 
-            $values = array();
+            $values = array(),
+            $orderBy = null,
+            $limit = null;
         protected Table $table;
         private $booleanConditon = "AND", $equalityOperator = false;
 
@@ -18,7 +20,8 @@ namespace MySqlConnector {
         }
 
         public function selectFromDB() { 
-            return $this->table->select($this->getSelectColumns(), $this->whereCondition());
+            return $this->table->select($this->getSelectColumns(), $this->whereCondition(),
+                                        $this->getOrderBy(), $this->getLimit());
         }
 
         public function deleteFromDb() { 
@@ -88,6 +91,18 @@ namespace MySqlConnector {
         public function getValues() { return $this->values; }
         //Set the values used by this object
         public function setValues(array $newValues) { return $this->values = $newValues; }
+
+        //Get the values provided to this object
+        public function getOrderBy() { return $this->orderBy; }
+        //Set the values used by this object
+        public function setOrderBy($newOrderByColumn, $isAsc = true) { 
+            return $this->orderBy = "$newOrderByColumn ".($isAsc?"ASC":"DESC");
+        }
+
+        //Get the values provided to this object
+        public function getLimit() { return $this->limit; }
+        //Set the values used by this object
+        public function setLimit($newLimit) { return $this->limit = $newLimit; }
     }
 }
 

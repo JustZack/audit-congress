@@ -56,6 +56,26 @@ namespace AuditCongress {
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
+        private static function getSingleTermByBioguideId($bioguideId) {
+            $terms = new MemberTermsQuery();
+            $terms->setSearchColumns(["bioguideId"]);
+            $terms->setSearchValues([$bioguideId]);
+            $terms->setLimit(1);
+            return $terms;
+        }
+
+        public static function getLastByBioguideId($bioguideId) {
+            $terms = self::getSingleTermByBioguideId($bioguideId);
+            $terms->setOrderBy("end", false);
+            return $terms->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getFirstByBioguideId($bioguideId) {
+            $terms = self::getSingleTermByBioguideId($bioguideId);
+            $terms->setOrderBy("start", true);
+            return $terms->selectFromDB()->fetchAllAssoc();
+        }
+
         public static function getByBioguideIdByType($bioguideId, $type) {
             $terms = new MemberTermsQuery();
             $terms->setSearchColumns(["bioguideId", "type"]);
@@ -126,6 +146,18 @@ namespace AuditCongress {
             self::enforceCache();
             $terms = MemberTermsQuery::getByBioguideId($bioguideId);
             return self::parseResult($terms);
+        }
+
+        public static function getLastByBioguideId($bioguideId) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getLastByBioguideId($bioguideId);
+            return self::returnFirst(self::parseResult($terms));
+        }
+
+        public static function getFirstByBioguideId($bioguideId) {
+            self::enforceCache();
+            $terms = MemberTermsQuery::getFirstByBioguideId($bioguideId);
+            return self::returnFirst(self::parseResult($terms));
         }
 
         public static function getByBioguideIdByType($bioguideId, $type) {

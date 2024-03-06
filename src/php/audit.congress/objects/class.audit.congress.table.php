@@ -60,6 +60,12 @@ namespace AuditCongress {
 
         public abstract function updateCache();
 
+        public static function returnFirst($results) {
+            if ($results == null) return null;
+            else if (count($results) > 0) return $results[0];
+            else return $results;
+        }
+
     }
 }
 

@@ -184,9 +184,14 @@ namespace AuditCongress {
 
         //Set the given members image if available (false if not)
         public static function getMemberImage($bioguideId) {
-            $congressMember = new \CongressGov\Member($bioguideId);
-            $depiction = $congressMember->depiction;
             $imageUrl = $imageAttribution = 'false';
+            $depiction = false;
+            
+            try {
+                $congressMember = new \CongressGov\Member($bioguideId);
+                $depiction = $congressMember->depiction;
+            } catch (ApiException $e) { }
+
             if (is_array($depiction)) 
                 list("imageUrl"=>$imageUrl, "attribution"=>$imageAttribution) = $depiction;
             return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
@@ -207,15 +212,15 @@ namespace AuditCongress {
             return $members;
         }
 
-        protected static function parseResult($resultRows) {
-            $rows = self::ensureMembersHaveImage($resultRows);
-            return MemberRow::rowsToObjects($rows);
+        protected static function parseResult($rows) {
+            $rows = self::ensureMembersHaveImage($rows);
+            return MemberResult::rowsToObjects($rows);
         }
 
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $members = MembersQuery::getByBioguideId($bioguideId);
-            return self::parseResult($members);
+            return self::returnFirst(self::parseResult($members));
         }
 
         public static function getByName($firstName = null, $lastName = null) {
@@ -228,6 +233,27 @@ namespace AuditCongress {
             self::enforceCache();
             $members = MembersQuery::getByGender($gender);
             return self::parseResult($members);
+        }
+    }
+
+    class MemberResult {
+        public MemberRow $member;
+        public ?MemberTermRow $firstTerm;
+        public ?MemberTermRow $lastTerm;
+        public ?MemberSocialsRow $socials;
+
+        public static function rowsToObjects($rows) {
+            $objects = array();
+            foreach ($rows as $row) array_push($objects, new MemberResult($row));
+            return $objects;
+        }
+
+        public function __construct($memberArray) {
+            $this->member = new MemberRow($memberArray);
+            $bioguideId = $this->member->bioguideId;
+            $this->firstTerm = MemberTerms::getFirstByBioguideId($bioguideId);
+            $this->lastTerm = MemberTerms::getLastByBioguideId($bioguideId);
+            $this->socials = MemberSocials::getByBioguideId($bioguideId);
         }
     }
 }

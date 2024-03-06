@@ -2,20 +2,23 @@
 
 namespace MySqlConnector {
     abstract class SqlRow {
-        public function __construct($rowAssocArray) {
+        public function __construct($rowAssocArray = null) {
             $this->setFieldsFromObject($rowAssocArray);    
         }
 
         public abstract function getColumns();
         public abstract function getValues();
         function setFieldsFromObject($obj, $keyMustExist = true) {
-            foreach ($obj as $key=>$value)
-                if (($keyMustExist && property_exists($this, $key)) || !$keyMustExist) 
-                    $this->{$key} = $value;
+            if ($obj != null)
+                foreach ($obj as $key=>$value)
+                    if (($keyMustExist && property_exists($this, $key)) || !$keyMustExist) 
+                        $this->{$key} = $value;
         }
 
         
         public static function rowsToObjects($rows) {
+            if (count($rows) == 0) return null;
+
             $rowObjects = array();
             $objectType = static::class;
             foreach ($rows as $row) {

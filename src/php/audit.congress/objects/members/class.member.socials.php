@@ -93,7 +93,7 @@ namespace AuditCongress {
         public static function getByBioguideId($bioguideId) {
             self::enforceCache();
             $socials = MemberSocialsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($socials);
+            return self::returnFirst(self::parseResult($socials));
         }
     }
 }

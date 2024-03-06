@@ -89,7 +89,7 @@ namespace AuditCongress {
         public static function getByFecId($fecId) {
             self::enforceCache();
             $elections = MemberElectionsQuery::getByFecId($fecId);
-            return self::parseResult($elections);
+            return self::returnFirst(self::parseResult($elections));
         }
     }
 }
