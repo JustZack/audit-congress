@@ -7,13 +7,12 @@ namespace MySqlConnector {
             $searchColumns = array(), 
             $searchValues = array(),  
             $columns = array(), 
-            $values = array(),
-            $tableName;
+            $values = array();
         protected Table $table;
         private $booleanConditon = "AND", $equalityOperator = false;
 
         public function __construct($tableName, $equalityOperator = "=", $booleanOperator = "AND") {
-            $this->setTableName($tableName);
+            $this->table = new Table($tableName);
             $this->setEqualityOperator($equalityOperator);
             $this->setConditionOperator($booleanOperator);
         }
@@ -51,8 +50,6 @@ namespace MySqlConnector {
             else throw new SqlException("SQLObject: Tried using an unsupported operator '$operator'");
         }
        
-
-
         //Return a condtion for this sql object with the set boolean operator and '=' or 'like'
         public function whereCondition() {
             $condition = "";
@@ -87,19 +84,10 @@ namespace MySqlConnector {
         //Set the columns used by this object (for setting or updating values)
         public function setColumns(array $newColumns) { return $this->columns = $newColumns; }
 
-
         //Get the values provided to this object
         public function getValues() { return $this->values; }
         //Set the values used by this object
         public function setValues(array $newValues) { return $this->values = $newValues; }
-
-        //Get the tablename used by this object
-        public function getTableName() { return $this->tableName; }
-        //Set the tablename used by this object
-        public function setTableName($tableName) { 
-            $this->tableName = $tableName; 
-            $this->table = new Table($tableName);
-        }
     }
 }
 

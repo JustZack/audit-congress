@@ -187,10 +187,8 @@ namespace AuditCongress {
             $congressMember = new \CongressGov\Member($bioguideId);
             $depiction = $congressMember->depiction;
             $imageUrl = $imageAttribution = 'false';
-            if (is_array($depiction)) {
-                $imageUrl = $depiction["imageUrl"];
-                $imageAttribution = $depiction["attribution"];
-            }
+            if (is_array($depiction)) 
+                list("imageUrl"=>$imageUrl, "attribution"=>$imageAttribution) = $depiction;
             return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
         }
         //Make sure the given array of members have image urls set
