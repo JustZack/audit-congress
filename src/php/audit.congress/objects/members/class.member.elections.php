@@ -2,47 +2,6 @@
 
 namespace AuditCongress {
 
-    use \MySqlConnector\SqlRow;
-    use \MySqlConnector\SqlObject;
-
-    class MemberElectionRow extends SqlRow {
-        public
-            $fecId,
-            $bioguideId,
-            $lastUpdate,
-            $nextUpdate;
-
-            public function getColumns() {
-                return ["fecId","bioguideId",
-                "lastUpdate","nextUpdate"];
-            }
-        
-            public function getValues() {
-                return [$this->fecId,$this->bioguideId,
-                $this->lastUpdate,$this->nextUpdate];
-            }
-    }
-
-    class MemberElectionsQuery extends SqlObject {
-        public function __construct() {
-            parent::__construct("MemberElections");
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            $terms = new MemberElectionsQuery();
-            $terms->setSearchColumns(["bioguideId"]);
-            $terms->setSearchValues([$bioguideId]);
-            return $terms->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByFecId($fecId) {
-            $terms = new MemberElectionsQuery();
-            $terms->setSearchColumns(["fecId"]);
-            $terms->setSearchValues([$fecId]);
-            return $terms->selectFromDB()->fetchAllAssoc();
-        }
-    }
-
     class MemberElections extends MemberTable {
         
         private function __construct() {

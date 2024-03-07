@@ -2,50 +2,7 @@
 
 namespace AuditCongress {
 
-    use \MySqlConnector\SqlRow;
-    use \MySqlConnector\SqlObject;
     use \UnitedStatesLegislators\CurrentDistrictOffices;
-
-    class MemberOfficesRow extends SqlRow {
-        public
-            $bioguideId,$officeId,
-            $address,$suite,$building,$city,$state,$zip,
-            $latitude,$longitude,$phone,$fax,
-            $lastUpdate,$nextUpdate;
-
-            public function getColumns() {
-                return ["bioguideId","officeId","address","suite",
-                        "building","city","state","zip","latitude",
-                        "longitude","phone","fax","lastUpdate","nextUpdate"];
-            }
-
-            public function getValues() {
-                return [$this->bioguideId,$this->officeId,$this->address,
-                $this->suite,$this->building,$this->city,$this->state,
-                $this->zip,$this->latitude,$this->longitude,$this->phone,
-                $this->fax,$this->lastUpdate,$this->nextUpdate];
-            }
-    }
-
-    class MemberOfficesQuery extends SqlObject {
-        public function __construct() {
-            parent::__construct("MemberOffices");
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            $offices = new MemberOfficesQuery();
-            $offices->setSearchColumns(["bioguideId"]);
-            $offices->setSearchValues([$bioguideId]);
-            return $offices->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByOfficeId($officeId) {
-            $offices = new MemberOfficesQuery();
-            $offices->setSearchColumns(["officeId"]);
-            $offices->setSearchValues([$officeId]);
-            return $offices->selectFromDB()->fetchAllAssoc();
-        }
-    }
 
     class MemberOffices extends MemberTable {
 

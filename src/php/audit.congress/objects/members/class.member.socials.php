@@ -1,51 +1,8 @@
 <?php 
 
 namespace AuditCongress {
-    use \MySqlConnector\SqlRow;
-    use \MySqlConnector\SqlObject;
+    
     use \UnitedStatesLegislators\Socials;
-
-    class MemberSocialsRow extends SqlRow {
-        public
-            $bioguideId,
-            $twitter,
-            $twitterId,
-            $facebook,
-            $facebookId,
-            $youtube,
-            $youtubeId,
-            $instagram,
-            $instagramId,
-
-            $lastUpdate,
-            $nextUpdate;
-
-            public function getColumns() {
-                return ["bioguideId", "twitter", "twitterId", 
-                "facebook", "facebookId", "youtube", "youtubeId",
-                "instagram", "instagramId", "lastUpdate", "nextUpdate"];
-            }
-        
-            public function getValues() {
-                return [$this->bioguideId, $this->twitter,
-                $this->twitterId,$this->facebook,$this->facebookId,
-                $this->youtube,$this->youtubeId,$this->instagram,
-                $this->instagramId, $this->lastUpdate, $this->nextUpdate];
-            }
-    }
-
-    class MemberSocialsQuery extends SqlObject {
-        public function __construct() {
-            parent::__construct("MemberSocials");
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            $socials = new MemberSocialsQuery();
-            $socials->setSearchColumns(["bioguideId"]);
-            $socials->setSearchValues([$bioguideId]);
-            return $socials->selectFromDB()->fetchAllAssoc();
-        }
-    }
 
     class MemberSocials extends MemberTable {
         
