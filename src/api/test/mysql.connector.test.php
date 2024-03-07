@@ -71,8 +71,8 @@ namespace APITest {
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
 
-        static function testSqlMemberByName($fname = null, $lname = null) {
-            $rows = \AuditCongress\Members::getByName($fname, $lname);
+        static function testSqlMemberByName($fname = null, $lname = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByName($fname, $lname, $isCurrent);
             var_dump($rows);
         }
 
@@ -86,8 +86,8 @@ namespace APITest {
             var_dump($rows);
         }
 
-        static function testSqlMemberById($id) {
-            $rows = \AuditCongress\Members::getByBioguideId($id);
+        static function testSqlMemberById($id, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByBioguideId($id, $isCurrent);
             var_dump($rows);
         }
 

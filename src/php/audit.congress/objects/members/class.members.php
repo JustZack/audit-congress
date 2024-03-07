@@ -56,28 +56,28 @@ namespace AuditCongress {
             parent::__construct("Members");
         }
 
-        public static function getByBioguideId($bioguideId) {
+        public static function getByBioguideId($bioguideId, $isCurrent = null) {
             $members = new MembersQuery();
-            $members->setSearchColumns(["bioguideId"]);
-            $members->setSearchValues([$bioguideId]);
+            $members->setSearchColumns(["bioguideId", "isCurrent"]);
+            $members->setSearchValues([$bioguideId, $isCurrent]);
             return $members->selectFromDB()->fetchAllAssoc();
         }
 
         /*Fetch members whose names contain the given first, middle, or last name
                 Must provide atleast one of the names.*/
-        public static function getByName($firstName = null, $lastName = null) {
+        public static function getByName($firstName = null, $lastName = null, $isCurrent = null) {
             $members = new MembersQuery();
             $members->setEqualityOperator("like");
-            $members->setSearchColumns(["first", "last"]);
-            $members->setSearchValues([$firstName, $lastName]);
+            $members->setSearchColumns(["first", "last", "isCurrent"]);
+            $members->setSearchValues([$firstName, $lastName, $isCurrent]);
             return $members->selectFromDB()->fetchAllAssoc();
         }
 
         //Fetch members with the given gender (M or F at this time)
-        public static function getByGender($gender) {
+        public static function getByGender($gender, $isCurrent = null) {
             $members = new MembersQuery();
-            $members->setSearchColumns(["gender"]);
-            $members->setSearchValues([$gender]);
+            $members->setSearchColumns(["gender", "isCurrent"]);
+            $members->setSearchValues([$gender, $isCurrent]);
             return $members->selectFromDB()->fetchAllAssoc();
         }
 
@@ -217,21 +217,21 @@ namespace AuditCongress {
             return MemberResult::rowsToObjects($rows);
         }
 
-        public static function getByBioguideId($bioguideId) {
+        public static function getByBioguideId($bioguideId, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByBioguideId($bioguideId);
+            $members = MembersQuery::getByBioguideId($bioguideId, $isCurrent);
             return self::returnFirst(self::parseResult($members));
         }
 
-        public static function getByName($firstName = null, $lastName = null) {
+        public static function getByName($firstName = null, $lastName = null, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByName($firstName, $lastName);
+            $members = MembersQuery::getByName($firstName, $lastName, $isCurrent);
             return self::parseResult($members);
         }
 
-        public static function getByGender($gender) {
+        public static function getByGender($gender, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByGender($gender);
+            $members = MembersQuery::getByGender($gender, $isCurrent);
             return self::parseResult($members);
         }
     }

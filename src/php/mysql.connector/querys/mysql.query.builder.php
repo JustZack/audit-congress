@@ -41,6 +41,8 @@ namespace MySqlConnector {
         }
         //Return a SQL string with the propper `column` = 'value' syntax
         public static function getColumnEqualsValueSql($column, $value, $equalityOperator) {
+            $value = $value==false?"0":$value;
+
             if ($equalityOperator == "like") return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
             else         return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
         }
@@ -48,13 +50,21 @@ namespace MySqlConnector {
         public static function getLogicalOperatorSql($operator) {
             return sprintf(" %s ", $operator);
         }
+
+        private static function isNotNullOrBlank($value) {
+            if (!isset($value)) return false;
+            else {
+                if (is_string($value)) return strlen($value) > 0;
+                else return true;
+            }
+        }
         //Get all columns and values with a non null value
         public static function getUseableColumnsAndValues($columns, $values) {
             $nonNullValues = array();
             $nonNullColumns = array();
 
             for ($i = 0;$i < count($columns);$i++) {
-                if (!empty($values[$i])) {
+                if (self::isNotNullOrBlank($values[$i])) {
                     array_push($nonNullValues, $values[$i]);
                     array_push($nonNullColumns, $columns[$i]);
                 }
