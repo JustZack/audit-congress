@@ -2,9 +2,7 @@
 
 namespace AuditCongress {
 
-    use \MySqlConnector\SqlObject;
-
-    class MemberElectionsQuery extends SqlObject {
+    class MemberElectionsQuery extends \MySqlConnector\SqlObject {
         public function __construct() {
             parent::__construct("MemberElections");
         }

@@ -2,9 +2,7 @@
 
 namespace AuditCongress {
 
-    use \MySqlConnector\SqlRow;
-
-    class MemberRow extends SqlRow {
+    class MemberRow extends \MySqlConnector\SqlRow {
         public
             $bioguideId,
             $thomasId,

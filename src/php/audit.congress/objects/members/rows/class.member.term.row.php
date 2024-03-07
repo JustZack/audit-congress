@@ -1,10 +1,8 @@
 <?php
 
 namespace AuditCongress {
-
-    use \MySqlConnector\SqlRow;
-    
-    class MemberTermRow extends SqlRow {
+   
+    class MemberTermRow extends \MySqlConnector\SqlRow {
         public
             $bioguideId,
             $type,
