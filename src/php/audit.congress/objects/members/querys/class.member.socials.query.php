@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
     
-    class MemberSocialsQuery extends \MySqlConnector\SqlObject {
+    class MemberSocialsQuery extends AuditCongressQuery {
         public function __construct() {
             parent::__construct("MemberSocials");
         }

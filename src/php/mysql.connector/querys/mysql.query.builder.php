@@ -76,32 +76,40 @@ namespace MySqlConnector {
             }
         }
         //Get all columns and values with a non null value
-        public static function getUseableColumnsAndValues($columns, $values) {
+        public static function getUseableColumnsAndValues($columns, $values, $operators = null, $conditionals = null) {
             $nonNullValues = array();
             $nonNullColumns = array();
+            $nonNullOperators = array();
+            $nonNullConditions = array();
 
-            for ($i = 0;$i < count($columns);$i++) {
+            $numCols = count($columns);
+            for ($i = 0;$i < $numCols;$i++) {
                 if (self::isNotNullOrBlank($values[$i])) {
                     array_push($nonNullValues, $values[$i]);
                     array_push($nonNullColumns, $columns[$i]);
+                    if ($operators != null)    array_push($nonNullOperators, $operators[$i]);
+                    if ($conditionals != null && $i < $numCols-1) array_push($nonNullConditions, $conditionals[$i]);
                 }
             }
 
-            return ["columns" => $nonNullColumns, "values" => $nonNullValues];
+            return ["columns" => $nonNullColumns, "values" => $nonNullValues,
+                    "operators" => $nonNullOperators, "conditions" => $nonNullConditions];
         }
         //Build the where condition for a query
         public static function buildWhereCondition($columns, $values, $equalityOperators, $booleanConditons) {
-            $useable = self::getUseableColumnsAndValues($columns, $values);
+            $useable = self::getUseableColumnsAndValues($columns, $values, $equalityOperators, $booleanConditons);
             $values = self::escapeStrings($useable["values"]);
             $columns = $useable["columns"];
+            $operators = $useable["operators"];
+            $conditionals = $useable["conditions"];
 
             $condition = "";
             $numColumns = count($columns);
             for ($i = 0;$i < $numColumns;$i++) {
                 //Set column = value sql string
-                $condition .= self::getColumnEqualsValueSql($columns[$i], $values[$i], $equalityOperators[$i]);
+                $condition .= self::getColumnEqualsValueSql($columns[$i], $values[$i], $operators[$i]);
                 if ($i < $numColumns-1) //If we are not on the last condition, add the operator
-                    $condition .= self::getLogicalOperatorSql($booleanConditons[$i]);
+                    $condition .= self::getLogicalOperatorSql($conditionals[$i]);
             }
             return $condition;
         }

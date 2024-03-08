@@ -60,7 +60,9 @@ namespace MySqlConnector {
         
         public function getBooleanConditions() {
             if ($this->conditionList == null) {
-                return array_fill(0, count($this->getSearchColumns())-1, $this->booleanConditon);
+                $numSearchCols = count($this->getSearchColumns());
+                if ($numSearchCols > 1) return array_fill(0, $numSearchCols-1, $this->booleanConditon);
+                else return [$this->booleanConditon];
             } else return $this->conditionList;
         }
 

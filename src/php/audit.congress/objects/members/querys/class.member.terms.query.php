@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class MemberTermsQuery extends \MySqlConnector\SqlObject {
+    class MemberTermsQuery extends AuditCongressQuery {
         public function __construct() {
             parent::__construct("MemberTerms");
         }
@@ -24,13 +24,13 @@ namespace AuditCongress {
 
         public static function getLastByBioguideId($bioguideId) {
             $terms = self::getSingleTermByBioguideId($bioguideId);
-            $terms->setOrderBy("end", false);
+            $terms->setOrderBy(["end"], false);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getFirstByBioguideId($bioguideId) {
             $terms = self::getSingleTermByBioguideId($bioguideId);
-            $terms->setOrderBy("start", true);
+            $terms->setOrderBy(["start"], true);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
