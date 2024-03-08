@@ -53,15 +53,12 @@ namespace MySqlConnector {
         public static function getColumnEqualsValueSql($column, $value, $equalityOperator, $quotesArounditems = true) {
             $value = $value==false?"0":$value;
 
-            if ($equalityOperator == "like") {
-                if ($quotesArounditems) return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
-                else                    return sprintf("%s like %s%s%s", $column, "%", $value, "%");
-            }
-            else {
-                if ($quotesArounditems) return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
-                else                    return sprintf("%s %s %s", $column, $equalityOperator, $value);
-                         
-            }
+            $colQuote = $quotesArounditems?"`":"";
+            $valQuote = $quotesArounditems?"'":"";
+            if ($equalityOperator == "like")
+                return sprintf("%s%s%s like '%s%s%s'", $colQuote, $column, $colQuote, "%", $value, "%");
+            else 
+                return sprintf("%s%s%s %s %s%s%s", $colQuote, $column, $colQuote, $equalityOperator, $valQuote, $value, $valQuote);
         }
         //Return a SQL string containing the given logical operator
         public static function getLogicalOperatorSql($operator) {
