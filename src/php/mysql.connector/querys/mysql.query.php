@@ -6,8 +6,6 @@ namespace MySqlConnector {
         public 
             $params = array(), 
             $sql_formated = "";
-            static $allowedOperators = array("=", "like", "<", "<=", "=>", ">"),
-            $allowedConditions = array("and", "or");
         public function __construct($sql_string = null, $params = null) {
             if ($sql_string != null) $this->appendQuery($sql_string, $params);
         }

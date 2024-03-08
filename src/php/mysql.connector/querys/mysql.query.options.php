@@ -8,6 +8,7 @@ namespace MySqlConnector {
             $searchValues = array(),  
             $columns = array(), 
             $values = array(),
+            $join = null,
             $orderBy = null,
             $groupBy = null,
             $limit = null;
@@ -42,21 +43,29 @@ namespace MySqlConnector {
         public function getOrderBy() { return $this->orderBy; }
         //Set the order by string used by this object
         public function setOrderBy($newOrderByColumns, $isAsc = true) { 
-            $orderList = QueryBuilder::buildItemList($newOrderByColumns, false);
+            $orderList = QueryBuilder::buildItemList($newOrderByColumns, false, "");
             $this->orderBy = "$orderList ".($isAsc?"ASC":"DESC");
         }
 
         //Get the group by string provided to this object
         public function getGroupBy() { return $this->groupBy; }
         //Set the group by string used by this object
-        public function setGroupBy($newOrderByColumns) { 
-            $this->groupBy = QueryBuilder::buildItemList($newOrderByColumns, false);
+        public function setGroupBy($newGroupByColumns) { 
+            $this->groupBy = QueryBuilder::buildItemList($newGroupByColumns, false, "");
         }
 
         //Get the row limit provided to this object
         public function getLimit() { return $this->limit; }
         //Set the row limit used by this object
         public function setLimit($newLimit) { $this->limit = $newLimit; }
+
+        public function getJoin() { return $this->join; }
+
+        public function setJoin($onTable, $onTableColumns, $thisTableColumns) {
+            $format = "%s ON %s";
+            $joinCondition = QueryBuilder::buildOnCondition($onTableColumns, $thisTableColumns, "=", "AND");
+            $this->join = sprintf($format, $onTable, $joinCondition);
+        }
     }
 }
 

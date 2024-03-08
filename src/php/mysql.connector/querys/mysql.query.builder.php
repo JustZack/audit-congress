@@ -4,6 +4,17 @@ namespace MySqlConnector {
 
     class QueryBuilder {
         
+        static $allowedOperators = array("=", "like", "<", "<=", ">=", ">");
+        static $allowedConditions = array("and", "or");
+
+        public static function isAllowedOperator($operator) {
+            return in_array($operator, self::$allowedOperators);
+        }
+
+        public static function isAllowedConditional($conditional) {
+            return in_array($conditional, self::$allowedConditions);
+        }
+
         //Build a formattable list with $numItems, like '(%s, %s, %s...)'
         public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {
             $itemFormat = "$quoteChar%s$quoteChar";
@@ -34,17 +45,23 @@ namespace MySqlConnector {
             return self::buildItemList($items, $withParens, $quoteChar, false);
         }
 
-
         //Check that the number of columns matches the number of values
         public static function sameNumberOfColumnsAndValues($columns, $values) {
             return count($columns) == count($values);
         }
         //Return a SQL string with the propper `column` = 'value' syntax
-        public static function getColumnEqualsValueSql($column, $value, $equalityOperator) {
+        public static function getColumnEqualsValueSql($column, $value, $equalityOperator, $quotesArounditems = true) {
             $value = $value==false?"0":$value;
 
-            if ($equalityOperator == "like") return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
-            else         return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
+            if ($equalityOperator == "like") {
+                if ($quotesArounditems) return sprintf("`%s` like '%s%s%s'", $column, "%", $value, "%");
+                else                    return sprintf("%s like %s%s%s", $column, "%", $value, "%");
+            }
+            else {
+                if ($quotesArounditems) return sprintf("`%s` %s '%s'", $column, $equalityOperator, $value);
+                else                    return sprintf("%s %s %s", $column, $equalityOperator, $value);
+                         
+            }
         }
         //Return a SQL string containing the given logical operator
         public static function getLogicalOperatorSql($operator) {
@@ -73,7 +90,7 @@ namespace MySqlConnector {
             return ["columns" => $nonNullColumns, "values" => $nonNullValues];
         }
         //Build the where condition for a query
-        public static function buildWhereCondition($columns, $values, $equalityOperator, $booleanConditon) {
+        public static function buildWhereCondition($columns, $values, $equalityOperators, $booleanConditons) {
             $useable = self::getUseableColumnsAndValues($columns, $values);
             $values = self::escapeStrings($useable["values"]);
             $columns = $useable["columns"];
@@ -82,9 +99,26 @@ namespace MySqlConnector {
             $numColumns = count($columns);
             for ($i = 0;$i < $numColumns;$i++) {
                 //Set column = value sql string
-                $condition .= self::getColumnEqualsValueSql($columns[$i], $values[$i], $equalityOperator);
+                $condition .= self::getColumnEqualsValueSql($columns[$i], $values[$i], $equalityOperators[$i]);
                 if ($i < $numColumns-1) //If we are not on the last condition, add the operator
-                    $condition .= self::getLogicalOperatorSql($booleanConditon);
+                    $condition .= self::getLogicalOperatorSql($booleanConditons[$i]);
+            }
+            return $condition;
+        }
+
+        //Build the on condition for a join query
+        public static function buildOnCondition($onTableColumns, $otherTableColumns) {
+            $useable = self::getUseableColumnsAndValues($onTableColumns, $otherTableColumns);
+            $onColumns = self::escapeStrings($useable["values"]);
+            $otherColumns = $useable["columns"];
+
+            $condition = "";
+            $numColumns = count($onColumns);
+            for ($i = 0;$i < $numColumns;$i++) {
+                //Set column = value sql string
+                $condition .= self::getColumnEqualsValueSql($onColumns[$i], $otherColumns[$i], "=", false);
+                if ($i < $numColumns-1) //If we are not on the last condition, add the operator
+                    $condition .= self::getLogicalOperatorSql("AND");
             }
             return $condition;
         }

@@ -70,13 +70,15 @@ namespace MySqlConnector {
 
 
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
-        public function select($selectColumns, $whereCondition = null, $orderBy = null, $limit = null) : Result {
+        public function select($selectColumns, $whereCondition = null, $join = null, $groupBy = null, $orderBy = null, $limit = null) : Result {
             $sql = "SELECT %s FROM `$this->name`";
             
             $colList = QueryBuilder::buildItemList($selectColumns, false, "");
             $sql = sprintf($sql, $colList);
 
+            if ($join != null)        $sql .= sprintf(" JOIN %s", $join);
             if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
+            if ($groupBy != null)        $sql .= sprintf(" GROUP BY %s", $groupBy);
             if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
             if ($limit != null)          $sql .= sprintf(" LIMIT %s", $limit);
           
