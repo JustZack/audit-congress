@@ -3,6 +3,7 @@
 namespace MySqlConnector {
 
     class Query {
+        public static $totalQueries = 0;
         public 
             $params = array(), 
             $sql_formated = "";
@@ -44,12 +45,14 @@ namespace MySqlConnector {
 
         //Run this query
         public function execute() {
+            self::$totalQueries += 1;
             $connection = Connection::getConnection();
             $result = new Result($connection->query($this->sql_formated), $this->sql_formated);
             return self::throwIfError($result);
         }
         //Run many queries that have already been appended
         public function executeMany() {
+            self::$totalQueries += 1;
             $connection = Connection::getConnection();
             $result = new Result($connection->multi_query($this->sql_formated), $this->sql_formated);
             return self::throwIfError($result);
