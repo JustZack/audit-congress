@@ -101,6 +101,21 @@ namespace APITest {
             var_dump($rows);
         }
 
+        static function testGetSenators($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getSenators($state, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testGetReps($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getRepresentatives($state, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testGetByState($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByState($state, $isCurrent);
+            var_dump($rows);
+        }
+        
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }

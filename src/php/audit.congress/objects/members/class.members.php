@@ -4,7 +4,7 @@ namespace AuditCongress {
 
     use UnitedStatesLegislators\HistoricalMembers;
     use UnitedStatesLegislators\CurrentMembers;
-    
+
     class Members extends MemberTable {
         private ?MemberTerms $termsInstance = null;
         private ?MemberElections $electionsInstance = null;
@@ -147,9 +147,29 @@ namespace AuditCongress {
             $members = MembersQuery::getByGender($gender, $isCurrent);
             return self::parseResult($members);
         }
+
+        public static function getByState($state = null, $isCurrent = null) {
+            self::enforceCache();
+            $members = MembersQuery::getByState($state, $isCurrent);
+            return self::parseResult($members);
+        }
+
+        public static function getSenators($state = null, $isCurrent = null) {
+            self::enforceCache();
+            $members = MembersQuery::getSenators($state, $isCurrent);
+            return self::parseResult($members);
+        }
+
+        public static function getRepresentatives($state = null, $isCurrent = null) {
+            self::enforceCache();
+            $members = MembersQuery::getRepresentatives($state, $isCurrent);
+            return self::parseResult($members);
+        }
     }
 
     class MemberResult {
+        use getAndPrintAsJson;
+
         public MemberRow $member;
         public ?MemberTermRow $firstTerm;
         public ?MemberTermRow $lastTerm;

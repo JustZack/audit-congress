@@ -15,7 +15,7 @@ require_once AUDITCONGRESS_FOLDER."\objects\members\\rows\class.member.term.row.
 
 require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.member.elections.query.php";
 require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.member.offices.query.php";
-require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.member.query.php";
+require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.members.query.php";
 require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.member.socials.query.php";
 require_once AUDITCONGRESS_FOLDER."\objects\members\querys\class.member.terms.query.php";
 
