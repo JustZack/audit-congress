@@ -16,9 +16,9 @@ namespace MySqlConnector {
         }
 
         public function selectFromDB() { 
-            return $this->table->select($this->getSelectColumns(), $this->whereCondition(),
-                                        $this->getJoin(), $this->getGroupBy(),
-                                        $this->getOrderBy(), $this->getLimit());
+            return $this->table->selectObject($this);
+            /*return $this->table->select($this->getSelectColumns(), $this->whereCondition(), $this->getJoin(), 
+                            $this->getGroupBy(), $this->getOrderBy(), $this->getLimit(), $this->getOffset());*/
         }
 
         public function deleteFromDb() { 

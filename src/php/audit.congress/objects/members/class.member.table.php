@@ -5,7 +5,7 @@ namespace AuditCongress {
     abstract class MemberTable extends AuditCongressTable {
 
         private function getTopRow() {
-            return $this->getTable()->select(["lastUpdate", "nextUpdate"], null, null, null, null, 1)->fetchAssoc();
+            return $this->getTable()->select(["lastUpdate", "nextUpdate"], null, null, null, null, 1, null)->fetchAssoc();
         }
 
         public function cacheIsValid() {
