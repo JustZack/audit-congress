@@ -33,8 +33,9 @@ MySqlConnector::testEnforceSchema();
 
 
 //MySqlConnector::testGetSenators("CO", true);
-MySqlConnector::testGetReps("CO", true);
-//MySqlConnector::testGetByState("TX", true);
+//MySqlConnector::testGetReps("CO", true);
+MySqlConnector::testGetReps("NY", true);
+//MySqlConnector::testGetByState("TX", false);
 
 echo "Total Queries: ".\MySqlConnector\Query::$totalQueries . "\n";
 
