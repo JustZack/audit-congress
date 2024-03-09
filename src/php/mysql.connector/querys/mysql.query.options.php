@@ -11,7 +11,8 @@ namespace MySqlConnector {
             $join = null,
             $orderBy = null,
             $groupBy = null,
-            $limit = null;
+            $limit = null,
+            $offset = null;
 
 
         //Get the columns used when selecting this object
@@ -58,6 +59,10 @@ namespace MySqlConnector {
         public function getLimit() { return $this->limit; }
         //Set the row limit used by this object
         public function setLimit($newLimit) { $this->limit = $newLimit; }
+
+        public function getOffset() { return $this->offset; }
+
+        public function setOffset($newOffset) { $this->offset = $newOffset; }
 
         public function getJoin() { return $this->join; }
 
