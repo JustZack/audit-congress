@@ -127,7 +127,7 @@ namespace AuditCongress {
 
         protected static function parseResult($rows) {
             $rows = self::ensureMembersHaveImage($rows);
-            return MemberResult::rowsToObjects($rows);
+            return $rows;
         }
 
         public static function getByBioguideId($bioguideId, $isCurrent = null) {
@@ -164,29 +164,6 @@ namespace AuditCongress {
             self::enforceCache();
             $members = MembersQuery::getRepresentatives($state, $isCurrent);
             return self::parseResult($members);
-        }
-    }
-
-    class MemberResult {
-        use getAndPrintAsJson;
-
-        public MemberRow $member;
-        public ?MemberTermRow $firstTerm;
-        public ?MemberTermRow $lastTerm;
-        public ?MemberSocialsRow $socials;
-
-        public static function rowsToObjects($rows) {
-            $objects = array();
-            foreach ($rows as $row) array_push($objects, new MemberResult($row));
-            return $objects;
-        }
-
-        public function __construct($memberArray) {
-            $this->member = new MemberRow($memberArray);
-            $bioguideId = $this->member->bioguideId;
-            $this->firstTerm = MemberTerms::getFirstByBioguideId($bioguideId);
-            $this->lastTerm = MemberTerms::getLastByBioguideId($bioguideId);
-            $this->socials = MemberSocials::getByBioguideId($bioguideId);
         }
     }
 }
