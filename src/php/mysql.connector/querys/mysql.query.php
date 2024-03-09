@@ -3,6 +3,7 @@
 namespace MySqlConnector {
 
     class Query {
+        public static $totalQueries = 0;
         public 
             $params = array(), 
             $sql_formated = "";
@@ -25,7 +26,7 @@ namespace MySqlConnector {
         //Append a query to this query
         public function appendQuery($sql_string, $params = null) {
             //Always put a semicolon at the end of a query
-            $sql = $sql_string.";";
+            $sql = $sql_string.";\n";
             if ($params != null) {
                 $this->sql_formated .= sprintf($sql, ...$params);
                 array_merge($this->params, $params);
@@ -38,21 +39,23 @@ namespace MySqlConnector {
 
         //Throw the SQL error if the result failed
         private static function throwIfError($result) {
-            if ($result->failure()) throw new \Exception(Connection::lastError());
+            if ($result->failure()) throw new SqlException("Query Exception: ".Connection::lastError());
             return $result;   
         }
 
         //Run this query
         public function execute() {
+            self::$totalQueries += 1;
             $connection = Connection::getConnection();
             $result = new Result($connection->query($this->sql_formated), $this->sql_formated);
-            return Query::throwIfError($result);
+            return self::throwIfError($result);
         }
         //Run many queries that have already been appended
         public function executeMany() {
+            self::$totalQueries += 1;
             $connection = Connection::getConnection();
             $result = new Result($connection->multi_query($this->sql_formated), $this->sql_formated);
-            return Query::throwIfError($result);
+            return self::throwIfError($result);
         }
 
 
@@ -64,26 +67,11 @@ namespace MySqlConnector {
         }
         //For running  returing true or false (success values)
         public static function runActionQuery($sql, $params = null) {
-            return Query::getResult($sql, $params)->success();
+            return self::getResult($sql, $params)->success();
         }
         //For running queries that return rows
         public static function runQuery($sql, $params = null) {
-            return Query::getResult($sql, $params)->fetchAll();
-        }
-        //Build a formattable list with $numItems, like '(%s, %s, %s...)'
-        public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {
-            $itemFormat = "$quoteChar%s$quoteChar";
-            $sql = $withParens ? "(" : "";
-            for ($i = 0;$i < $numItems;$i++) $sql .= $i < $numItems - 1 ? "$itemFormat, " : $itemFormat;
-            $sql .= $withParens ? ")" : "";
-            return $sql;
-        }
-
-        //Build a list with the given items, parenthesis, and quote character
-        public static function buildList($items, $withParens = true, $quoteChar = "'") {
-            $listFormat = Query::buildFormattableList(count($items), $withParens, $quoteChar);
-            $sql = sprintf($listFormat, ...$items);
-            return $sql;
+            return self::getResult($sql, $params)->fetchAll();
         }
     }
 }

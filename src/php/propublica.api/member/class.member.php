@@ -45,6 +45,8 @@ namespace ProPublica {
             $this->route = "members/$this->id";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

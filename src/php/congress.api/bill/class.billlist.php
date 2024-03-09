@@ -48,6 +48,8 @@ namespace CongressGov {
                 $this->route .= "$this->congress/";
                 if (isset($this->type)) $this->route .= "$this->type/";
             }
+
+            $this->fetchFromApi();
         }
 
         

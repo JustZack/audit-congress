@@ -13,6 +13,8 @@ namespace UnitedStatesLegislators {
             $this->bio = new PersonBio($personObj["bio"]);
             $this->terms = new PersonTerms($personObj["terms"]);
         }
+
+        public function getTerms() { return $this->terms->terms; }
     }
 }
 

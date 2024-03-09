@@ -47,6 +47,7 @@ namespace AuditCongress {
         use lowerCaseField;
         use setFieldsFromObject;
         use unsetField;
+        use toArray;
     }
 
     trait getAndPrintAsJson {
@@ -75,6 +76,12 @@ namespace AuditCongress {
     trait setFieldsFromObject {
         function setFieldsFromObject($obj) {
             foreach ($obj as $key=>$value) $this->{$key} = $value; 
+        }
+    }
+
+    trait toArray {
+        function toArray() {
+            return json_decode(json_encode($this), true);
         }
     }
 }

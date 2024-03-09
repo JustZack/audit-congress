@@ -71,6 +71,6 @@ export default class UrlUtil {
     }
 
     static setWindowUrl(windowTitle, path) {
-        window.history.pushState("", windowTitle, path);
+        window.history.pushState("", windowTitle, Env.getDomain()+path);
     }
 }

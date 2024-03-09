@@ -27,7 +27,8 @@ namespace CongressGov {
 
             $this->route = "$this->actionType/$this->congress/$this->type/$this->number/cosponsors";
             $this->setUidFromRoute();
-        }
+        
+            $this->fetchFromApi();}
 
         function fetchFromApi() {
             $cosponsors = Api::call_bulk($this->route, $this->apiDataField);

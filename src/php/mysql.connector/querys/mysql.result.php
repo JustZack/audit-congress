@@ -36,21 +36,43 @@ namespace MySqlConnector {
             if ($this->hasResults()) return $this->mysqli_result->fetch_all();
             else return $this->success();
         }
+        
         //Return one row at a time, as an array
         public function fetchArray() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_array();
             else return $this->success();
         }
+        //Return all rows, as an array of arrays
+        public function fetchAllArray() {
+            $rowsArray = array();
+            while ($row = $this->fetchArray()) array_push($rowsArray, $row);
+            return $rowsArray;
+        }
+
         //Return one row at a time, as an associativce array
         public function fetchAssoc() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_assoc();
             else return $this->success();
         }
+        //Return one row at a time, as an associativce array
+        public function fetchAllAssoc() {
+            $rowsAssoc = array();
+            while ($row = $this->fetchAssoc()) array_push($rowsAssoc, $row);
+            return $rowsAssoc;
+        }
+
         //Return one row at a time
         public function fetchRow() {
             if ($this->hasResults()) return $this->mysqli_result->fetch_row();
             else return $this->success();
         }
+        //Return all rowsm as mysqli rows
+        public function fetchAllRow() {
+            $rows = array();
+            while ($row = $this->fetchRow()) array_push($rows, $row);
+            return $rows;
+        }
+
         //Return a full column, as an array
         public function fetchColumn($column_num) {
             if ($this->hasResults()) return $this->mysqli_result->fetch_column($column_num);

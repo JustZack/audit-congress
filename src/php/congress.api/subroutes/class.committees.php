@@ -24,6 +24,8 @@ namespace CongressGov {
 
             $this->route = "bill/$this->congress/$this->type/$this->number/committees";
             $this->setUidFromRoute();
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

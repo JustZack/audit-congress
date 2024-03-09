@@ -71,6 +71,51 @@ namespace APITest {
             while ($row = $result->fetchColumn(1)) var_dump($row);
         }
 
+        static function testSqlMemberByName($fname = null, $lname = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByName($fname, $lname, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testSqlMemberOfficeById($id) {
+            $rows = \AuditCongress\MemberOffices::getByBioguideId($id);
+            var_dump($rows);
+        }
+
+        static function testSqlMemberSocialsById($id) {
+            $rows = \AuditCongress\MemberSocials::getByBioguideId($id);
+            var_dump($rows);
+        }
+
+        static function testSqlMemberById($id, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByBioguideId($id, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testSqTermsByPartyByYear($party, $year = null) {
+            $rows = \AuditCongress\MemberTerms::getByParty($party, $year);
+            var_dump($rows);
+        }
+
+        static function testSqTermsByStateByYear($state, $year = null) {
+            $rows = \AuditCongress\MemberTerms::getByState($state, $year);
+            var_dump($rows);
+        }
+
+        static function testGetSenators($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getSenators($state, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testGetReps($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getRepresentatives($state, $isCurrent);
+            var_dump($rows);
+        }
+
+        static function testGetByState($state = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByState($state, $isCurrent);
+            var_dump($rows);
+        }
+        
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }

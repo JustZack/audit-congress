@@ -9,6 +9,8 @@ namespace UnitedStatesLegislators {
             $this->id = new PersonIdShort($officePersonObj["id"]);
             $this->offices = new PersonOffices($officePersonObj["offices"]);
         }
+
+        function getOffices() { return $this->offices->offices;}
     }
 }
 

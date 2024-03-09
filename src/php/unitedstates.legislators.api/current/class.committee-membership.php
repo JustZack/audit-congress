@@ -14,6 +14,8 @@ namespace UnitedStatesLegislators {
             $this->route = "committee-membership-current";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

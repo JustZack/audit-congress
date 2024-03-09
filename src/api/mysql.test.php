@@ -19,7 +19,24 @@ require_once "test/autoload.php";
 
 //MySqlConnector::testDatabase("auditcongress");
 
-//MySqlConnector::testEnforceSchema();
+MySqlConnector::testEnforceSchema();
+//MySqlConnector::testSqlMemberById("A5");
+//MySqlConnector::testSqlMemberByName("Zach", null, null);
+//MySqlConnector::testSqlMemberOfficeById("A000055");
+//MySqlConnector::testSqlMemberSocialsById("A000055");
+//MySqlConnector::testSqlMemberById("A000055");
+//MySqlConnector::testSqTermsByPartyByYear("dem", "2020");
+//MySqlConnector::testSqTermsByStateByYear("co", "2023");
+//MySqlConnector::testSqMembersByState("CO", true);
+//MySqlConnector::testSqMembersByState("AK", false);
+//MySqlConnector::testSqMembersByState("HI");
 
+
+//MySqlConnector::testGetSenators("CO", true);
+//MySqlConnector::testGetReps("CO", true);
+MySqlConnector::testGetReps("NY", true);
+//MySqlConnector::testGetByState("TX", false);
+
+echo "Total Queries: ".\MySqlConnector\Query::$totalQueries . "\n";
 
 ?>

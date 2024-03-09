@@ -14,6 +14,8 @@ namespace UnitedStatesLegislators {
             $this->route = "legislators-district-offices";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {

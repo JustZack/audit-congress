@@ -43,6 +43,8 @@ namespace ProPublica {
             $this->route = "$this->congress/$this->chamber/sessions/$this->session/votes/$this->roll_call";
             $this->setUidFromRoute();
             $this->route .= ".json";
+
+            $this->fetchFromApi();
         }
 
         function fetchFromApi() {
