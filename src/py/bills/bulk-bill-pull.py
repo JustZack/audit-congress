@@ -14,7 +14,14 @@ BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
 BILLS_DIR = "cache"
 BILL_ZIPS_DIR = BILLS_DIR+"/zips/"
-BILL_DATA_DIR = BILLS_DIR+"/data/"
+BILL_DATA_DIR = BILLS_DIR+"/data10010/"
+
+MAX_THREAD_POOL_SIZE = 3
+#50 => 630s (10min)
+#20 => 620s (10min)
+#10 => 415s (7min)
+#5  => 345s (5min 45s) => 26 zip files, 5 threads per zip files = 130 concurrent threads max
+#3  => 364s (6min)
 
 #folders have varying structure
 BILL_PATH_TYPE_ONE = 115 #If equals 115, use this
@@ -28,13 +35,6 @@ BILL_FOLDERS_THR = "{}/congress/data/{}/bills/" #Structure for 113 -> 114, 116 o
 
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", 
                      "s" , "sconres", "sjres", "sres"]
-
-MAX_THREAD_POOL_SIZE = 5
-#50 => 630s (10min)
-#20 => 620s (10min)
-#10 => 415s (7min)
-#5  => 345s (5min 45s) => 26 zip files, 5 threads per zip files = 130 concurrent threads max
-#3  => 364s (6min)
 
 SHOW_DEBUG_MESSAGES = False
 def debug_print(*strs):
@@ -98,10 +98,7 @@ def mysql_execute_query(mysql_con, sql, use_database):
         mysql_cursor.execute("USE "+use_database)
 
     mysql_cursor.execute(sql)
-    if not returnDict:
-        result = [row[0] for row in mysql_cursor.fetchall()]
-    else:
-        result = dict(mysql_cursor.fetchall())
+    result = [row[0] for row in mysql_cursor.fetchall()]
 
     mysql_cursor.close()
     return result
@@ -202,12 +199,12 @@ def downloadBillZipfiles():
 
 
 def extractZipFiles(zipFile, files, saveDir):
-    with ThreadPoolExecutor(MAX_THREAD_POOL_SIZE) as exe:
-        for file in files:
-            data = zipFile.read(file)
-            path = saveDir+"/"+file
-            data = data.decode(json.detect_encoding(data))
-            exe.submit(saveFile, path, data)
+    #with ThreadPoolExecutor(MAX_THREAD_POOL_SIZE) as exe:
+    for file in files:
+        data = zipFile.read(file)
+        path = saveDir+"/"+file
+        saveBinaryFile(path, data)
+            #exe.submit(saveBinaryFile, path, data)
 
 def extractBillZip(filename):
     startExtract = datetime.now()
@@ -215,17 +212,25 @@ def extractBillZip(filename):
     zipPath = filename
     dataPath = BILL_DATA_DIR+determineCongressNumberfromPath(filename)
     zipped = ZipFile(zipPath, 'r')
-    files = zipped.namelist()
-    extractZipFiles(zipped, files, dataPath)
+    zipped.extractall(dataPath)
     zipped.close()
+    files = []
+    files = zipped.namelist()
+    #extractZipFiles(zipped, files, dataPath)
 
     print(format(seconds_since(startExtract)),"Extracted", len(files), "files from", zipPath, "to", dataPath)
+    time.sleep(2)
         
 def extractBillZipFiles():
     zips = [BILL_ZIPS_DIR+p for p in os.listdir(BILL_ZIPS_DIR) if p.find(".zip") >= 0]
     print("Started extracting", len(zips), "Zip files")
 
-    extractBillZip(zips[0])
+    for zipFile in zips: extractBillZip(zipFile)
+        
+    #extractBillZip(zips[0])
+    #with ThreadPoolExecutor(2) as exe:
+    #    for zipFile in zips:
+    #        exe.submit(extractBillZip, zipFile)
     #threads = getThreads(extractBillZip, zips)
     #startThreads(threads)
     #joinThreads(threads)
@@ -248,7 +253,7 @@ def parseBillData(filePath):
         actualBill["congress"] = jsonData["congress"]
         actualBill["number"] = jsonData["number"]
 
-        actualBill["sponsorThomasId"] = jsonData["sponsor"]["thomas_id"]
+        actualBill["sponsorThomasId"] = jsonData["sponsor"]["thomas_id"] if jsonData["sponsor"] is not None else None
 
         actualBill["officialTitle"] = jsonData["official_title"]
         actualBill["popularTitle"] = jsonData["popular_title"]
@@ -264,7 +269,7 @@ def parseBillData(filePath):
     return billData
 
 def insertBills(mysql_con, bills):
-    sql = "INSERT INTO bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
        
     data = []
     for bill in bills:
@@ -272,7 +277,9 @@ def insertBills(mysql_con, bills):
         data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
         bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"]))
 
+
     mysql_execute_many_querys(mysql_con, sql, data, "auditcongress")
+    print("Inserted",len(data),"rows into Bills")
 
 def parseBillType(typePath):
     mysql_con = mysql_connect("127.0.0.1", "AuditCongress", "?6n78$y\"\"~'Fvdy", "auditcongress")
@@ -298,20 +305,27 @@ def parseBillFolder(folderPath):
     folders = [typePath+folder for folder in folders if folder in BILL_TYPE_FOLDERS]
     print("Started parsing bills in", congress, "congress")
 
-    parseBillType(folders[0])
-    #threads = getThreads(parseBillType, folders)
-    #startThreads(threads)
-    #joinThreads(threads)
+    #parseBillType(folders[0])
+    threads = getThreads(parseBillType, folders)
+    startThreads(threads)
+    joinThreads(threads)
+
+def truncateBills():
+    mysql_con = mysql_connect("127.0.0.1", "AuditCongress", "?6n78$y\"\"~'Fvdy", "auditcongress")
+    mysql_execute_query(mysql_con, "TRUNCATE BILLS", "auditcongress")
+    mysql_con.close()
+
 
 def parseBillFiles():
     congresses = os.listdir(BILL_DATA_DIR)
     congresses = [BILL_DATA_DIR+congress for congress in congresses]
-
-    parseBillFolder(congresses[0])
-    #threads = getThreads(parseBillFolder, congresses)
-    #startThreads(threads)
-    #joinThreads(threads)
-
+    
+    truncateBills()
+    
+    #parseBillFolder(congresses[0])
+    threads = getThreads(parseBillFolder, congresses)
+    startThreads(threads)
+    joinThreads(threads)
 
 
 

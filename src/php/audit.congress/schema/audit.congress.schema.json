@@ -112,7 +112,7 @@
             {
                 "name": "Bills",
                 "columns": {
-                    "id": { "type": "VARCHAR(50)", "null": "NO"},
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
