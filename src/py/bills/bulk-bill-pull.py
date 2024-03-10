@@ -12,9 +12,7 @@ import mysql.connector
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
-BILLS_DIR = "cache"
-BILL_ZIPS_DIR = BILLS_DIR+"/zips/"
-BILL_DATA_DIR = BILLS_DIR+"/data10010/"
+BILLS_DIR = "cache/"
 
 MAX_THREAD_POOL_SIZE = 3
 #50 => 630s (10min)
@@ -33,8 +31,7 @@ BILL_FOLDERS_TWO = "{}/bills/" #Structure for 93 -> 112
 #Else, use this by default
 BILL_FOLDERS_THR = "{}/congress/data/{}/bills/" #Structure for 113 -> 114, 116 onwards 
 
-BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", 
-                     "s" , "sconres", "sjres", "sres"]
+BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s" , "sconres", "sjres", "sres"]
 
 SHOW_DEBUG_MESSAGES = False
 def debug_print(*strs):
@@ -67,13 +64,6 @@ def downloadZipFile(url, savePath):
     file = rq.get(url)
     saveBinaryFile(savePath+".zip", file.content)
 
-def getAndExtractZipFile(url, savePath):
-    ensureFoldersExist(savePath)
-
-    file = rq.get(url, stream=True)
-    zipped = ZipFile(io.BytesIO(file.content))
-    zipped.extractall(savePath)
-
 def getParsedSoup(url, features="html.parser"):
     page = rq.get(url)
     debug_print("GET:", url)
@@ -86,10 +76,10 @@ def getParsedXml(url): return getParsedSoup(url, "xml")
 
 
 
-
 # Opens a connection with a MySQL host
-def mysql_connect(host, user, password):
-    return mysql.connector.connect(host=host, user=user, password=password)
+def mysql_connect():
+    return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", 
+                                   password="?6n78$y\"\"~'Fvdy", database="auditcongress")
 
 # Executes a single query string
 def mysql_execute_query(mysql_con, sql, use_database):
@@ -118,38 +108,8 @@ def mysql_execute_many_querys(mysql_con, sql, data, database):
 
 
 
-def getLeadingZeroNumber(number, minLength):
-    nStr = str(number)
-    nDiff = minLength-len(nStr)
-    return nStr if nDiff <= 0 else ("0"*nDiff)+nStr
-def getYearsByCongress(congress):
-    n2 = int(congress)*2
-    # congress# * 2 + 1787 = first year of this congress session
-    year1 = n2+1787
-    #Then compute the second year
-    #This differs because the 72nd congress sessions were 3 years, now they are 2
-    year2 = n2+1788 if n2 > 72 else (n2+1789)
-
-    return [year1, year2]
 
 
-
-def determineCongressNumberfromPath(url):
-    lastSlash = url.rfind("/")
-    lastDot = url.rfind(".")
-    congress = url[lastSlash+1:lastDot] if lastDot > -1 else url[lastSlash+1:]
-    
-    return congress
-
-def getBillZipUrls():
-    soup = getParsedHtml(PROPUBLICA_BULK_BILLS_URL)
-    links = soup.select(BILL_LINKS_SELECTOR)
-    return [link["href"] for link in links]
-
-def startThreadsWithPool(function, allOptions):
-    with ThreadPoolExecutor(max_workers=MAX_THREAD_POOL_SIZE) as executor:
-        [executor.submit(function, op) for op in allOptions]
-            
 def buildThread(target, args):
     return threading.Thread(target=target, args=(args,), daemon=True)
 def getThreads(function, allOptions):
@@ -172,18 +132,26 @@ def joinThreads(threads):
         time.sleep(1)    
 
 
-def mysql_connect(host, username, password,database):
-    return mysql.connector.connect(host=host,user=username,password=password,database=database)
 
 
 
-
+def determineCongressNumberfromPath(url):
+    lastSlash = url.rfind("/")
+    lastDot = url.rfind(".")
+    congress = url[lastSlash+1:lastDot] if lastDot > -1 else url[lastSlash+1:]
+    
+    return congress
 
 def downloadBillZip(url):
     congress = determineCongressNumberfromPath(url)
-    savePath = BILL_ZIPS_DIR+congress
+    savePath = BILLS_DIR+congress
     downloadZipFile(url, savePath)
     print("Saved bulk bill data for congress", congress, "to", savePath)
+
+def getBillZipUrls():
+    soup = getParsedHtml(PROPUBLICA_BULK_BILLS_URL)
+    links = soup.select(BILL_LINKS_SELECTOR)
+    return [link["href"] for link in links]
 
 def downloadBillZipfiles():
     urls = getBillZipUrls()
@@ -196,79 +164,8 @@ def downloadBillZipfiles():
 
 
 
-
-
-def extractZipFiles(zipFile, files, saveDir):
-    #with ThreadPoolExecutor(MAX_THREAD_POOL_SIZE) as exe:
-    for file in files:
-        data = zipFile.read(file)
-        path = saveDir+"/"+file
-        saveBinaryFile(path, data)
-            #exe.submit(saveBinaryFile, path, data)
-
-def extractBillZip(filename):
-    startExtract = datetime.now()
-
-    zipPath = filename
-    dataPath = BILL_DATA_DIR+determineCongressNumberfromPath(filename)
-    zipped = ZipFile(zipPath, 'r')
-    zipped.extractall(dataPath)
-    zipped.close()
-    files = []
-    files = zipped.namelist()
-    #extractZipFiles(zipped, files, dataPath)
-
-    print(format(seconds_since(startExtract)),"Extracted", len(files), "files from", zipPath, "to", dataPath)
-    time.sleep(2)
-        
-def extractBillZipFiles():
-    zips = [BILL_ZIPS_DIR+p for p in os.listdir(BILL_ZIPS_DIR) if p.find(".zip") >= 0]
-    print("Started extracting", len(zips), "Zip files")
-
-    for zipFile in zips: extractBillZip(zipFile)
-        
-    #extractBillZip(zips[0])
-    #with ThreadPoolExecutor(2) as exe:
-    #    for zipFile in zips:
-    #        exe.submit(extractBillZip, zipFile)
-    #threads = getThreads(extractBillZip, zips)
-    #startThreads(threads)
-    #joinThreads(threads)
-
-
-
-
-
-
-
-def parseBillData(filePath):
-    billData = dict()
-    with open(filePath, "r") as file:  
-        jsonData = json.load(file)
-
-        actualBill = dict()
-        actualBill["id"] = jsonData["bill_id"]
-
-        actualBill["type"] = jsonData["bill_type"]
-        actualBill["congress"] = jsonData["congress"]
-        actualBill["number"] = jsonData["number"]
-
-        actualBill["sponsorThomasId"] = jsonData["sponsor"]["thomas_id"] if jsonData["sponsor"] is not None else None
-
-        actualBill["officialTitle"] = jsonData["official_title"]
-        actualBill["popularTitle"] = jsonData["popular_title"]
-
-        billData["bill"] = actualBill
-        billData["titles"] = jsonData["titles"]
-        billData["subjects"] = jsonData["subjects"]
-        billData["cosponsors"] = jsonData["cosponsors"]
-        billData["committees"] = jsonData["committees"]
-        billData["amendments"] = jsonData["amendments"]
-        billData["actions"] = jsonData["actions"]
-
-    return billData
-
-def insertBills(mysql_con, bills):
+def insertBills(bills):
+    mysql_con = mysql_connect()
     sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
        
     data = []
@@ -277,55 +174,80 @@ def insertBills(mysql_con, bills):
         data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
         bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"]))
 
-
     mysql_execute_many_querys(mysql_con, sql, data, "auditcongress")
-    print("Inserted",len(data),"rows into Bills")
-
-def parseBillType(typePath):
-    mysql_con = mysql_connect("127.0.0.1", "AuditCongress", "?6n78$y\"\"~'Fvdy", "auditcongress")
-    folders = os.listdir(typePath)
-    bills = []
-    for folder in folders:
-        data = "{}/{}/{}".format(typePath,folder,"data.json")
-        bill = parseBillData(data)
-        bills.append(bill)
-    insertBills(mysql_con, bills)
     mysql_con.close()
-            
-def parseBillFolder(folderPath):
-    congress = int(determineCongressNumberfromPath(folderPath))
-    if congress == BILL_PATH_TYPE_ONE:
-        typePath = BILL_FOLDERS_ONE.format(folderPath, congress) 
-    elif congress <= BILL_PATH_TYPE_TWO:
-        typePath = BILL_FOLDERS_TWO.format(folderPath) 
-    else: 
-        typePath = BILL_FOLDERS_THR.format(folderPath, congress) 
 
-    folders = os.listdir(typePath)
-    folders = [typePath+folder for folder in folders if folder in BILL_TYPE_FOLDERS]
-    print("Started parsing bills in", congress, "congress")
+def parseBillData(fileData):
+    billData = dict()
+    jsonData = json.loads(fileData)
 
-    #parseBillType(folders[0])
-    threads = getThreads(parseBillType, folders)
-    startThreads(threads)
-    joinThreads(threads)
+    actualBill = dict()
+    actualBill["id"] = jsonData["bill_id"]
+
+    actualBill["type"] = jsonData["bill_type"]
+    actualBill["congress"] = jsonData["congress"]
+    actualBill["number"] = jsonData["number"]
+
+    sponsor = jsonData["sponsor"]
+    if (sponsor is not None):
+        if "bioguide_id" in sponsor:
+            actualBill["sponsorThomasId"] = sponsor["bioguide_id"]
+        else:
+            actualBill["sponsorThomasId"] = sponsor["thomas_id"]
+    else:
+        actualBill["sponsorThomasId"] = None
+
+    actualBill["officialTitle"] = jsonData["official_title"]
+    actualBill["popularTitle"] = jsonData["popular_title"]
+
+    billData["bill"] = actualBill
+    billData["titles"] = jsonData["titles"]
+    billData["subjects"] = jsonData["subjects"]
+    billData["cosponsors"] = jsonData["cosponsors"]
+    billData["committees"] = jsonData["committees"]
+    billData["amendments"] = jsonData["amendments"]
+    billData["actions"] = jsonData["actions"]
+
+    return billData
+
+def readZippedFiles(zipFile):
+    bills = []
+    files = zipFile.namelist()
+    totalFilesRead = 0
+    for file in files:
+        if (file.find("amendments") == -1 and file.find("/data.json") >= 0):
+            totalFilesRead += 1
+            data = zipFile.read(file)
+            try:
+                bills.append(parseBillData(data))
+            except:
+                print("Error from",file)
+    
+    insertBills(bills)
+    return totalFilesRead
+
+def readBillZip(filename):
+    startRead = datetime.now()
+
+    totalRead = 0
+    with ZipFile(filename, 'r') as zipped:
+        totalRead = readZippedFiles(zipped)
+
+    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "data files from", filename)
+    time.sleep(2)
+        
+def readBillZipFiles():
+    zips = [BILLS_DIR+p for p in os.listdir(BILLS_DIR) if p.find(".zip") >= 0]
+    print("Started parseing", len(zips), "Zip files")
+    truncateBills()
+
+    for zipFile in zips: readBillZip(zipFile)
 
 def truncateBills():
-    mysql_con = mysql_connect("127.0.0.1", "AuditCongress", "?6n78$y\"\"~'Fvdy", "auditcongress")
+    mysql_con = mysql_connect()
     mysql_execute_query(mysql_con, "TRUNCATE BILLS", "auditcongress")
     mysql_con.close()
 
-
-def parseBillFiles():
-    congresses = os.listdir(BILL_DATA_DIR)
-    congresses = [BILL_DATA_DIR+congress for congress in congresses]
-    
-    truncateBills()
-    
-    #parseBillFolder(congresses[0])
-    threads = getThreads(parseBillFolder, congresses)
-    startThreads(threads)
-    joinThreads(threads)
 
 
 
@@ -333,24 +255,17 @@ def parseBillFiles():
 def doBulkBillPull():
     if os.path.exists(BILLS_DIR):
         print("Deleting Existing Bills Cache...")
-        #if os.path.exists(BILL_ZIPS_DIR): shutil.rmtree(BILL_ZIPS_DIR)
-        #if os.path.exists(BILL_DATA_DIR): shutil.rmtree(BILL_DATA_DIR)
-        #shutil.rmtree(BILLS_DIR)
+        shutil.rmtree(BILLS_DIR)
     
     startPull = datetime.now()
 
-    if not os.path.exists(BILL_ZIPS_DIR):
+    if not os.path.exists(BILLS_DIR):
         downloadBillZipfiles()
-        print("Took", seconds_since(startPull),"seconds to download",countFiles(BILL_ZIPS_DIR),"zip files.")
+        print("Took", seconds_since(startPull),"seconds to download",countFiles(BILLS_DIR),"zip files.")
     
     startExtract = datetime.now()
-    if not os.path.exists(BILL_DATA_DIR):
-        extractBillZipFiles()
-        print("Took", seconds_since(startExtract),"seconds to extract",countFiles(BILL_DATA_DIR),"zipped files.")
-
-    startParse = datetime.now()
-    parseBillFiles()
-    #print("Took", seconds_since(startParse),"seconds to parse",countFiles(BILL_DATA_DIR),"bill files.")
+    readBillZipFiles()
+    print("Took", seconds_since(startExtract),"seconds to parse",countFiles(BILLS_DIR),"zip files.")
 
 if __name__ == "__main__":   
     doBulkBillPull()
