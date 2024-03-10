@@ -27,8 +27,8 @@
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
                     "isCurrent": { "type": "TINYINT(1)", "null": "NO" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -37,8 +37,8 @@
                     "fecId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
                     
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -54,8 +54,8 @@
                     "instagram": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagramId": { "type": "VARCHAR(250)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -67,7 +67,7 @@
                     "end": { "type": "DATE", "null": "YES" },
                     
                     "state": { "type": "VARCHAR(50)", "null": "YES" },
-                    "district": { "type": "INT(11)", "null": "YES" },
+                    "district": { "type": "INT", "null": "YES" },
                     "party": { "type": "VARCHAR(100)", "null": "YES" },
                     "class": { "type": "VARCHAR(100)", "null": "YES" },
                     "how": { "type": "VARCHAR(250)", "null": "YES" },
@@ -80,8 +80,8 @@
                     "office": { "type": "VARCHAR(100)", "null": "YES" },
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -103,8 +103,24 @@
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
                     "fax": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
+                }
+            },
+
+
+            {
+                "name": "Bills",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO"},
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "sponsorThomasId": { "type": "VARCHAR(50)", "null": "NO" },
+
+                    "officialTitle": { "type": "VARCHAR(50)", "null": "NO" },
+                    "popularTitle": { "type": "VARCHAR(50)", "null": "NO" }
                 }
             }
         ]
