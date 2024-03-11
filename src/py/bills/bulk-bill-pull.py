@@ -72,6 +72,9 @@ def getParsedSoup(url, features="html.parser"):
 def getParsedHtml(url): return getParsedSoup(url)
 def getParsedXml(url): return getParsedSoup(url, "xml")
 
+def parseXMLData(data):
+    return BeautifulSoup(data, "xml")
+
 
 
 
@@ -177,7 +180,75 @@ def insertBills(bills):
     mysql_execute_many_querys(mysql_con, sql, data, "auditcongress")
     mysql_con.close()
 
-def parseBillData(fileData):
+def parseBillFDSYSXml(fileData):
+    billData = dict()
+
+    xmlData = parseXMLData(fileData)
+
+    bcongress = xmlData.select("bill > congress")[0].text
+    bnumber = xmlData.select("bill > number")[0].text
+    btype = xmlData.select("bill > type")[0].text.lower()
+
+    actualBill = dict()
+    actualBill["id"] = "{}{}-{}".format(btype, bnumber, bcongress)
+
+    actualBill["type"] = btype
+    actualBill["congress"] = bcongress
+    actualBill["number"] = bnumber
+
+    sponsor = xmlData.select("bill > sponsors bioguideId")
+    actualBill["sponsorThomasId"] = sponsor[0].text
+
+    title = xmlData.select("bill > title")[0].text
+    actualBill["officialTitle"] = title
+    actualBill["popularTitle"] = title
+
+    billData["bill"] = actualBill
+    #billData["titles"] = xmlData.select("bill > titles")[0]
+    #billData["subjects"] = xmlData.select("bill > subjects")[0]
+    #billData["cosponsors"] = xmlData.select("bill > cosponsors")[0]
+    #billData["committees"] = xmlData.select("bill > committees")[0]
+    #billData["amendments"] = xmlData.select("bill > amendments")[0]
+    #billData["actions"] = xmlData.select("bill > actions")[0]
+
+    return billData
+
+def parseBillDataXml(fileData):
+    billData = dict()
+    xmlData = parseXMLData(fileData)
+    
+    actualBill = dict()
+    actualBill["id"] = jsonData["bill_id"]
+
+    billElem = xmlData.select("<bill>")
+    print(billElem)
+    actualBill["type"] = billElem["type"]
+    actualBill["congress"] = billElem["session"]
+    actualBill["number"] = billElem["number"]
+    return billData
+    sponsor = jsonData["sponsor"]
+    if (sponsor is not None):
+        if "bioguide_id" in sponsor:
+            actualBill["sponsorThomasId"] = sponsor["bioguide_id"]
+        else:
+            actualBill["sponsorThomasId"] = sponsor["thomas_id"]
+    else:
+        actualBill["sponsorThomasId"] = None
+
+    actualBill["officialTitle"] = jsonData["official_title"]
+    actualBill["popularTitle"] = jsonData["popular_title"]
+
+    billData["bill"] = actualBill
+    billData["titles"] = jsonData["titles"]
+    billData["subjects"] = jsonData["subjects"]
+    billData["cosponsors"] = jsonData["cosponsors"]
+    billData["committees"] = jsonData["committees"]
+    billData["amendments"] = jsonData["amendments"]
+    billData["actions"] = jsonData["actions"]
+
+    return billData
+
+def parseBillDataJson(fileData):
     billData = dict()
     jsonData = json.loads(fileData)
 
@@ -210,18 +281,47 @@ def parseBillData(fileData):
 
     return billData
 
+def getBillFolderDict(fileList):
+    folders = dict()
+    for file in fileList:
+        lastDot = file.rfind(".")
+        lastSlash = file.rfind("/")+1
+        
+        directory = file[0:lastSlash]
+        file = file[lastSlash:]
+
+        if directory not in folders: folders[directory] = set()
+        
+        #implies this is a folder
+        if lastDot > lastSlash: folders[directory].add(file)
+    return folders
+
 def readZippedFiles(zipFile):
     bills = []
     files = zipFile.namelist()
+    folderDict = getBillFolderDict(files)
     totalFilesRead = 0
-    for file in files:
-        if (file.find("amendments") == -1 and file.find("/data.json") >= 0):
-            totalFilesRead += 1
+    for name,folder in folderDict.items():
+        if name.find("amendments") >= 0: continue
+
+        file = None
+        if "data.json" in folder: file = name+"data.json"
+        elif "data.xml" in folder: file = name+"data.xml"
+        elif "fdsys_billstatus.xml" in folder: file = name+"fdsys_billstatus.xml"
+
+        if file is not None:
             data = zipFile.read(file)
             try:
-                bills.append(parseBillData(data))
-            except:
-                print("Error from",file)
+                bill = None
+                if file.find("data.json") >= 0: bill = parseBillDataJson(data)
+                #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
+                elif file.find("fdsys_billstatus.xml") >= 0: bill = parseBillFDSYSXml(data)
+
+                if bill is not None: 
+                    totalFilesRead += 1
+                    bills.append(bill)
+            except Exception as e:
+                print("Error from",file,":",str(e))
     
     insertBills(bills)
     return totalFilesRead
@@ -233,7 +333,7 @@ def readBillZip(filename):
     with ZipFile(filename, 'r') as zipped:
         totalRead = readZippedFiles(zipped)
 
-    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "data files from", filename)
+    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "bills files from", filename)
     time.sleep(2)
         
 def readBillZipFiles():
@@ -241,7 +341,9 @@ def readBillZipFiles():
     print("Started parseing", len(zips), "Zip files")
     truncateBills()
 
-    for zipFile in zips: readBillZip(zipFile)
+    for zipFile in zips:
+        #if zipFile.find("118") >= 0:
+        readBillZip(zipFile)
 
 def truncateBills():
     mysql_con = mysql_connect()
@@ -253,11 +355,13 @@ def truncateBills():
 
 
 def doBulkBillPull():
-    if os.path.exists(BILLS_DIR):
+    #Delete the cache before running
+    if False and os.path.exists(BILLS_DIR):
         print("Deleting Existing Bills Cache...")
         shutil.rmtree(BILLS_DIR)
     
     startPull = datetime.now()
+
 
     if not os.path.exists(BILLS_DIR):
         downloadBillZipfiles()
