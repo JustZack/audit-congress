@@ -2,6 +2,8 @@ import os, time, shutil, io, json
 from zipfile import ZipFile
 from datetime import datetime
 
+import xmltodict
+
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
@@ -40,29 +42,20 @@ def debug_print(*strs):
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 def countFiles(inDir):
     count = 0
-    for root_dir, cur_dir, files in os.walk(inDir):
-        count += len(files)
+    for root_dir, cur_dir, files in os.walk(inDir): count += len(files)
     return count
 
-def ensureFoldersExist(path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+def ensureFoldersExist(path): os.makedirs(os.path.dirname(path), exist_ok=True)
 
 def saveFileAny(writeType, path, data):
     ensureFoldersExist(path)
     file = open(path, writeType)
     file.write(data)
     file.close()
+def saveBinaryFile(path, data): saveFileAny("wb", path, data)
+def saveFile(path, data): saveFileAny("w", path, data)
 
-def saveBinaryFile(path, data):
-    saveFileAny("wb", path, data)
-
-def saveFile(path, data):
-    saveFileAny("w", path, data)
-
-def downloadZipFile(url, savePath):
-    ensureFoldersExist(savePath)
-    file = rq.get(url)
-    saveBinaryFile(savePath+".zip", file.content)
+def downloadZipFile(url, savePath): saveBinaryFile(savePath+".zip", rq.get(url).content)
 
 def getParsedSoup(url, features="html.parser"):
     page = rq.get(url)
@@ -72,21 +65,16 @@ def getParsedSoup(url, features="html.parser"):
 def getParsedHtml(url): return getParsedSoup(url)
 def getParsedXml(url): return getParsedSoup(url, "xml")
 
-def parseXMLData(data):
-    return BeautifulSoup(data, "xml")
 
 
-
-
-
+MYSQL_CON = None
 # Opens a connection with a MySQL host
 def mysql_connect():
-    return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", 
-                                   password="?6n78$y\"\"~'Fvdy", database="auditcongress")
+    return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", password="?6n78$y\"\"~'Fvdy", database="auditcongress")
 
 # Executes a single query string
-def mysql_execute_query(mysql_con, sql, use_database):
-    mysql_cursor = mysql_con.cursor()
+def mysql_execute_query(mysql_conn, sql, use_database):
+    mysql_cursor = mysql_conn.cursor()
     if use_database is not None:
         mysql_cursor.execute("USE "+use_database)
 
@@ -97,22 +85,19 @@ def mysql_execute_query(mysql_con, sql, use_database):
     return result
 
 # Executes Many querys, based on executeMany. Best for inserts.
-def mysql_execute_many_querys(mysql_con, sql, data, database):
-    mysql_cursor = mysql_con.cursor()
+def mysql_execute_many_querys(mysql_conn, sql, data, database):
+    mysql_cursor = mysql_conn.cursor()
 
     mysql_cursor.execute("USE "+database)
 
     mysql_cursor.executemany(sql, data)
 
-    mysql_con.commit()
+    mysql_conn.commit()
     result = [row[0] for row in mysql_cursor.fetchall()]
     mysql_cursor.close()
     return result
 
-
-
-
-
+#Built a thread given the target and arguments
 def buildThread(target, args):
     return threading.Thread(target=target, args=(args,), daemon=True)
 def getThreads(function, allOptions):
@@ -121,7 +106,6 @@ def getThreads(function, allOptions):
         thread = buildThread(function, op)
         threads.append(thread)
     return threads
-
 def startThreads(threads): 
     for thread in threads:
         thread.start() 
@@ -167,41 +151,43 @@ def downloadBillZipfiles():
 
 
 
-def insertBills(bills):
-    mysql_con = mysql_connect()
-    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-       
-    data = []
-    for bill in bills:
-        bill = bill["bill"]
-        data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
-        bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"]))
-
-    mysql_execute_many_querys(mysql_con, sql, data, "auditcongress")
-    mysql_con.close()
-
 def parseBillFDSYSXml(fileData):
+    xmlData = xmltodict.parse(fileData)
+    
+    bill = xmlData["billStatus"]["bill"] 
+
+    #print(bill["sponsors"])
+    #print(bill["sponsors"])
+
+
     billData = dict()
+    try:
 
-    xmlData = parseXMLData(fileData)
+        typ = bill["type"] if "type" in bill.keys() else bill["billType"]
+        cong = bill["congress"]
+        num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
 
-    bcongress = xmlData.select("bill > congress")[0].text
-    bnumber = xmlData.select("bill > number")[0].text
-    btype = xmlData.select("bill > type")[0].text.lower()
+        actualBill = dict()
+        actualBill["id"] = "{}{}-{}".format(typ, num, cong)
 
-    actualBill = dict()
-    actualBill["id"] = "{}{}-{}".format(btype, bnumber, bcongress)
+        actualBill["type"] = typ
+        actualBill["congress"] = cong
+        actualBill["number"] = num
 
-    actualBill["type"] = btype
-    actualBill["congress"] = bcongress
-    actualBill["number"] = bnumber
+        sponsor = bill["sponsors"]
+        actualBill["sponsorThomasId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
 
-    sponsor = xmlData.select("bill > sponsors bioguideId")
-    actualBill["sponsorThomasId"] = sponsor[0].text
+        actualBill["officialTitle"] = bill["title"]
+        actualBill["popularTitle"] = bill["title"]
+    except Exception as e:
+        print(e,":", bill["sponsors"])
 
-    title = xmlData.select("bill > title")[0].text
-    actualBill["officialTitle"] = title
-    actualBill["popularTitle"] = title
+    #sponsor = xmlData.select("bill > sponsors bioguideId")
+    #actualBill["sponsorThomasId"] = sponsor[0].text
+
+    #title = xmlData.select("bill > title")[0].text
+    #actualBill["officialTitle"] = title
+    #actualBill["popularTitle"] = title
 
     billData["bill"] = actualBill
     #billData["titles"] = xmlData.select("bill > titles")[0]
@@ -214,8 +200,10 @@ def parseBillFDSYSXml(fileData):
     return billData
 
 def parseBillDataXml(fileData):
+    raise Exception("data.xml is not implemented")
+
     billData = dict()
-    xmlData = parseXMLData(fileData)
+    xmlData = xmltodict.parse(fileData)
     
     actualBill = dict()
     actualBill["id"] = jsonData["bill_id"]
@@ -281,6 +269,17 @@ def parseBillDataJson(fileData):
 
     return billData
 
+def insertBills(bills, mysql_conn):
+    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+       
+    data = []
+    for bill in bills:
+        bill = bill["bill"]
+        data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
+        bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"]))
+
+    mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
+
 def getBillFolderDict(fileList):
     folders = dict()
     for file in fileList:
@@ -292,15 +291,16 @@ def getBillFolderDict(fileList):
 
         if directory not in folders: folders[directory] = set()
         
-        #implies this is a folder
+        #implies this is a file
         if lastDot > lastSlash: folders[directory].add(file)
     return folders
 
-def readZippedFiles(zipFile):
+def readZippedFiles(zipFile, mysql_conn):
     bills = []
     files = zipFile.namelist()
     folderDict = getBillFolderDict(files)
     totalFilesRead = 0
+    skippedFiles = 0
     for name,folder in folderDict.items():
         if name.find("amendments") >= 0: continue
 
@@ -320,36 +320,54 @@ def readZippedFiles(zipFile):
                 if bill is not None: 
                     totalFilesRead += 1
                     bills.append(bill)
+                else: skippedFiles += 1
             except Exception as e:
+                skippedFiles += 1
                 print("Error from",file,":",str(e))
     
-    insertBills(bills)
+    insertBills(bills, mysql_conn)
+    if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
     return totalFilesRead
 
 def readBillZip(filename):
     startRead = datetime.now()
-
+    mysql_conn = mysql_connect()
+    
     totalRead = 0
     with ZipFile(filename, 'r') as zipped:
-        totalRead = readZippedFiles(zipped)
-
-    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "bills files from", filename)
+        totalRead = readZippedFiles(zipped, mysql_conn)
+        
+    mysql_conn.close()
+    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "bill files from", filename)
     time.sleep(2)
         
 def readBillZipFiles():
     zips = [BILLS_DIR+p for p in os.listdir(BILLS_DIR) if p.find(".zip") >= 0]
     print("Started parseing", len(zips), "Zip files")
+    print("Dropping", countBills(), "bills...")
     truncateBills()
 
-    for zipFile in zips:
-        #if zipFile.find("118") >= 0:
-        readBillZip(zipFile)
+    #10 = ~180s (maxing SSD)
+    #5 = ~190s   (maxing SSD)
+    #4 = ~180s   (maxing SSD)
+    #3 = ~200s   (maxing SSD)
+    #2 = ~210s   (maxing SSD)
+    with ThreadPoolExecutor(5) as exe:
+        for zipFile in zips:
+            exe.submit(readBillZip, zipFile)
+    
+    #26 Threads = ~196 Seconds (maxing SSD)
+    #threads = getThreads(readBillZip, zips)
+    #startThreads(threads)
+    #joinThreads(threads)
+    
+    #sequential = 253s
+    #for zipFile in zips:
+        #if zipFile.find("113") >= 0:
+    #    readBillZip(zipFile)
 
-def truncateBills():
-    mysql_con = mysql_connect()
-    mysql_execute_query(mysql_con, "TRUNCATE BILLS", "auditcongress")
-    mysql_con.close()
-
+def truncateBills(): mysql_execute_query(mysql_connect(), "TRUNCATE BILLS", "auditcongress")
+def countBills(): return mysql_execute_query(mysql_connect(), "select count(*) from BILLS", "auditcongress")[0]
 
 
 
@@ -367,9 +385,13 @@ def doBulkBillPull():
         downloadBillZipfiles()
         print("Took", seconds_since(startPull),"seconds to download",countFiles(BILLS_DIR),"zip files.")
     
+    MYSQL_CON = mysql_connect()
+    
     startExtract = datetime.now()
     readBillZipFiles()
-    print("Took", seconds_since(startExtract),"seconds to parse",countFiles(BILLS_DIR),"zip files.")
+    print("Took", seconds_since(startExtract),"seconds to parse & insert",countBills(),"bills files.")
+
+    MYSQL_CON.close()
 
 if __name__ == "__main__":   
     doBulkBillPull()
