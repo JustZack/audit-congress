@@ -113,6 +113,7 @@ namespace AuditCongress {
         public static function ensureMembersHaveImage($rows) {
             $members = array();
             foreach ($rows as $row) {
+                //if (!isset($row["imageUrl"])) break;
                 if ($row["imageUrl"] == '') {
                     $bioguideId = $row["bioguideId"];
                     list("imageUrl"=>$imgUrl, "imageAttribution"=>$imgAttr) = self::getMemberImage($bioguideId);
@@ -128,6 +129,14 @@ namespace AuditCongress {
         protected static function parseResult($rows) {
             $rows = self::ensureMembersHaveImage($rows);
             return $rows;
+        }
+
+        public static function getBioguideToThomasIdMapping() {
+            self::enforceCache();
+            $members = MembersQuery::getBioguideToThomasIdMapping();
+            $mapping = array();
+            foreach ($members as $member) $mapping[$member["bioguideId"]] = $member["thomasId"];
+            return $mapping;
         }
 
         public static function getByBioguideId($bioguideId, $isCurrent = null) {

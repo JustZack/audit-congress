@@ -7,6 +7,12 @@ namespace AuditCongress {
             parent::__construct("Members");
         }
 
+        public static function getBioguideToThomasIdMapping() {
+            $members = new MembersQuery();
+            $members->setSelectColumns(["bioguideId", "thomasId"]);
+            return $members->selectFromDB()->fetchAllAssoc();
+        }
+
         public static function getByBioguideId($bioguideId, $isCurrent = null) {
             $members = new MembersQuery();
             $members->setSearchColumns(["bioguideId", "isCurrent"]);
