@@ -117,7 +117,7 @@
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
 
-                    "sponsorThomasId": { "type": "VARCHAR(50)", "null": "NO" },
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
 
                     "officialTitle": { "type": "VARCHAR(50)", "null": "NO" },
                     "popularTitle": { "type": "VARCHAR(50)", "null": "NO" },

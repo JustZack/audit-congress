@@ -135,7 +135,7 @@ namespace AuditCongress {
             self::enforceCache();
             $members = MembersQuery::getBioguideToThomasIdMapping();
             $mapping = array();
-            foreach ($members as $member) $mapping[$member["bioguideId"]] = $member["thomasId"];
+            foreach ($members as $member) $mapping[$member["thomasId"]] = $member["bioguideId"];
             return $mapping;
         }
 

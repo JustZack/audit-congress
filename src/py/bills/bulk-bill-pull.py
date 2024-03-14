@@ -17,23 +17,9 @@ BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
 BILLS_DIR = "cache/"
 
-MAX_THREAD_POOL_SIZE = 3
-#50 => 630s (10min)
-#20 => 620s (10min)
-#10 => 415s (7min)
-#5  => 345s (5min 45s) => 26 zip files, 5 threads per zip files = 130 concurrent threads max
-#3  => 364s (6min)
-
-#folders have varying structure
-BILL_PATH_TYPE_ONE = 115 #If equals 115, use this
-BILL_FOLDERS_ONE = "{}/{}/bills/" #Structure for 115 only
-
-BILL_PATH_TYPE_TWO = 112 #Else if less than 112, use this
-BILL_FOLDERS_TWO = "{}/bills/" #Structure for 93 -> 112
-
-#Else, use this by default
-BILL_FOLDERS_THR = "{}/congress/data/{}/bills/" #Structure for 113 -> 114, 116 onwards 
-
+MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
+MEMBERS_MAPPING = None
+#All folders that we care about in the bills folder
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s" , "sconres", "sjres", "sres"]
 
 SHOW_DEBUG_MESSAGES = False
@@ -181,7 +167,7 @@ def parseBillFDSYSXml(fileData):
     actualBill["number"] = num
 
     sponsor = bill["sponsors"]
-    actualBill["sponsorThomasId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
+    actualBill["bioguideId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
 
     actualBill["officialTitle"] = bill["title"]
     actualBill["popularTitle"] = bill["title"]
@@ -265,11 +251,11 @@ def parseBillDataXml(fileData):
     sponsor = jsonData["sponsor"]
     if (sponsor is not None):
         if "bioguide_id" in sponsor:
-            actualBill["sponsorThomasId"] = sponsor["bioguide_id"]
+            actualBill["bioguideId"] = sponsor["bioguide_id"]
         else:
-            actualBill["sponsorThomasId"] = sponsor["thomas_id"]
+            actualBill["bioguideId"] = MEMBERS_MAPPING[str(sponsor["thomas_id"])]
     else:
-        actualBill["sponsorThomasId"] = None
+        actualBill["bioguideId"] = None
 
     actualBill["officialTitle"] = jsonData["official_title"]
     actualBill["popularTitle"] = jsonData["popular_title"]
@@ -298,11 +284,11 @@ def parseBillDataJson(fileData):
     sponsor = jsonData["sponsor"]
     if (sponsor is not None):
         if "bioguide_id" in sponsor:
-            actualBill["sponsorThomasId"] = sponsor["bioguide_id"]
+            actualBill["bioguideId"] = sponsor["bioguide_id"]
         else:
-            actualBill["sponsorThomasId"] = sponsor["thomas_id"]
+            actualBill["bioguideId"] = MEMBERS_MAPPING[sponsor["thomas_id"]]
     else:
-        actualBill["sponsorThomasId"] = None
+        actualBill["bioguideId"] = None
 
     actualBill["officialTitle"] = jsonData["official_title"]
     actualBill["popularTitle"] = jsonData["popular_title"]
@@ -321,14 +307,14 @@ def parseBillDataJson(fileData):
     return billData
 
 def insertBills(bills, mysql_conn):
-    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle, introduced, updated) "\
+    sql = "INSERT INTO Bills (id, type, congress, number, bioguideId, officialTitle, popularTitle, introduced, updated) "\
           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
        
     data = []
     for bill in bills:
         bill = bill["bill"]
         data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
-        bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"], 
+        bill["bioguideId"], bill["officialTitle"], bill["popularTitle"], 
         bill["introduced_at"], bill["updated_at"]))
 
     mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
@@ -386,20 +372,20 @@ def readZippedFiles(zipFile, mysql_conn):
     return totalFilesRead
 
 def readBillZip(filename):
-    startRead = datetime.now()
     mysql_conn = mysql_connect()
     
+    startDelete = datetime.now()
     congress = determineCongressNumberfromPath(filename)
-    #print("Dropping", countBills(mysql_conn, congress), "bills for congress", congress)
-    print("Dropping bills for congress", congress)
     deleteBills(mysql_conn, congress)
+    print("Took", seconds_since(startDelete), "seconds to drop bills for congress", congress)
 
+    startRead = datetime.now()
     totalRead = 0
     with ZipFile(filename, 'r') as zipped:
         totalRead = readZippedFiles(zipped, mysql_conn)
         
     mysql_conn.close()
-    print("Took",seconds_since(startRead),"seconds to drop, parse, then insert", totalRead, "bill files from", filename)
+    print("Took",seconds_since(startRead),"seconds to parse then insert", totalRead, "bill files from", filename)
     time.sleep(2)
 
 fullMultiThreading = False
@@ -446,8 +432,16 @@ def countBills(mysql_conn, congress=None):
 
 
 
+def setMemberMapping():
+    global MEMBERS_MAPPING
+    print("Fetching ThomasId to BioguideId mapping from",MEMBERS_MAPPING_API_URL)
+    page = rq.get(MEMBERS_MAPPING_API_URL)
+    MEMBERS_MAPPING = json.loads(page.content)["mapping"]
 
 def doBulkBillPull():
+    #First fetch the BioguideId => ThomasID mapping
+    setMemberMapping()
+
     #Delete the cache before running
     if False and os.path.exists(BILLS_DIR):
         print("Deleting Existing Bills Cache...")
