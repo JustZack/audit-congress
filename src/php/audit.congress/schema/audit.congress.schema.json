@@ -120,7 +120,10 @@
                     "sponsorThomasId": { "type": "VARCHAR(50)", "null": "NO" },
 
                     "officialTitle": { "type": "VARCHAR(50)", "null": "NO" },
-                    "popularTitle": { "type": "VARCHAR(50)", "null": "NO" }
+                    "popularTitle": { "type": "VARCHAR(50)", "null": "NO" },
+                    
+                    "introduced": { "type": "VARCHAR(50)", "null": "NO" },
+                    "updated": { "type": "VARCHAR(50)", "null": "NO" }
                 }
             }
         ]

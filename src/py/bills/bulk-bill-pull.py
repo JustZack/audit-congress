@@ -3,6 +3,7 @@ from zipfile import ZipFile
 from datetime import datetime
 
 import xmltodict
+from pprint import pprint
 
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -67,7 +68,6 @@ def getParsedXml(url): return getParsedSoup(url, "xml")
 
 
 
-MYSQL_CON = None
 # Opens a connection with a MySQL host
 def mysql_connect():
     return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", password="?6n78$y\"\"~'Fvdy", database="auditcongress")
@@ -79,6 +79,7 @@ def mysql_execute_query(mysql_conn, sql, use_database):
         mysql_cursor.execute("USE "+use_database)
 
     mysql_cursor.execute(sql)
+
     result = [row[0] for row in mysql_cursor.fetchall()]
 
     mysql_cursor.close()
@@ -88,7 +89,8 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor = mysql_conn.cursor()
 
-    mysql_cursor.execute("USE "+database)
+    if database is not None:
+        mysql_cursor.execute("USE "+database)
 
     mysql_cursor.executemany(sql, data)
 
@@ -150,52 +152,98 @@ def downloadBillZipfiles():
 
 
 
+def getKeyIfSet(dictionary, defaultValue, *keys):
+    item = dictionary
+    if item is not None:
+        for key in keys:
+            if key in item: item = item[key]
+            if item is None: break
+            
+    return defaultValue
 
 def parseBillFDSYSXml(fileData):
     xmlData = xmltodict.parse(fileData)
     
     bill = xmlData["billStatus"]["bill"] 
 
-    #print(bill["sponsors"])
-    #print(bill["sponsors"])
-
-
     billData = dict()
-    try:
 
-        typ = bill["type"] if "type" in bill.keys() else bill["billType"]
-        cong = bill["congress"]
-        num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
+    typ = bill["type"] if "type" in bill.keys() else bill["billType"]
+    cong = bill["congress"]
+    num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
 
-        actualBill = dict()
-        actualBill["id"] = "{}{}-{}".format(typ, num, cong)
+    actualBill = dict()
+    billData["bill"] = actualBill
+    actualBill["id"] = "{}{}-{}".format(typ, num, cong)
 
-        actualBill["type"] = typ
-        actualBill["congress"] = cong
-        actualBill["number"] = num
+    actualBill["type"] = typ
+    actualBill["congress"] = cong
+    actualBill["number"] = num
 
-        sponsor = bill["sponsors"]
-        actualBill["sponsorThomasId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
+    sponsor = bill["sponsors"]
+    actualBill["sponsorThomasId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
 
-        actualBill["officialTitle"] = bill["title"]
-        actualBill["popularTitle"] = bill["title"]
-    except Exception as e:
-        print(e,":", bill["sponsors"])
+    actualBill["officialTitle"] = bill["title"]
+    actualBill["popularTitle"] = bill["title"]
+    
+    actualBill["introduced_at"] = bill["introducedDate"]
+    actualBill["updated_at"] = bill["updateDate"]
 
-    #sponsor = xmlData.select("bill > sponsors bioguideId")
-    #actualBill["sponsorThomasId"] = sponsor[0].text
+    actualBill["originChamber"] = bill["originChamber"]
 
-    #title = xmlData.select("bill > title")[0].text
-    #actualBill["officialTitle"] = title
-    #actualBill["popularTitle"] = title
+    policyArea = bill["policyArea"] if "policyArea" in bill else None
+    actualBill["policyArea"] = policyArea["name"] if policyArea is not None else ""
+    actualBill["summaries"] = bill["summaries"] if "summaries" in bill else []
+    
+    subjects = bill["subjects"] if "subjects" in bill else None
+    ["subjects", "billSubjects", "legislativeSubjects", "item"]
+    if subjects is not None:
+        if "billSubjects" in subjects: subjects = subjects["billSubjects"]
+        subjects = subjects["legislativeSubjects"]
+        if subjects is not None: subjects = subjects["item"]
+        else: subjects = []
+    else: subjects = []
+
+    cosponsored = bill["cosponsors"] if "cosponsors" in bill else None
+    ["cosponsors", "item"]
+    if cosponsored is not None: cosponsored = cosponsored["item"]
+    else: cosponsored = []
+
+    committees = bill["committees"] if "committees" in bill else None
+    ["billCommittees", "item"]
+    if committees is not None:
+        if "billCommittees" in committees: committees = committees["billCommittees"]
+        if committees is not None and "item" in committees: committees = committees["item"]
+        else: committees = []
+    else: committees = []
+
+    amendments = bill["amendments"] if "amendments" in bill else None
+    ["amendments", "amendment"]
+    if amendments is not None:
+        if "amendment" in amendments: amendments = amendments["amendment"]
+        else: amendments = []
+    else: amendments = []
+
+    actions = bill["actions"] if "actions" in bill else None
+    if actions is not None:
+        if "item" in actions: actions = actions["item"]
+        else: actions = []
+    else: actions = []
+
+    laws = bill["laws"] if "laws" in bill else None
+    if laws is not None:
+        if "item" in laws: laws = laws["item"]
+        else: laws = []
+    else: laws = []
 
     billData["bill"] = actualBill
-    #billData["titles"] = xmlData.select("bill > titles")[0]
-    #billData["subjects"] = xmlData.select("bill > subjects")[0]
-    #billData["cosponsors"] = xmlData.select("bill > cosponsors")[0]
-    #billData["committees"] = xmlData.select("bill > committees")[0]
-    #billData["amendments"] = xmlData.select("bill > amendments")[0]
-    #billData["actions"] = xmlData.select("bill > actions")[0]
+    billData["titles"] = bill["titles"]["item"]
+    billData["subjects"] = subjects
+    billData["cosponsors"] = cosponsored
+    billData["committees"] = committees
+    billData["amendments"] = amendments
+    billData["actions"] = actions
+    billData["laws"] = laws
 
     return billData
 
@@ -259,6 +307,9 @@ def parseBillDataJson(fileData):
     actualBill["officialTitle"] = jsonData["official_title"]
     actualBill["popularTitle"] = jsonData["popular_title"]
 
+    actualBill["introduced_at"] = jsonData["introduced_at"]
+    actualBill["updated_at"] = jsonData["updated_at"]
+
     billData["bill"] = actualBill
     billData["titles"] = jsonData["titles"]
     billData["subjects"] = jsonData["subjects"]
@@ -270,13 +321,15 @@ def parseBillDataJson(fileData):
     return billData
 
 def insertBills(bills, mysql_conn):
-    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    sql = "INSERT INTO Bills (id, type, congress, number, sponsorThomasId, officialTitle, popularTitle, introduced, updated) "\
+          "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
        
     data = []
     for bill in bills:
         bill = bill["bill"]
         data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
-        bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"]))
+        bill["sponsorThomasId"], bill["officialTitle"], bill["popularTitle"], 
+        bill["introduced_at"], bill["updated_at"]))
 
     mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
 
@@ -301,6 +354,7 @@ def readZippedFiles(zipFile, mysql_conn):
     folderDict = getBillFolderDict(files)
     totalFilesRead = 0
     skippedFiles = 0
+
     for name,folder in folderDict.items():
         if name.find("amendments") >= 0: continue
 
@@ -311,21 +365,23 @@ def readZippedFiles(zipFile, mysql_conn):
 
         if file is not None:
             data = zipFile.read(file)
-            try:
-                bill = None
-                if file.find("data.json") >= 0: bill = parseBillDataJson(data)
-                #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
-                elif file.find("fdsys_billstatus.xml") >= 0: bill = parseBillFDSYSXml(data)
+            bill = None
+            if file.find("data.json") >= 0: bill = parseBillDataJson(data)
+            #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
+            elif file.find("fdsys_billstatus.xml") >= 0: bill = parseBillFDSYSXml(data)
 
-                if bill is not None: 
+            if bill is not None: 
                     totalFilesRead += 1
                     bills.append(bill)
-                else: skippedFiles += 1
-            except Exception as e:
-                skippedFiles += 1
-                print("Error from",file,":",str(e))
+                    #if len(bill["amendments"]) == 2:
+                    #    pprint(bill["amendments"])
+                    #    return 1
+            else: skippedFiles += 1
+    try:
+        insertBills(bills, mysql_conn)
+    except Exception as e:
+        print("Exception for", zipFile.filename, ": ", e)
     
-    insertBills(bills, mysql_conn)
     if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
     return totalFilesRead
 
@@ -333,41 +389,60 @@ def readBillZip(filename):
     startRead = datetime.now()
     mysql_conn = mysql_connect()
     
+    congress = determineCongressNumberfromPath(filename)
+    #print("Dropping", countBills(mysql_conn, congress), "bills for congress", congress)
+    print("Dropping bills for congress", congress)
+    deleteBills(mysql_conn, congress)
+
     totalRead = 0
     with ZipFile(filename, 'r') as zipped:
         totalRead = readZippedFiles(zipped, mysql_conn)
         
     mysql_conn.close()
-    print("Took",seconds_since(startRead),"seconds to parse & insert", totalRead, "bill files from", filename)
+    print("Took",seconds_since(startRead),"seconds to drop, parse, then insert", totalRead, "bill files from", filename)
     time.sleep(2)
-        
+
+fullMultiThreading = False
+threadPooling = False
+poolSize = 1
+noThreading = True    
 def readBillZipFiles():
     zips = [BILLS_DIR+p for p in os.listdir(BILLS_DIR) if p.find(".zip") >= 0]
     print("Started parseing", len(zips), "Zip files")
-    print("Dropping", countBills(), "bills...")
-    truncateBills()
-
-    #10 = ~180s (maxing SSD)
-    #5 = ~190s   (maxing SSD)
-    #4 = ~180s   (maxing SSD)
-    #3 = ~200s   (maxing SSD)
-    #2 = ~210s   (maxing SSD)
-    with ThreadPoolExecutor(5) as exe:
+    
+    if fullMultiThreading:
+        #26 Threads = ~215 Seconds (maxing SSD)
+        threads = getThreads(readBillZip, zips)
+        startThreads(threads)
+        joinThreads(threads)
+    elif threadPooling:
+        #10 = ~180s (maxing SSD)
+        #5 = ~195s   (maxing SSD)
+        #4 = ~165s   (maxing SSD) == 4 is quickest
+        #3 = ~185s   (maxing SSD)
+        #2 = ~210s   (maxing SSD)
+        with ThreadPoolExecutor(poolSize) as exe:
+            for zipFile in zips:
+                exe.submit(readBillZip, zipFile)
+    elif noThreading:
+        #sequential = ~260s
         for zipFile in zips:
-            exe.submit(readBillZip, zipFile)
-    
-    #26 Threads = ~196 Seconds (maxing SSD)
-    #threads = getThreads(readBillZip, zips)
-    #startThreads(threads)
-    #joinThreads(threads)
-    
-    #sequential = 253s
-    #for zipFile in zips:
-        #if zipFile.find("113") >= 0:
-    #    readBillZip(zipFile)
+            #if zipFile.find("109") >= 0 or zipFile.find("117") >= 0:
+            #if zipFile.find("117") >= 0:
+            readBillZip(zipFile)
 
-def truncateBills(): mysql_execute_query(mysql_connect(), "TRUNCATE BILLS", "auditcongress")
-def countBills(): return mysql_execute_query(mysql_connect(), "select count(*) from BILLS", "auditcongress")[0]
+def deleteBills(mysql_conn, congress=None): 
+    sql = ""
+    if congress is None: sql = "TRUNCATE BILLS"
+    else: sql = "DELETE FROM BILLS WHERE congress = {}".format(congress)
+    mysql_execute_query(mysql_conn, sql, "auditcongress")
+    mysql_conn.commit()
+
+def countBills(mysql_conn, congress=None): 
+    sql = ""
+    if congress is None: sql = "SELECT COUNT(*) FROM BILLS"
+    else: sql = "SELECT COUNT(*) FROM BILLS WHERE congress = {}".format(congress)
+    return mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
 
 
 
@@ -385,13 +460,9 @@ def doBulkBillPull():
         downloadBillZipfiles()
         print("Took", seconds_since(startPull),"seconds to download",countFiles(BILLS_DIR),"zip files.")
     
-    MYSQL_CON = mysql_connect()
-    
     startExtract = datetime.now()
     readBillZipFiles()
     print("Took", seconds_since(startExtract),"seconds to parse & insert",countBills(),"bills files.")
-
-    MYSQL_CON.close()
 
 if __name__ == "__main__":   
     doBulkBillPull()
