@@ -169,8 +169,7 @@ def parseBillFDSYSXml(fileData):
     sponsor = bill["sponsors"]
     actualBill["bioguideId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
 
-    actualBill["officialTitle"] = bill["title"]
-    actualBill["popularTitle"] = bill["title"]
+    actualBill["title"] = bill["title"]
     
     actualBill["introduced_at"] = bill["introducedDate"]
     actualBill["updated_at"] = bill["updateDate"]
@@ -188,12 +187,30 @@ def parseBillFDSYSXml(fileData):
         subjects = subjects["legislativeSubjects"]
         if subjects is not None: subjects = subjects["item"]
         else: subjects = []
+        
+        if type(subjects) is dict: subjects = [subjects]
     else: subjects = []
 
-    cosponsored = bill["cosponsors"] if "cosponsors" in bill else None
+    cosponsoredDat = bill["cosponsors"] if "cosponsors" in bill else None
     ["cosponsors", "item"]
-    if cosponsored is not None: cosponsored = cosponsored["item"]
-    else: cosponsored = []
+    if cosponsoredDat is not None: cosponsoredDat = cosponsoredDat["item"]
+    else: cosponsoredDat = []
+
+    cosponsored = []
+    if type(cosponsoredDat) is list:
+        for cospon in cosponsoredDat:
+            id = cospon["bioguideId"] if "bioguideId" in cospon else getMemberByThomasId(cospon["thomas_id"])
+            since = cospon["sponsorshipDate"]
+            withdrawn = cospon["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cospon else None
+            isOriginal = cospon["isOriginalCosponsor"] if "isOriginalCosponsor" in cospon else None
+            cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
+    elif type(cosponsoredDat) is dict:
+        id = cosponsoredDat["bioguideId"] if "bioguideId" in cosponsoredDat else getMemberByThomasId(cosponsoredDat["thomas_id"])
+        since = cosponsoredDat["sponsorshipDate"]
+        withdrawn = cosponsoredDat["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsoredDat else None
+        isOriginal = cosponsoredDat["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsoredDat else None
+        cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
+
 
     committees = bill["committees"] if "committees" in bill else None
     ["billCommittees", "item"]
@@ -222,9 +239,17 @@ def parseBillFDSYSXml(fileData):
         else: laws = []
     else: laws = []
 
+    titles = bill["titles"] if "titles" in bill else None
+    if titles is not None:
+        if "item" in titles: titles = titles["item"]
+        else: titles = []
+    else: titles = []
+
+    titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
+
     billData["bill"] = actualBill
-    billData["titles"] = bill["titles"]["item"]
-    billData["subjects"] = subjects
+    billData["titles"] = titles
+    billData["subjects"] = [subject["name"] for subject in subjects]
     billData["cosponsors"] = cosponsored
     billData["committees"] = committees
     billData["amendments"] = amendments
@@ -253,7 +278,7 @@ def parseBillDataXml(fileData):
         if "bioguide_id" in sponsor:
             actualBill["bioguideId"] = sponsor["bioguide_id"]
         else:
-            actualBill["bioguideId"] = MEMBERS_MAPPING[str(sponsor["thomas_id"])]
+            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
     else:
         actualBill["bioguideId"] = None
 
@@ -286,38 +311,70 @@ def parseBillDataJson(fileData):
         if "bioguide_id" in sponsor:
             actualBill["bioguideId"] = sponsor["bioguide_id"]
         else:
-            actualBill["bioguideId"] = MEMBERS_MAPPING[sponsor["thomas_id"]]
+            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
     else:
         actualBill["bioguideId"] = None
 
-    actualBill["officialTitle"] = jsonData["official_title"]
-    actualBill["popularTitle"] = jsonData["popular_title"]
+    actualBill["title"] = jsonData["official_title"]
 
     actualBill["introduced_at"] = jsonData["introduced_at"]
     actualBill["updated_at"] = jsonData["updated_at"]
 
+    cosponsors = []
+    for cospon in jsonData["cosponsors"]:
+        id = cospon["bioguideId"] if "bioguideId" in cospon else getMemberByThomasId(cospon["thomas_id"])
+        since = cospon["sponsored_at"]
+        withdrawn = cospon["withdrawn_at"] if "withdrawn_at" in cospon else None
+        isOriginal = None
+        cosponsors.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
+    
     billData["bill"] = actualBill
     billData["titles"] = jsonData["titles"]
     billData["subjects"] = jsonData["subjects"]
-    billData["cosponsors"] = jsonData["cosponsors"]
+    billData["cosponsors"] = cosponsors
     billData["committees"] = jsonData["committees"]
     billData["amendments"] = jsonData["amendments"]
     billData["actions"] = jsonData["actions"]
 
     return billData
 
-def insertBills(bills, mysql_conn):
-    sql = "INSERT INTO Bills (id, type, congress, number, bioguideId, officialTitle, popularTitle, introduced, updated) "\
-          "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-       
-    data = []
-    for bill in bills:
-        bill = bill["bill"]
-        data.append((bill["id"], bill["type"], bill["congress"], bill["number"],
-        bill["bioguideId"], bill["officialTitle"], bill["popularTitle"], 
-        bill["introduced_at"], bill["updated_at"]))
+def insertBills(bills):
+    mysql_conn = mysql_connect()
 
-    mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
+    billSql = "INSERT INTO Bills (id, type, congress, number, bioguideId, title, introduced, updated) "\
+              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+
+    subjectSql = "INSERT INTO BillSubjects (type, congress, number, subject) VALUES (%s, %s, %s, %s)"
+    titleSql = "INSERT INTO BillTitles (type, congress, number, title, titleType, titleAs, isForPortion) "\
+               "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    coSponSql = "INSERT INTO BillCoSponsors (type, congress, number, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    
+    billData,subjectData,titleData,cosponData = [],[],[],[]
+
+    for parsedBill in bills:
+        bill = parsedBill["bill"]
+        t,c,n = bill["type"],bill["congress"],bill["number"]
+        bioguide = bill["bioguideId"]
+
+        billData.append((bill["id"], t, c, n, bioguide, bill["title"], 
+                         bill["introduced_at"], bill["updated_at"]))
+
+        for subject in parsedBill["subjects"]: subjectData.append((t, c, n, subject))
+
+        for title in parsedBill["titles"]: 
+            isForPortion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
+            titleData.append((t, c, n, title["title"], title["type"], title["as"], isForPortion))
+        
+        for cosponsor in parsedBill["cosponsors"]:
+            cosponData.append((t, c, n, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+
+
+    mysql_execute_many_querys(mysql_conn, billSql, billData, "auditcongress")
+    mysql_execute_many_querys(mysql_conn, subjectSql, subjectData, "auditcongress")
+    mysql_execute_many_querys(mysql_conn, titleSql, titleData, "auditcongress")
+    mysql_execute_many_querys(mysql_conn, coSponSql, cosponData, "auditcongress")
+    mysql_conn.close()
 
 def getBillFolderDict(fileList):
     folders = dict()
@@ -334,7 +391,7 @@ def getBillFolderDict(fileList):
         if lastDot > lastSlash: folders[directory].add(file)
     return folders
 
-def readZippedFiles(zipFile, mysql_conn):
+def readZippedFiles(zipFile):
     bills = []
     files = zipFile.namelist()
     folderDict = getBillFolderDict(files)
@@ -363,29 +420,31 @@ def readZippedFiles(zipFile, mysql_conn):
                     #    pprint(bill["amendments"])
                     #    return 1
             else: skippedFiles += 1
-    try:
-        insertBills(bills, mysql_conn)
-    except Exception as e:
-        print("Exception for", zipFile.filename, ": ", e)
-    
-    if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
-    return totalFilesRead
 
-def readBillZip(filename):
-    mysql_conn = mysql_connect()
-    
-    startDelete = datetime.now()
+    if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
+    return bills
+
+def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
-    deleteBills(mysql_conn, congress)
-    print("Took", seconds_since(startDelete), "seconds to drop bills for congress", congress)
+
+    deleteThread = buildThread(deleteBills, congress)
+    startThreads([deleteThread]) 
 
     startRead = datetime.now()
+    bills = []
     totalRead = 0
     with ZipFile(filename, 'r') as zipped:
-        totalRead = readZippedFiles(zipped, mysql_conn)
-        
-    mysql_conn.close()
-    print("Took",seconds_since(startRead),"seconds to parse then insert", totalRead, "bill files from", filename)
+        bills = readZippedFiles(zipped)
+
+    insertThread = buildThread(insertBills, bills)
+    joinThreads([deleteThread])
+
+    startThreads([insertThread]) 
+    joinThreads([insertThread])
+
+    zipped.close()
+           
+    print("Took",seconds_since(startRead),"seconds to parse then insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
 fullMultiThreading = False
@@ -415,22 +474,42 @@ def readBillZipFiles():
         for zipFile in zips:
             #if zipFile.find("109") >= 0 or zipFile.find("117") >= 0:
             #if zipFile.find("117") >= 0:
+            #    readBillZip(zipFile)
             readBillZip(zipFile)
 
-def deleteBills(mysql_conn, congress=None): 
+def deleteBills(congress=None): 
+    mysql_conn = mysql_connect()
+    startDelete = datetime.now()
+    toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
     sql = ""
-    if congress is None: sql = "TRUNCATE BILLS"
-    else: sql = "DELETE FROM BILLS WHERE congress = {}".format(congress)
-    mysql_execute_query(mysql_conn, sql, "auditcongress")
-    mysql_conn.commit()
 
-def countBills(mysql_conn, congress=None): 
+    for table in toDeleteFrom:
+        if congress is None: sql = "TRUNCATE {}".format(table)
+        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
+        mysql_execute_query(mysql_conn, sql, "auditcongress")
+    
+    mysql_conn.commit()
+    mysql_conn.close()
+
+    print("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
+
+
+def countBills(congress=None): 
+    mysql_conn = mysql_connect()
+    
     sql = ""
     if congress is None: sql = "SELECT COUNT(*) FROM BILLS"
     else: sql = "SELECT COUNT(*) FROM BILLS WHERE congress = {}".format(congress)
-    return mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
+
+    count = mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
+    mysql_conn.close()
+    return count
 
 
+def getMemberByThomasId(thomasId):
+    global MEMBERS_MAPPING
+    try: return MEMBERS_MAPPING[thomasId]
+    except Exception as e: return None
 
 def setMemberMapping():
     global MEMBERS_MAPPING
@@ -438,8 +517,9 @@ def setMemberMapping():
     page = rq.get(MEMBERS_MAPPING_API_URL)
     MEMBERS_MAPPING = json.loads(page.content)["mapping"]
 
+#900s to run
 def doBulkBillPull():
-    #First fetch the BioguideId => ThomasID mapping
+    #First fetch the ThomasID => BioguideId mapping
     setMemberMapping()
 
     #Delete the cache before running
@@ -448,7 +528,6 @@ def doBulkBillPull():
         shutil.rmtree(BILLS_DIR)
     
     startPull = datetime.now()
-
 
     if not os.path.exists(BILLS_DIR):
         downloadBillZipfiles()
