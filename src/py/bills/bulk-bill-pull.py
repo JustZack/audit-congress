@@ -17,6 +17,8 @@ BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
 BILLS_DIR = "cache/"
 
+VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
+
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 #All folders that we care about in the bills folder
@@ -60,6 +62,8 @@ def mysql_connect():
 
 # Executes a single query string
 def mysql_execute_query(mysql_conn, sql, use_database):
+    print(sql)
+
     mysql_cursor = mysql_conn.cursor()
     if use_database is not None:
         mysql_cursor.execute("USE "+use_database)
@@ -73,6 +77,8 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 
 # Executes Many querys, based on executeMany. Best for inserts.
 def mysql_execute_many_querys(mysql_conn, sql, data, database):
+    print("[{} rows X {} values]".format(len(data), len(data[0])),sql)
+
     mysql_cursor = mysql_conn.cursor()
 
     if database is not None:
@@ -160,7 +166,6 @@ def parseBillFDSYSXml(fileData):
 
     actualBill = dict()
     billData["bill"] = actualBill
-    actualBill["id"] = "{}{}-{}".format(typ, num, cong)
 
     actualBill["type"] = typ
     actualBill["congress"] = cong
@@ -300,8 +305,7 @@ def parseBillDataJson(fileData):
     jsonData = json.loads(fileData)
 
     actualBill = dict()
-    actualBill["id"] = jsonData["bill_id"]
-
+    
     actualBill["type"] = jsonData["bill_type"]
     actualBill["congress"] = jsonData["congress"]
     actualBill["number"] = jsonData["number"]
@@ -344,30 +348,43 @@ def insertBills(bills):
     billSql = "INSERT INTO Bills (id, type, congress, number, bioguideId, title, introduced, updated) "\
               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
-    subjectSql = "INSERT INTO BillSubjects (type, congress, number, subject) VALUES (%s, %s, %s, %s)"
-    titleSql = "INSERT INTO BillTitles (type, congress, number, title, titleType, titleAs, isForPortion) "\
-               "VALUES (%s, %s, %s, %s, %s, %s, %s)"
-    coSponSql = "INSERT INTO BillCoSponsors (type, congress, number, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
-                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    subjectSql = "INSERT INTO BillSubjects (id, type, congress, number, subjectIndex, subject) VALUES (%s, %s, %s, %s, %s, %s)"
+    titleSql = "INSERT INTO BillTitles (id, type, congress, number, titleIndex, title, titleType, titleAs, isForPortion) "\
+               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    coSponSql = "INSERT INTO BillCoSponsors (id, type, congress, number, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     
     billData,subjectData,titleData,cosponData = [],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
-        t,c,n = bill["type"],bill["congress"],bill["number"]
+        t,c,n = bill["type"].lower(),bill["congress"],bill["number"]
         bioguide = bill["bioguideId"]
 
-        billData.append((bill["id"], t, c, n, bioguide, bill["title"], 
+        id = "{}{}-{}".format(t, n, c)
+
+        billData.append((id, t, c, n, bioguide, bill["title"], 
                          bill["introduced_at"], bill["updated_at"]))
-
-        for subject in parsedBill["subjects"]: subjectData.append((t, c, n, subject))
-
-        for title in parsedBill["titles"]: 
-            isForPortion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-            titleData.append((t, c, n, title["title"], title["type"], title["as"], isForPortion))
         
+        pid = id+"-{}"
+        i = 0        
+        for subject in parsedBill["subjects"]: 
+            sid = pid.format(i)
+            subjectData.append((sid, t, c, n, i, subject))
+            i += 1
+
+        i = 0
+        for title in parsedBill["titles"]: 
+            tid = pid.format(i)
+            isForPortion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
+            titleData.append((tid, t, c, n, i, title["title"], title["type"], title["as"], isForPortion))
+            i += 1
+        
+        i = 0
         for cosponsor in parsedBill["cosponsors"]:
-            cosponData.append((t, c, n, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+            cid = pid.format(cosponsor["id"])+"-"+str(i)
+            cosponData.append((cid, t, c, n, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+            i += 1
 
 
     mysql_execute_many_querys(mysql_conn, billSql, billData, "auditcongress")
@@ -427,8 +444,8 @@ def readZippedFiles(zipFile):
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
 
-    deleteThread = buildThread(deleteBills, congress)
-    startThreads([deleteThread]) 
+    #deleteThread = buildThread(deleteBills, congress)
+    #startThreads([deleteThread]) 
 
     startRead = datetime.now()
     bills = []
@@ -437,7 +454,7 @@ def readBillZip(filename):
         bills = readZippedFiles(zipped)
 
     insertThread = buildThread(insertBills, bills)
-    joinThreads([deleteThread])
+    #joinThreads([deleteThread])
 
     startThreads([insertThread]) 
     joinThreads([insertThread])
@@ -455,6 +472,8 @@ def readBillZipFiles():
     zips = [BILLS_DIR+p for p in os.listdir(BILLS_DIR) if p.find(".zip") >= 0]
     print("Started parseing", len(zips), "Zip files")
     
+    deleteBills()
+
     if fullMultiThreading:
         #26 Threads = ~215 Seconds (maxing SSD)
         threads = getThreads(readBillZip, zips)
@@ -489,24 +508,28 @@ def deleteBills(congress=None):
         if congress is None: sql = "TRUNCATE {}".format(table)
         else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
         mysql_execute_query(mysql_conn, sql, "auditcongress")
+        mysql_conn.commit()
     
-    mysql_conn.commit()
     mysql_conn.close()
 
     print("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 
-def countBills(congress=None): 
+def countRows(table, congress=None): 
     mysql_conn = mysql_connect()
     
     sql = ""
-    if congress is None: sql = "SELECT COUNT(*) FROM BILLS"
-    else: sql = "SELECT COUNT(*) FROM BILLS WHERE congress = {}".format(congress)
+    if congress is None: sql = "SELECT COUNT(*) FROM {}".format(table)
+    else: sql = "SELECT COUNT(*) FROM {} WHERE congress = {}".format(table, congress)
 
     count = mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
     mysql_conn.close()
     return count
 
+
+def dbSchemaIsValid():
+    page = rq.get(VALIDATE_DB_API_URL)
+    return "valid" in json.loads(page.content)
 
 def getMemberByThomasId(thomasId):
     global MEMBERS_MAPPING
@@ -515,14 +538,31 @@ def getMemberByThomasId(thomasId):
 
 def setMemberMapping():
     global MEMBERS_MAPPING
-    print("Fetching ThomasId to BioguideId mapping from",MEMBERS_MAPPING_API_URL)
     page = rq.get(MEMBERS_MAPPING_API_URL)
-    MEMBERS_MAPPING = json.loads(page.content)["mapping"]
+    resp = json.loads(page.content)
+    if "mapping" in resp:
+        MEMBERS_MAPPING =  resp["mapping"]
+        return True
+    else:
+        return False
+
 
 #900s to run
 def doBulkBillPull():
-    #First fetch the ThomasID => BioguideId mapping
-    setMemberMapping()
+    #Make sure the DB schema is valid first
+    if not dbSchemaIsValid():
+        print("Could not validatethe DB schema via API... Exiting.")
+        exit()
+    else:
+        print("Confirmed DB Schema is valid via the API.")
+    
+    #Ffetch the ThomasID => BioguideId mapping
+    if not setMemberMapping():
+        print("Could not fetch thomas_id -> bioguide_id mapping from API... Exiting.")
+        exit()
+    else:
+        print("Found",len(MEMBERS_MAPPING), "thomas_id -> bioguide_id mappings via the API")
+    
 
     #Delete the cache before running
     if False and os.path.exists(BILLS_DIR):
@@ -537,7 +577,12 @@ def doBulkBillPull():
     
     startExtract = datetime.now()
     readBillZipFiles()
-    print("Took", seconds_since(startExtract),"seconds to parse & insert",countBills(),"bills files.")
+
+    billCount = countRows("Bills")
+    subjectCount = countRows("BillSubjects")
+    titlesCount = countRows("BillTitles")
+    cosponCount = countRows("BillCoSponsors")
+    print("Took", seconds_since(startExtract),"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
 if __name__ == "__main__":   
     doBulkBillPull()

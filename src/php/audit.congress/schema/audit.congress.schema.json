@@ -114,13 +114,14 @@
                 "name": "Bills",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
 
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
 
-                    "title": { "type": "VARCHAR(50)", "null": "YES" },
+                    "title": { "type": "VARCHAR(500)", "null": "YES" },
                     
                     "introduced": { "type": "VARCHAR(50)", "null": "NO" },
                     "updated": { "type": "VARCHAR(50)", "null": "NO" }
@@ -129,9 +130,13 @@
             {
                 "name": "BillSubjects",
                 "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
+
+                    "subjectIndex": { "type": "INT", "null": "NO" },
 
                     "subject": { "type": "VARCHAR(250)", "null": "NO" }
                 }
@@ -139,11 +144,15 @@
             {
                 "name": "BillTitles",
                 "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
 
-                    "title": { "type": "VARCHAR(250)", "null": "NO" },
+                    "titleIndex": { "type": "INT", "null": "NO" },
+
+                    "title": { "type": "VARCHAR(500)", "null": "NO" },
                     "titleAs": { "type": "VARCHAR(250)", "null": "YES" },
                     "titleType": { "type": "VARCHAR(250)", "null": "YES" },
                     "isForPortion": { "type": "VARCHAR(250)", "null": "YES" }
@@ -152,6 +161,8 @@
             {
                 "name": "BillCoSponsors",
                 "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },

@@ -19,6 +19,7 @@ if ($route !== null) {
         
         case "recentBills": API::HandleRecentBillsRoute(); break;
         case "bioguideToThomas": API::HandleBioguideToThomasMapping(); break;
+        case "validateSchema": API::HandleValidateSchema(); break;
         default: API::NotFound($route); break;
     }
 } else API::NotFound($route);

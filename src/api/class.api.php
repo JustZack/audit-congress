@@ -221,6 +221,17 @@ class API {
             API::Error($e->getMessage());
         }
     }
+
+    public static function HandleValidateSchema() {
+        try {
+            $enforcer = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
+            $enforcer->enforceSchema();
+            $operations = $enforcer::getDBOperationsList();
+            API::Success(array("valid" => true, "operations" => $operations));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
 }
 
 ?>

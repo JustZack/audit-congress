@@ -4,10 +4,12 @@ namespace MySqlConnector {
 
     class SchemaEnforcer {
         public $schema = null;
-        private static $debug_log = true;
+        private static $debug_log = false;
+        private static $operations = array();
+
         public function __construct($schemaFilePath) {
             $this->schema = json_decode(file_get_contents($schemaFilePath), true);
-            $this->enforceSchema();
+
         }
 
         private static function debugPrint($message) {
@@ -28,8 +30,13 @@ namespace MySqlConnector {
             }
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
-
         }
+
+        private static function addDBOperation($operation) { 
+            self::debugPrint($operation);
+            array_push(self::$operations, $operation); 
+        }
+        public static function getDBOperationsList() { return self::$operations; }
 
         //For the given table $name, enforce the given $columns onto its schema
         private static function enforceTableSchema($name, $columns) {
@@ -42,7 +49,7 @@ namespace MySqlConnector {
             if (!$table->exists()) {
                 $columnCreateSqlArr = $columnsExpected->getSqlCreateStrings();
                 $table->create($columnCreateSqlArr);
-                self::debugPrint("Create Table $name\n");
+                self::addDBOperation("Create Table $name");
             }
             //Otherwise enforce the schema for this table
             else self::enforceColumnSchema($table, $columnsExpected, $table->columns());
@@ -57,7 +64,7 @@ namespace MySqlConnector {
                 if (!isset($schemaKnownTables[strtolower($name)])) {
                     $table = new Table($name);
                     $table->drop();
-                    self::debugPrint("Drop Table $name\n");
+                    self::addDBOperation("Drop Table $name");
                 }
         }
 
@@ -70,17 +77,17 @@ namespace MySqlConnector {
 
         private static function dropColumn($table, $name, $type) {
             $table->dropColumn($name, $type);  
-            self::debugPrint("Drop $name=>$type"); 
+            self::addDBOperation("Drop $name=>$type"); 
         }
 
         private static function addColumn($table, $name, $type) {
             $table->addColumn($name, $type);  
-            self::debugPrint("Add $name=>$type"); 
+            self::addDBOperation("Add $name=>$type"); 
         }
 
         private static function modifyColumn($table, $name, $type) {
             $table->modifyColumn($name, $type);  
-            self::debugPrint("Add $name=>$type"); 
+            self::addDBOperation("Add $name=>$type"); 
         }
 
 
