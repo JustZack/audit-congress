@@ -547,21 +547,19 @@ def setMemberMapping():
         return False
 
 
+def exitWithError(error):
+    print("{}... Exiting.".format(error))
+    exit()
+
 #900s to run
 def doBulkBillPull():
     #Make sure the DB schema is valid first
-    if not dbSchemaIsValid():
-        print("Could not validatethe DB schema via API... Exiting.")
-        exit()
-    else:
-        print("Confirmed DB Schema is valid via the API.")
+    if not dbSchemaIsValid(): exitWithError("Could not validate the DB schema via API")
+    else: print("Confirmed DB Schema is valid via the API.")
     
-    #Ffetch the ThomasID => BioguideId mapping
-    if not setMemberMapping():
-        print("Could not fetch thomas_id -> bioguide_id mapping from API... Exiting.")
-        exit()
-    else:
-        print("Found",len(MEMBERS_MAPPING), "thomas_id -> bioguide_id mappings via the API")
+    #Fetch the ThomasID => BioguideId mapping
+    if not setMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
+    else: print("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
     
 
     #Delete the cache before running

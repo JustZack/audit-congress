@@ -11,8 +11,6 @@ namespace AuditCongress {
         }
 
         public function updateCache() {
-            var_dump("Update cache for: ".$this->name);
-
             //Clear out all data associated with socials
             $this->clearRows();
 
