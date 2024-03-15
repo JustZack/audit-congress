@@ -322,7 +322,7 @@ def parseBillDataJson(fileData):
 
     cosponsors = []
     for cospon in jsonData["cosponsors"]:
-        id = cospon["bioguideId"] if "bioguideId" in cospon else getMemberByThomasId(cospon["thomas_id"])
+        id = cospon["bioguide_id"] if "bioguide_id" in cospon else getMemberByThomasId(cospon["thomas_id"])
         since = cospon["sponsored_at"]
         withdrawn = cospon["withdrawn_at"] if "withdrawn_at" in cospon else None
         isOriginal = None
@@ -472,12 +472,14 @@ def readBillZipFiles():
     elif noThreading:
         #sequential = ~260s
         for zipFile in zips:
-            #if zipFile.find("109") >= 0 or zipFile.find("117") >= 0:
+            #if zipFile.find("93") >= 0 or zipFile.find("113") >= 0 or zipFile.find("117") >= 0:
             #if zipFile.find("117") >= 0:
+            #if zipFile.find("113") >= 0:
+            #if zipFile.find("93") >= 0:
             #    readBillZip(zipFile)
             readBillZip(zipFile)
 
-def deleteBills(congress=None): 
+def deleteBills(congress=None):
     mysql_conn = mysql_connect()
     startDelete = datetime.now()
     toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
