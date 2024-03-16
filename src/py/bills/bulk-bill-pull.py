@@ -16,13 +16,15 @@ PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congre
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
 BILLS_DIR = "cache/"
+#All folders that we care about in the bills folder
+BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s" , "sconres", "sjres", "sres"]
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
-#All folders that we care about in the bills folder
-BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s" , "sconres", "sjres", "sres"]
+
+LAST_CONGRESS_PROCESSED = None
 
 SHOW_DEBUG_MESSAGES = False
 def debug_print(*strs):
@@ -62,7 +64,7 @@ def mysql_connect():
 
 # Executes a single query string
 def mysql_execute_query(mysql_conn, sql, use_database):
-    print(sql)
+    debug_print(sql)
 
     mysql_cursor = mysql_conn.cursor()
     if use_database is not None:
@@ -77,7 +79,7 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 
 # Executes Many querys, based on executeMany. Best for inserts.
 def mysql_execute_many_querys(mysql_conn, sql, data, database):
-    print("[{} rows X {} values]".format(len(data), len(data[0])),sql)
+    debug_print("[{} rows X {} values]".format(len(data), len(data[0])),sql)
 
     mysql_cursor = mysql_conn.cursor()
 
@@ -90,6 +92,82 @@ def mysql_execute_many_querys(mysql_conn, sql, data, database):
     result = [row[0] for row in mysql_cursor.fetchall()]
     mysql_cursor.close()
     return result
+
+def countRows(inTable, congress=None): 
+    mysql_conn = mysql_connect()
+    
+    sql = ""
+    if congress is None: sql = "SELECT COUNT(*) FROM {}".format(inTable)
+    else: sql = "SELECT COUNT(*) FROM {} WHERE congress = {}".format(inTable, congress)
+
+    count = mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
+    mysql_conn.close()
+    return count
+
+def deleteBills(congress=None):
+    mysql_conn = mysql_connect()
+    startDelete = datetime.now()
+    toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
+    sql = ""
+
+    for table in toDeleteFrom:
+        if congress is None: sql = "TRUNCATE {}".format(table)
+        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
+        mysql_execute_query(mysql_conn, sql, "auditcongress")
+        mysql_conn.commit()
+    
+    mysql_conn.close()
+
+    print("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
+
+def dbSchemaIsValid():
+    page = rq.get(VALIDATE_DB_API_URL)
+    return "valid" in json.loads(page.content)
+
+def getMemberByThomasId(thomasId):
+    global MEMBERS_MAPPING
+    try: return MEMBERS_MAPPING[thomasId]
+    except Exception as e: return None
+
+def fetchMemberMapping():
+    global MEMBERS_MAPPING
+    page = rq.get(MEMBERS_MAPPING_API_URL)
+    resp = json.loads(page.content)
+    if "mapping" in resp:
+        MEMBERS_MAPPING =  resp["mapping"]
+        return True
+    else:
+        return False
+
+def fetchLastCongress():
+    global LAST_CONGRESS_PROCESSED
+
+    mysql_conn = mysql_connect()
+    sql = "SELECT status FROM CacheStatus where source = 'bulk-bill'"
+    result = mysql_execute_query(mysql_conn, sql, "auditcongress")
+    if (len(result) == 1): LAST_CONGRESS_PROCESSED = int(result[0])
+    elif (len(result) == 0):
+        sql = "INSERT INTO CacheStatus (source, status) VALUES ('bulk-bill', 93)"
+        mysql_execute_query(mysql_conn, sql, "auditcongress")
+        mysql_conn.commit()
+        LAST_CONGRESS_PROCESSED = 93
+    mysql_conn.close()
+    return LAST_CONGRESS_PROCESSED
+
+def updateStartingCongress(startingCongress):
+    global LAST_CONGRESS_PROCESSED
+
+    mysql_conn = mysql_connect()
+    LAST_CONGRESS_PROCESSED = startingCongress
+    sql = "UPDATE CacheStatus SET status = {} WHERE source = 'bulk-bill'".format(startingCongress)
+    result = mysql_execute_query(mysql_conn, sql, "auditcongress")
+    mysql_conn.commit()
+    mysql_conn.close()
+
+
+
+
+
 
 #Built a thread given the target and arguments
 def buildThread(target, args):
@@ -121,26 +199,41 @@ def determineCongressNumberfromPath(url):
     lastDot = url.rfind(".")
     congress = url[lastSlash+1:lastDot] if lastDot > -1 else url[lastSlash+1:]
     
-    return congress
+    return int(congress)
 
 def downloadBillZip(url):
     congress = determineCongressNumberfromPath(url)
-    savePath = BILLS_DIR+congress
+    savePath = BILLS_DIR+str(congress)
     downloadZipFile(url, savePath)
-    print("Saved bulk bill data for congress", congress, "to", savePath)
+    debug_print("Saved bulk bill data for congress", congress, "to", savePath)
 
 def getBillZipUrls():
     soup = getParsedHtml(PROPUBLICA_BULK_BILLS_URL)
     links = soup.select(BILL_LINKS_SELECTOR)
     return [link["href"] for link in links]
 
-def downloadBillZipfiles():
-    urls = getBillZipUrls()
-    print("started downloading", len(urls), "Zip files")
+def downloadNeededBillZips():
+    urls = [url for url in getBillZipUrls() if determineCongressNumberfromPath(url) >= LAST_CONGRESS_PROCESSED]
+    print("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
 
     threads = getThreads(downloadBillZip, urls)
     startThreads(threads)
     joinThreads(threads)
+
+    return len(urls)
+
+def getCachedZipFilePaths():
+    zips = sorted(os.listdir(BILLS_DIR), key=lambda z: int(z[:-4]))
+    zips = [BILLS_DIR+z for z in zips if z.find(".zip") >= 0 and int(z[:-4]) >= LAST_CONGRESS_PROCESSED]
+    return zips
+
+def deleteOutOfDateZips():
+    zips = getCachedZipFilePaths()
+    zipsToDelete = [z for z in zips if int(z[len(BILLS_DIR):-4]) >= LAST_CONGRESS_PROCESSED]
+    for z in zipsToDelete: 
+        debug_print("Delete:",z)
+        os.remove(z)
+
 
 
 
@@ -443,144 +536,96 @@ def readZippedFiles(zipFile):
 
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
+    bills, totalRead, startRead = [], 0, datetime.now()
 
-    #deleteThread = buildThread(deleteBills, congress)
-    #startThreads([deleteThread]) 
+    deleteThread = buildThread(deleteBills, congress)
+    startThreads([deleteThread]) 
 
-    startRead = datetime.now()
-    bills = []
-    totalRead = 0
-    with ZipFile(filename, 'r') as zipped:
-        bills = readZippedFiles(zipped)
+    with ZipFile(filename, 'r') as zipped: bills = readZippedFiles(zipped)
 
     insertThread = buildThread(insertBills, bills)
-    #joinThreads([deleteThread])
+    joinThreads([deleteThread])
 
     startThreads([insertThread]) 
     joinThreads([insertThread])
 
     zipped.close()
            
+    updateStartingCongress(congress)
     print("Took",seconds_since(startRead),"seconds to parse then insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
-fullMultiThreading = False
-threadPooling = False
-poolSize = 1
-noThreading = True    
+fullMultiThreading, threadPooling, poolSize, noThreading = False, False, 2, True
 def readBillZipFiles():
-    zips = [BILLS_DIR+p for p in os.listdir(BILLS_DIR) if p.find(".zip") >= 0]
-    print("Started parseing", len(zips), "Zip files")
-    
-    deleteBills()
+    zips = getCachedZipFilePaths()
 
+    print("Started parseing", len(zips), "Zip file{}".format("s" if len(zips) != 1 else ""))
+
+    #Up to 26 Threads Slows everything down
     if fullMultiThreading:
-        #26 Threads = ~215 Seconds (maxing SSD)
         threads = getThreads(readBillZip, zips)
         startThreads(threads)
         joinThreads(threads)
+    #Between 2 and 4 threads speeds things up slightly compared to sequential
     elif threadPooling:
-        #10 = ~180s (maxing SSD)
-        #5 = ~195s   (maxing SSD)
-        #4 = ~165s   (maxing SSD) == 4 is quickest
-        #3 = ~185s   (maxing SSD)
-        #2 = ~210s   (maxing SSD)
         with ThreadPoolExecutor(poolSize) as exe:
             for zipFile in zips:
                 exe.submit(readBillZip, zipFile)
+    #No threading seems to have the most consistent performance though
     elif noThreading:
-        #sequential = ~260s
         for zipFile in zips:
+            readBillZip(zipFile)
+            #The following represent each different file format
             #if zipFile.find("93") >= 0 or zipFile.find("113") >= 0 or zipFile.find("117") >= 0:
             #if zipFile.find("117") >= 0:
             #if zipFile.find("113") >= 0:
             #if zipFile.find("93") >= 0:
             #    readBillZip(zipFile)
-            readBillZip(zipFile)
-
-def deleteBills(congress=None):
-    mysql_conn = mysql_connect()
-    startDelete = datetime.now()
-    toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
-    sql = ""
-
-    for table in toDeleteFrom:
-        if congress is None: sql = "TRUNCATE {}".format(table)
-        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
-        mysql_execute_query(mysql_conn, sql, "auditcongress")
-        mysql_conn.commit()
-    
-    mysql_conn.close()
-
-    print("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 
-def countRows(table, congress=None): 
-    mysql_conn = mysql_connect()
-    
-    sql = ""
-    if congress is None: sql = "SELECT COUNT(*) FROM {}".format(table)
-    else: sql = "SELECT COUNT(*) FROM {} WHERE congress = {}".format(table, congress)
-
-    count = mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
-    mysql_conn.close()
-    return count
 
 
-def dbSchemaIsValid():
-    page = rq.get(VALIDATE_DB_API_URL)
-    return "valid" in json.loads(page.content)
-
-def getMemberByThomasId(thomasId):
-    global MEMBERS_MAPPING
-    try: return MEMBERS_MAPPING[thomasId]
-    except Exception as e: return None
-
-def setMemberMapping():
-    global MEMBERS_MAPPING
-    page = rq.get(MEMBERS_MAPPING_API_URL)
-    resp = json.loads(page.content)
-    if "mapping" in resp:
-        MEMBERS_MAPPING =  resp["mapping"]
-        return True
-    else:
-        return False
 
 
 def exitWithError(error):
     print("{}... Exiting.".format(error))
     exit()
 
-#900s to run
+#~2800s to run with 16MB cache (With Truncate)
+#~1550s to run with 2048MB cache (With Truncate)
+#~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
     #Make sure the DB schema is valid first
     if not dbSchemaIsValid(): exitWithError("Could not validate the DB schema via API")
     else: print("Confirmed DB Schema is valid via the API.")
     
     #Fetch the ThomasID => BioguideId mapping
-    if not setMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
+    if not fetchMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
     else: print("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
     
+    #State where the process is starting, based off the database
+    print("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
-    #Delete the cache before running
-    if False and os.path.exists(BILLS_DIR):
-        print("Deleting Existing Bills Cache...")
-        shutil.rmtree(BILLS_DIR)
-    
-    startPull = datetime.now()
+    #If the cache exists, ensure old data is deleted
+    if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
 
-    if not os.path.exists(BILLS_DIR):
-        downloadBillZipfiles()
-        print("Took", seconds_since(startPull),"seconds to download",countFiles(BILLS_DIR),"zip files.")
-    
-    startExtract = datetime.now()
+    #Then rebuild the needed cache items
+    startDownload = datetime.now()
+    print("Took", seconds_since(startDownload),"seconds to download",downloadNeededBillZips(),"zip files.")
+
+    #Track how long it takes to parse and insert the bills
+    startInsert = datetime.now()
     readBillZipFiles()
-
+    timeToInsert = seconds_since(startInsert)
+    
+    #Count rows in each updated table
     billCount = countRows("Bills")
     subjectCount = countRows("BillSubjects")
     titlesCount = countRows("BillTitles")
     cosponCount = countRows("BillCoSponsors")
-    print("Took", seconds_since(startExtract),"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+
+    #Final log of what happened
+    print("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
 if __name__ == "__main__":   
     doBulkBillPull()

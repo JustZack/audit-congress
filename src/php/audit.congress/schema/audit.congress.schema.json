@@ -3,6 +3,17 @@
     "version": ".2",
     "tables": 
         [
+
+            {
+                "name": "CacheStatus",
+                "columns": {
+                    "source": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "status": { "type": "VARCHAR(50)", "null": "YES" }
+                }
+            },
+
+
+
             {
                 "name": "Members",
                 "columns": {
