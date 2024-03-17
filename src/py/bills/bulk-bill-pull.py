@@ -1,4 +1,4 @@
-import os, time, shutil, io, json
+import os, time, shutil, io, json, math
 from zipfile import ZipFile
 from datetime import datetime
 
@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests as rq
 from bs4 import BeautifulSoup
 import mysql.connector
+
 
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
@@ -29,6 +30,10 @@ LAST_CONGRESS_PROCESSED = None
 SHOW_DEBUG_MESSAGES = False
 def debug_print(*strs):
     if SHOW_DEBUG_MESSAGES: print(*strs)
+
+def log(*strs):
+    now = datetime.now()
+    print("[{}:{}:{}]".format(now.hour, now.minute, now.second), *strs)
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 def countFiles(inDir):
@@ -56,7 +61,14 @@ def getParsedSoup(url, features="html.parser"):
 def getParsedHtml(url): return getParsedSoup(url)
 def getParsedXml(url): return getParsedSoup(url, "xml")
 
-
+def chunkList(array, chunkSize):
+    chunckedList = []
+    numChunks = math.ceil(len(array)/chunkSize)
+    for n in range(numChunks):
+        start = n*chunkSize
+        end = (n+1)*chunkSize
+        chunckedList.append(array[start:end])
+    return chunckedList
 
 # Opens a connection with a MySQL host
 def mysql_connect():
@@ -104,21 +116,31 @@ def countRows(inTable, congress=None):
     mysql_conn.close()
     return count
 
-def deleteBills(congress=None):
+def runInsertingSql(sql, data):
     mysql_conn = mysql_connect()
-    startDelete = datetime.now()
-    toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
-    sql = ""
-
-    for table in toDeleteFrom:
-        if congress is None: sql = "TRUNCATE {}".format(table)
-        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
-        mysql_execute_query(mysql_conn, sql, "auditcongress")
-        mysql_conn.commit()
-    
+    mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
+    mysql_conn.commit()
     mysql_conn.close()
 
-    print("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
+def runCommitingSql(sql):
+    mysql_conn = mysql_connect()
+    mysql_execute_query(mysql_conn, sql, "auditcongress")
+    mysql_conn.commit()
+    mysql_conn.close()
+
+def deleteBills(congress=None):
+    startDelete = datetime.now()
+    toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
+
+    threads = []
+    for table in toDeleteFrom:
+        sql = ""
+        if congress is None: sql = "TRUNCATE {}".format(table)
+        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
+        runCommitingSql(sql)
+
+    startThenJoinThreads(threads)
+    log("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 def dbSchemaIsValid():
     page = rq.get(VALIDATE_DB_API_URL)
@@ -156,22 +178,31 @@ def fetchLastCongress():
 
 def updateStartingCongress(startingCongress):
     global LAST_CONGRESS_PROCESSED
-
-    mysql_conn = mysql_connect()
     LAST_CONGRESS_PROCESSED = startingCongress
     sql = "UPDATE CacheStatus SET status = {} WHERE source = 'bulk-bill'".format(startingCongress)
-    result = mysql_execute_query(mysql_conn, sql, "auditcongress")
-    mysql_conn.commit()
-    mysql_conn.close()
+    runCommitingSql(sql)
+
+def getBillFolderDict(fileList):
+    folders = dict()
+    for file in fileList:
+        lastDot = file.rfind(".")
+        lastSlash = file.rfind("/")+1
+        
+        directory = file[0:lastSlash]
+        file = file[lastSlash:]
+
+        if directory not in folders: folders[directory] = set()
+        
+        #implies this is a file
+        if lastDot > lastSlash: folders[directory].add(file)
+    return folders
 
 
 
 
-
-
-#Built a thread given the target and arguments
-def buildThread(target, args):
-    return threading.Thread(target=target, args=(args,), daemon=True)
+#Build threads given the target and arguments, start, and join them
+def buildThread(target, *args):
+    return threading.Thread(target=target, args=args, daemon=True)
 def getThreads(function, allOptions):
     threads = []
     for op in allOptions:
@@ -189,8 +220,9 @@ def joinThreads(threads):
             thread.join(2)
             if thread.is_alive(): numAlive += 1
         time.sleep(1)    
-
-
+def startThenJoinThreads(threads):
+    startThreads(threads)
+    joinThreads(threads)
 
 
 
@@ -214,11 +246,10 @@ def getBillZipUrls():
 
 def downloadNeededBillZips():
     urls = [url for url in getBillZipUrls() if determineCongressNumberfromPath(url) >= LAST_CONGRESS_PROCESSED]
-    print("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
+    log("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
 
     threads = getThreads(downloadBillZip, urls)
-    startThreads(threads)
-    joinThreads(threads)
+    startThenJoinThreads(threads)
 
     return len(urls)
 
@@ -432,16 +463,15 @@ def parseBillDataJson(fileData):
     billData["committees"] = jsonData["committees"]
     billData["amendments"] = jsonData["amendments"]
     billData["actions"] = jsonData["actions"]
+    billData["actions"] = jsonData["actions"]
 
     return billData
 
 def insertBills(bills):
-    mysql_conn = mysql_connect()
-
     billSql = "INSERT INTO Bills (id, type, congress, number, bioguideId, title, introduced, updated) "\
               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-
-    subjectSql = "INSERT INTO BillSubjects (id, type, congress, number, subjectIndex, subject) VALUES (%s, %s, %s, %s, %s, %s)"
+    subjectSql = "INSERT INTO BillSubjects (id, type, congress, number, subjectIndex, subject) "\
+                 "VALUES (%s, %s, %s, %s, %s, %s)"
     titleSql = "INSERT INTO BillTitles (id, type, congress, number, titleIndex, title, titleType, titleAs, isForPortion) "\
                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
     coSponSql = "INSERT INTO BillCoSponsors (id, type, congress, number, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
@@ -479,27 +509,12 @@ def insertBills(bills):
             cosponData.append((cid, t, c, n, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
             i += 1
 
-
-    mysql_execute_many_querys(mysql_conn, billSql, billData, "auditcongress")
-    mysql_execute_many_querys(mysql_conn, subjectSql, subjectData, "auditcongress")
-    mysql_execute_many_querys(mysql_conn, titleSql, titleData, "auditcongress")
-    mysql_execute_many_querys(mysql_conn, coSponSql, cosponData, "auditcongress")
-    mysql_conn.close()
-
-def getBillFolderDict(fileList):
-    folders = dict()
-    for file in fileList:
-        lastDot = file.rfind(".")
-        lastSlash = file.rfind("/")+1
-        
-        directory = file[0:lastSlash]
-        file = file[lastSlash:]
-
-        if directory not in folders: folders[directory] = set()
-        
-        #implies this is a file
-        if lastDot > lastSlash: folders[directory].add(file)
-    return folders
+    threads = []
+    threads.append(buildThread(runInsertingSql, billSql, billData))
+    threads.append(buildThread(runInsertingSql, subjectSql, subjectData))
+    threads.append(buildThread(runInsertingSql, titleSql, titleData))
+    threads.append(buildThread(runInsertingSql, coSponSql, cosponData))
+    startThenJoinThreads(threads)
 
 def readZippedFiles(zipFile):
     bills = []
@@ -526,14 +541,15 @@ def readZippedFiles(zipFile):
             if bill is not None: 
                     totalFilesRead += 1
                     bills.append(bill)
-                    #if len(bill["amendments"]) == 2:
-                    #    pprint(bill["amendments"])
-                    #    return 1
             else: skippedFiles += 1
 
     if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
     return bills
 
+singleThreadInsert = False
+threadPoolInsert = True
+threadPoolSize = 20
+chunkSize = 250
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
     bills, totalRead, startRead = [], 0, datetime.now()
@@ -542,30 +558,38 @@ def readBillZip(filename):
     startThreads([deleteThread]) 
 
     with ZipFile(filename, 'r') as zipped: bills = readZippedFiles(zipped)
+    chunckedBills = chunkList(bills, chunkSize)
 
-    insertThread = buildThread(insertBills, bills)
     joinThreads([deleteThread])
-
-    startThreads([insertThread]) 
-    joinThreads([insertThread])
-
-    zipped.close()
+    if singleThreadInsert:
+        log("Starting insert of",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
+        for chunk in range(len(chunckedBills)):
+            insertBills(chunckedBills[chunk])
+    else:
+        if not threadPoolInsert:
+            threads = getThreads(insertBills, chunckedBills)
+            log("Starting",len(threads),"X 4 threads to insert",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
+            startThenJoinThreads(threads)
+        else:
+            log("Starting ThreadPool({}) to insert".format(threadPoolSize),len(bills),"bill data objects in",len(chunckedBills),"chunks.")
+            with ThreadPoolExecutor(threadPoolSize) as exec:
+                for chunk in range(len(chunckedBills)):
+                    exec.submit(insertBills, chunckedBills[chunk])
            
     updateStartingCongress(congress)
-    print("Took",seconds_since(startRead),"seconds to parse then insert", len(bills), "bill files from", filename)
+    log("Took",seconds_since(startRead),"seconds to parse then insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
 fullMultiThreading, threadPooling, poolSize, noThreading = False, False, 2, True
 def readBillZipFiles():
     zips = getCachedZipFilePaths()
 
-    print("Started parseing", len(zips), "Zip file{}".format("s" if len(zips) != 1 else ""))
+    log("Started parsing", len(zips), "Zip file{}".format("s" if len(zips) != 1 else ""))
 
     #Up to 26 Threads Slows everything down
     if fullMultiThreading:
         threads = getThreads(readBillZip, zips)
-        startThreads(threads)
-        joinThreads(threads)
+        startThenJoinThreads(threads)
     #Between 2 and 4 threads speeds things up slightly compared to sequential
     elif threadPooling:
         with ThreadPoolExecutor(poolSize) as exe:
@@ -604,14 +628,15 @@ def doBulkBillPull():
     else: print("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
     
     #State where the process is starting, based off the database
-    print("Starting fetch, parse, and insert at congress", fetchLastCongress())
+    log("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
     #If the cache exists, ensure old data is deleted
     if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
 
     #Then rebuild the needed cache items
     startDownload = datetime.now()
-    print("Took", seconds_since(startDownload),"seconds to download",downloadNeededBillZips(),"zip files.")
+    count = downloadNeededBillZips()
+    log("Took", seconds_since(startDownload),"seconds to download",count,"zip files.")
 
     #Track how long it takes to parse and insert the bills
     startInsert = datetime.now()
@@ -625,7 +650,7 @@ def doBulkBillPull():
     cosponCount = countRows("BillCoSponsors")
 
     #Final log of what happened
-    print("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+    log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
 if __name__ == "__main__":   
     doBulkBillPull()
