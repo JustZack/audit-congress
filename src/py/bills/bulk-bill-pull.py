@@ -2,16 +2,12 @@ import os, time, shutil, io, json, math
 from zipfile import ZipFile
 from datetime import datetime
 
-import xmltodict
 from pprint import pprint
-
-import requests as rq
-from bs4 import BeautifulSoup
 
 import sys
 sys.path.append(os.path.abspath("../"))
 
-from shared import logger, db, zjthreads
+from shared import logger, db, zjthreads, util
 
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
@@ -37,41 +33,6 @@ def logError(*strs):
     logger.logError("bulk-bill", " ".join(str(item) for item in strs))
     if SHOW_DEBUG_MESSAGES: print("ERR:", *strs)
     
-def seconds_since(a): return (datetime.now()-a).total_seconds()
-def countFiles(inDir):
-    count = 0
-    for root_dir, cur_dir, files in os.walk(inDir): count += len(files)
-    return count
-
-def ensureFoldersExist(path): os.makedirs(os.path.dirname(path), exist_ok=True)
-
-def saveFileAny(writeType, path, data):
-    ensureFoldersExist(path)
-    file = open(path, writeType)
-    file.write(data)
-    file.close()
-def saveBinaryFile(path, data): saveFileAny("wb", path, data)
-def saveFile(path, data): saveFileAny("w", path, data)
-
-def downloadZipFile(url, savePath): saveBinaryFile(savePath+".zip", rq.get(url).content)
-
-def getParsedSoup(url, features="html.parser"):
-    page = rq.get(url)
-    log("GET:", url)
-    soup = BeautifulSoup(page.content, features)
-    return soup
-def getParsedHtml(url): return getParsedSoup(url)
-def getParsedXml(url): return getParsedSoup(url, "xml")
-
-def chunkList(array, chunkSize):
-    chunckedList = []
-    numChunks = math.ceil(len(array)/chunkSize)
-    for n in range(numChunks):
-        start = n*chunkSize
-        end = (n+1)*chunkSize
-        chunckedList.append(array[start:end])
-    return chunckedList
-
 def countRows(inTable, congress=None): 
     sql = ""
     if congress is None: sql = "SELECT COUNT(*) FROM {}".format(inTable)
@@ -95,7 +56,7 @@ def deleteBills(congress=None):
     if threadedDelete: zjthreads.runThreads(db.runCommitingSql, queries)
     else: [db.runCommitingSql(sql) for sql in queries]
 
-    log("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
+    log("Took", util.seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 def getMemberByThomasId(thomasId):
     global MEMBERS_MAPPING
@@ -104,8 +65,7 @@ def getMemberByThomasId(thomasId):
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
-    page = rq.get(MEMBERS_MAPPING_API_URL)
-    resp = json.loads(page.content)
+    resp = util.getParsedJson(MEMBERS_MAPPING_API_URL)
     if "mapping" in resp:
         MEMBERS_MAPPING =  resp["mapping"]
         return True
@@ -170,12 +130,12 @@ def determineCongressNumberfromPath(url):
 
 def downloadBillZip(url):
     congress = determineCongressNumberfromPath(url)
-    savePath = BILLS_DIR+str(congress)
-    downloadZipFile(url, savePath)
-    log("Saved bulk bill data for congress", congress, "to", savePath)
+    path = BILLS_DIR+str(congress)+".zip"
+    util.downloadZipFile(url, path)
+    log("Saved bulk bill data for congress", congress, "to", path)
 
 def getBillZipUrls():
-    soup = getParsedHtml(PROPUBLICA_BULK_BILLS_URL)
+    soup = util.getHtmlSoup(PROPUBLICA_BULK_BILLS_URL)
     links = soup.select(BILL_LINKS_SELECTOR)
     return [link["href"] for link in links]
 
@@ -195,9 +155,7 @@ def getCachedZipFilePaths():
 def deleteOutOfDateZips():
     zips = getCachedZipFilePaths()
     zipsToDelete = [z for z in zips if int(z[len(BILLS_DIR):-4]) >= LAST_CONGRESS_PROCESSED]
-    for z in zipsToDelete: 
-        log("Delete:",z)
-        os.remove(z)
+    util.deleteFiles(zipsToDelete)
 
 
 
@@ -212,7 +170,7 @@ def getKeyIfSet(dictionary, defaultValue, *keys):
     return defaultValue
 
 def parseBillFDSYSXml(fileData):
-    xmlData = xmltodict.parse(fileData)
+    xmlData = util.getParsedXmlFile(fileData)
     
     bill = xmlData["billStatus"]["bill"] 
 
@@ -492,7 +450,7 @@ def readBillZip(filename):
     zjthreads.startThreads([deleteThread]) 
 
     with ZipFile(filename, 'r') as zipped: bills = readZippedFiles(zipped)
-    chunckedBills = chunkList(bills, chunkSize)
+    chunckedBills = util.chunkList(bills, chunkSize)
 
     zjthreads.joinThreads([deleteThread])
     startInsert = datetime.now()
@@ -515,7 +473,7 @@ def readBillZip(filename):
         #            exec.submit(insertBills, chunckedBills[chunk])
            
     updateStartingCongress(congress)
-    log("Took",seconds_since(startInsert),"seconds to insert", len(bills), "bill files from", filename)
+    log("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
 fullMultiThreading, threadPooling, poolSize, noThreading = False, False, 2, True
@@ -574,12 +532,12 @@ def doBulkBillPull():
     #Then rebuild the needed cache items
     startDownload = datetime.now()
     count = downloadNeededBillZips()
-    log("Took", seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
+    log("Took", util.seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
 
     #Track how long it takes to parse and insert the bills
     startInsert = datetime.now()
     readBillZipFiles()
-    timeToInsert = seconds_since(startInsert)
+    timeToInsert = util.seconds_since(startInsert)
     
     #Count rows in each updated table
     billCount = countRows("Bills")

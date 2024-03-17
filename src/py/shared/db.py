@@ -1,13 +1,11 @@
 import os, time, shutil, io, json
 
 import mysql.connector
-import requests as rq
-
-import threading
-from concurrent.futures import ThreadPoolExecutor
 
 import sys, os
 sys.path.append(os.path.abspath("../"))
+
+from shared import util
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
 
@@ -60,6 +58,4 @@ def runReturningSql(sql):
     mysql_conn.close()
     return result
 
-def schemaIsValid():
-    page = rq.get(VALIDATE_DB_API_URL)
-    return "valid" in json.loads(page.content)
+def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
