@@ -1,4 +1,7 @@
-import db
+import sys, os
+sys.path.append(os.path.abspath("../"))
+
+from shared import db
 from datetime import datetime
 
 def log(logLevel, logAction, logMessage):

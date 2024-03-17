@@ -11,7 +11,7 @@
                     "level": { "type": "VARCHAR(50)", "null": "NO" },
                     "language": { "type": "VARCHAR(50)", "null": "NO" },
                     "action": { "type": "VARCHAR(50)", "null": "NO" },
-                    "message": { "type": "VARCHAR(50)", "null": "NO" },
+                    "message": { "type": "VARCHAR(10000)", "null": "NO" },
                     "time": { "type": "DATETIME", "null": "NO" }
                 }
             },

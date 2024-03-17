@@ -1,9 +1,13 @@
 import os, time, shutil, io, json
 
 import mysql.connector
+import requests as rq
 
 import threading
 from concurrent.futures import ThreadPoolExecutor
+
+import sys, os
+sys.path.append(os.path.abspath("../"))
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
 
@@ -38,17 +42,6 @@ def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor.close()
     return result
 
-def countRows(inTable, congress=None): 
-    mysql_conn = mysql_connect()
-    
-    sql = ""
-    if congress is None: sql = "SELECT COUNT(*) FROM {}".format(inTable)
-    else: sql = "SELECT COUNT(*) FROM {} WHERE congress = {}".format(inTable, congress)
-
-    count = mysql_execute_query(mysql_conn, sql, "auditcongress")[0]
-    mysql_conn.close()
-    return count
-
 def runInsertingSql(sql, data):
     mysql_conn = mysql_connect()
     mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
@@ -60,6 +53,12 @@ def runCommitingSql(sql):
     mysql_execute_query(mysql_conn, sql, "auditcongress")
     mysql_conn.commit()
     mysql_conn.close()
+
+def runReturningSql(sql):
+    mysql_conn = mysql_connect()
+    result = mysql_execute_query(mysql_conn, sql, "auditcongress")
+    mysql_conn.close()
+    return result
 
 def schemaIsValid():
     page = rq.get(VALIDATE_DB_API_URL)
