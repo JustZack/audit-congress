@@ -14,8 +14,9 @@ from bs4 import BeautifulSoup
 import sys
 sys.path.append(os.path.abspath("../"))
 
-from shared import logger, db, ezthreads
+from shared import logger, db, zjthreads
 
+import atexit
 
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
@@ -95,7 +96,7 @@ def deleteBills(congress=None):
         else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
         db.runCommitingSql(sql)
 
-    ezthreads.startThenJoinThreads(threads)
+    zjthreads.startThenJoinThreads(threads)
     log("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 def getMemberByThomasId(thomasId):
@@ -184,8 +185,8 @@ def downloadNeededBillZips():
     urls = [url for url in getBillZipUrls() if determineCongressNumberfromPath(url) >= LAST_CONGRESS_PROCESSED]
     log("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
 
-    threads = ezthreads.getThreads(downloadBillZip, urls)
-    ezthreads.startThenJoinThreads(threads)
+    threads = zjthreads.getThreads(downloadBillZip, urls)
+    zjthreads.startThenJoinThreads(threads)
 
     return len(urls)
 
@@ -446,11 +447,11 @@ def insertBills(bills):
             i += 1
 
     threads = []
-    threads.append(ezthreads.buildThread(db.runInsertingSql, billSql, billData))
-    threads.append(ezthreads.buildThread(db.runInsertingSql, subjectSql, subjectData))
-    threads.append(ezthreads.buildThread(db.runInsertingSql, titleSql, titleData))
-    threads.append(ezthreads.buildThread(db.runInsertingSql, coSponSql, cosponData))
-    ezthreads.startThenJoinThreads(threads)
+    threads.append(zjthreads.buildThread(db.runInsertingSql, billSql, billData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, subjectSql, subjectData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, titleSql, titleData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, coSponSql, cosponData))
+    zjthreads.startThenJoinThreads(threads)
 
 def readZippedFiles(zipFile):
     bills = []
@@ -490,22 +491,22 @@ def readBillZip(filename):
     congress = determineCongressNumberfromPath(filename)
     bills, totalRead, startRead = [], 0, datetime.now()
 
-    deleteThread = ezthreads.buildThread(deleteBills, congress)
-    ezthreads.startThreads([deleteThread]) 
+    deleteThread = zjthreads.buildThread(deleteBills, congress)
+    zjthreads.startThreads([deleteThread]) 
 
     with ZipFile(filename, 'r') as zipped: bills = readZippedFiles(zipped)
     chunckedBills = chunkList(bills, chunkSize)
 
-    ezthreads.joinThreads([deleteThread])
+    zjthreads.joinThreads([deleteThread])
     if singleThreadInsert:
         log("Starting insert of",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
         for chunk in range(len(chunckedBills)):
             insertBills(chunckedBills[chunk])
     else:
         if not threadPoolInsert:
-            threads = ezthreads.getThreads(insertBills, chunckedBills)
+            threads = zjthreads.getThreads(insertBills, chunckedBills)
             log("Starting",len(threads),"X 4 threads to insert",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
-            ezthreads.startThenJoinThreads(threads)
+            zjthreads.startThenJoinThreads(threads)
         else:
             log("Starting ThreadPool({}) to insert".format(threadPoolSize),len(bills),"bill data objects in",len(chunckedBills),"chunks.")
             with ThreadPoolExecutor(threadPoolSize) as exec:
@@ -524,8 +525,8 @@ def readBillZipFiles():
 
     #Up to 26 Threads Slows everything down
     if fullMultiThreading:
-        threads = ezthreads.getThreads(readBillZip, zips)
-        ezthreads.startThenJoinThreads(threads)
+        threads = zjthreads.getThreads(readBillZip, zips)
+        zjthreads.startThenJoinThreads(threads)
     #Between 2 and 4 threads speeds things up slightly compared to sequential
     elif threadPooling:
         with ThreadPoolExecutor(poolSize) as exe:
@@ -542,58 +543,63 @@ def readBillZipFiles():
             #if zipFile.find("93") >= 0:
             #    readBillZip(zipFile)
 
+
 def exitWithError(error):
     logError("{}... Exiting.".format(error))
-    #Mark this script as done running in the database
-    updateRunningStatus(False)
     exit()
+
+def stopWithError(error):
+    logError(error)
+    updateRunningStatus(False)
 
 #~2800s to run with 16MB cache (With Truncate)
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
-    try:
-        #Make sure the DB schema is valid first
-        if not db.schemaIsValid(): exitWithError("Could not validate the DB schema via API")
-        else: log("Confirmed DB Schema is valid via the API.")
-        
-        #Make sure the script isnt already running according to the DB
-        if scriptAlreadyRunning(): exitWithError("Tried running script when it is already running!")
-        else: updateRunningStatus(True)
+    #Make sure the DB schema is valid first
+    if not db.schemaIsValid(): exitWithError("Could not validate the DB schema via API")
+    else: log("Confirmed DB Schema is valid via the API.")
+    
+    #Make sure the script isnt already running according to the DB
+    if scriptAlreadyRunning():  exitWithError("Tried running script when it is already running!")
+    else: updateRunningStatus(True)
 
-        #Fetch the ThomasID => BioguideId mapping
-        if not fetchMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
-        else: log("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
-        
-        #State where the process is starting, based off the database
-        log("Starting fetch, parse, and insert at congress", fetchLastCongress())
+    #Fetch the ThomasID => BioguideId mapping
+    if not fetchMemberMapping(): raise Exception("Could not fetch thomas_id -> bioguide_id mapping from API")
+    else: log("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
+    
+    #State where the process is starting, based off the database
+    log("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
-        #If the cache exists, ensure old data is deleted
-        if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
+    #If the cache exists, ensure old data is deleted
+    if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
 
-        #Then rebuild the needed cache items
-        startDownload = datetime.now()
-        count = downloadNeededBillZips()
-        log("Took", seconds_since(startDownload),"seconds to download",count,"zip files.")
+    #Then rebuild the needed cache items
+    startDownload = datetime.now()
+    count = downloadNeededBillZips()
+    log("Took", seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
 
-        #Track how long it takes to parse and insert the bills
-        startInsert = datetime.now()
-        readBillZipFiles()
-        timeToInsert = seconds_since(startInsert)
-        
-        #Count rows in each updated table
-        billCount = countRows("Bills")
-        subjectCount = countRows("BillSubjects")
-        titlesCount = countRows("BillTitles")
-        cosponCount = countRows("BillCoSponsors")
+    #Track how long it takes to parse and insert the bills
+    startInsert = datetime.now()
+    readBillZipFiles()
+    timeToInsert = seconds_since(startInsert)
+    
+    #Count rows in each updated table
+    billCount = countRows("Bills")
+    subjectCount = countRows("BillSubjects")
+    titlesCount = countRows("BillTitles")
+    cosponCount = countRows("BillCoSponsors")
 
-        #Final log of what happened
-        log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
-    except Exception as e:
-        exitWithError(e)
-        
+    #Final log of what happened
+    log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+
     #Mark this script as done running in the database
     updateRunningStatus(False)
 
 if __name__ == "__main__":   
-    doBulkBillPull()
+    try:
+        doBulkBillPull()
+    except KeyboardInterrupt: 
+        stopWithError("Manually ended script via ctrl+c")
+    except Exception as e: 
+        stopWithError("Stopped with Exception {}".format(e))
