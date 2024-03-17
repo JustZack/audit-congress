@@ -5,9 +5,6 @@ from datetime import datetime
 import xmltodict
 from pprint import pprint
 
-import threading
-from concurrent.futures import ThreadPoolExecutor
-
 import requests as rq
 from bs4 import BeautifulSoup
 
@@ -15,8 +12,6 @@ import sys
 sys.path.append(os.path.abspath("../"))
 
 from shared import logger, db, zjthreads
-
-import atexit
 
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
@@ -85,18 +80,21 @@ def countRows(inTable, congress=None):
     count =   db.runReturningSql(sql)[0]
     return count
 
+threadedDelete = False
 def deleteBills(congress=None):
     startDelete = datetime.now()
     toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
 
-    threads = []
+    queries = []
+    sql = ""
     for table in toDeleteFrom:
-        sql = ""
         if congress is None: sql = "TRUNCATE {}".format(table)
         else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
-        db.runCommitingSql(sql)
+        queries.append(sql)
 
-    zjthreads.startThenJoinThreads(threads)
+    if threadedDelete: zjthreads.runThreads(db.runCommitingSql, queries)
+    else: [db.runCommitingSql(sql) for sql in queries]
+
     log("Took", seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 def getMemberByThomasId(thomasId):
@@ -185,8 +183,7 @@ def downloadNeededBillZips():
     urls = [url for url in getBillZipUrls() if determineCongressNumberfromPath(url) >= LAST_CONGRESS_PROCESSED]
     log("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
 
-    threads = zjthreads.getThreads(downloadBillZip, urls)
-    zjthreads.startThenJoinThreads(threads)
+    zjthreads.runThreads(downloadBillZip, urls)
 
     return len(urls)
 
@@ -404,7 +401,7 @@ def parseBillDataJson(fileData):
 
     return billData
 
-def insertBills(bills):
+def getInsertThreads(bills):
     billSql = "INSERT INTO Bills (id, type, congress, number, bioguideId, title, introduced, updated) "\
               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     subjectSql = "INSERT INTO BillSubjects (id, type, congress, number, subjectIndex, subject) "\
@@ -451,7 +448,7 @@ def insertBills(bills):
     threads.append(zjthreads.buildThread(db.runInsertingSql, subjectSql, subjectData))
     threads.append(zjthreads.buildThread(db.runInsertingSql, titleSql, titleData))
     threads.append(zjthreads.buildThread(db.runInsertingSql, coSponSql, cosponData))
-    zjthreads.startThenJoinThreads(threads)
+    return threads
 
 def readZippedFiles(zipFile):
     bills = []
@@ -484,12 +481,12 @@ def readZippedFiles(zipFile):
     return bills
 
 singleThreadInsert = False
-threadPoolInsert = True
-threadPoolSize = 20
+threadPoolInsert = False
+threadPoolSize = 100
 chunkSize = 250
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
-    bills, totalRead, startRead = [], 0, datetime.now()
+    bills, totalRead = [], 0
 
     deleteThread = zjthreads.buildThread(deleteBills, congress)
     zjthreads.startThreads([deleteThread]) 
@@ -498,23 +495,27 @@ def readBillZip(filename):
     chunckedBills = chunkList(bills, chunkSize)
 
     zjthreads.joinThreads([deleteThread])
+    startInsert = datetime.now()
     if singleThreadInsert:
         log("Starting insert of",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
         for chunk in range(len(chunckedBills)):
-            insertBills(chunckedBills[chunk])
-    else:
-        if not threadPoolInsert:
-            threads = zjthreads.getThreads(insertBills, chunckedBills)
-            log("Starting",len(threads),"X 4 threads to insert",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
+            zjthreads.startThenJoinThreads(getInsertThreads(chunckedBills[chunk]))
+    elif not threadPoolInsert:
+            threads = []
+            for chunk in range(len(chunckedBills)):
+                inserts = getInsertThreads(chunckedBills[chunk])
+                threads.extend(inserts)
+            log("Starting",len(threads),"threads to insert",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
             zjthreads.startThenJoinThreads(threads)
-        else:
-            log("Starting ThreadPool({}) to insert".format(threadPoolSize),len(bills),"bill data objects in",len(chunckedBills),"chunks.")
-            with ThreadPoolExecutor(threadPoolSize) as exec:
-                for chunk in range(len(chunckedBills)):
-                    exec.submit(insertBills, chunckedBills[chunk])
+    else:
+        log("Starting ThreadPool({}) to insert".format(threadPoolSize),len(bills),"bill data objects in",len(chunckedBills),"chunks.")
+        #zjthreads.runThreadPool(getInsertThreads, chunckedBills, threadPoolSize)
+        #with ThreadPoolExecutor(threadPoolSize) as exec:
+        #    for chunk in range(len(chunckedBills)):
+        #            exec.submit(insertBills, chunckedBills[chunk])
            
     updateStartingCongress(congress)
-    log("Took",seconds_since(startRead),"seconds to parse then insert", len(bills), "bill files from", filename)
+    log("Took",seconds_since(startInsert),"seconds to insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
 fullMultiThreading, threadPooling, poolSize, noThreading = False, False, 2, True
@@ -525,13 +526,10 @@ def readBillZipFiles():
 
     #Up to 26 Threads Slows everything down
     if fullMultiThreading:
-        threads = zjthreads.getThreads(readBillZip, zips)
-        zjthreads.startThenJoinThreads(threads)
+        threads = zjthreads.runThreads(readBillZip, zips)
     #Between 2 and 4 threads speeds things up slightly compared to sequential
     elif threadPooling:
-        with ThreadPoolExecutor(poolSize) as exe:
-            for zipFile in zips:
-                exe.submit(readBillZip, zipFile)
+        zjthreads.runThreadPool(readBillZip, zips, poolSize)
     #No threading seems to have the most consistent performance though
     elif noThreading:
         for zipFile in zips:
@@ -543,11 +541,6 @@ def readBillZipFiles():
             #if zipFile.find("93") >= 0:
             #    readBillZip(zipFile)
 
-
-def exitWithError(error):
-    logError("{}... Exiting.".format(error))
-    exit()
-
 def stopWithError(error):
     logError(error)
     updateRunningStatus(False)
@@ -557,11 +550,15 @@ def stopWithError(error):
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
     #Make sure the DB schema is valid first
-    if not db.schemaIsValid(): exitWithError("Could not validate the DB schema via API")
+    if not db.schemaIsValid(): 
+        logError("Could not validate the DB schema via API. Exiting.")
+        return
     else: log("Confirmed DB Schema is valid via the API.")
     
     #Make sure the script isnt already running according to the DB
-    if scriptAlreadyRunning():  exitWithError("Tried running script when it is already running!")
+    if scriptAlreadyRunning(): 
+        logError("Tried running script when it is already running! Exiting.")
+        return
     else: updateRunningStatus(True)
 
     #Fetch the ThomasID => BioguideId mapping

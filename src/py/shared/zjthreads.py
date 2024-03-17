@@ -9,10 +9,10 @@ from concurrent.futures import ThreadPoolExecutor
 def buildThread(target, *args):
     return threading.Thread(target=target, args=args, daemon=True)
 
-def getThreads(function, allOptions):
+def getThreads(function, arguments):
     threads = []
-    for op in allOptions:
-        thread = buildThread(function, op)
+    for args in arguments:
+        thread = buildThread(function, args)
         threads.append(thread)
     return threads
 
@@ -20,17 +20,25 @@ def startThreads(threads):
     for thread in threads:
         thread.start() 
 
+def getLivingThreads(threads):
+    return [t for t in threads if t.is_alive()]
+
 def joinThreads(threads): 
     numAlive = len(threads)
     while numAlive > 0:
-        numAlive = 0
-        for thread in threads:
-            thread.join(2)
-            if thread.is_alive(): numAlive += 1
-        time.sleep(1)    
-        
+        numAlive = len(getLivingThreads(threads))
+        time.sleep(1/10)      
+
 def startThenJoinThreads(threads):
     startThreads(threads)
     joinThreads(threads)
 
 
+def runThreads(function, arguments):
+    threads = getThreads(function, arguments)
+    startThenJoinThreads(threads)
+
+def runThreadPool(function, arguments, size = 10):
+    with ThreadPoolExecutor(size) as exe:
+        for a in arguments:
+            exe.submit(function, arguments)
