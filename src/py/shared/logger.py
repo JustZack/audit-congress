@@ -11,4 +11,4 @@ def log(logLevel, logAction, logMessage):
 
 def logInfo(logAction, logMessage): log("info", logAction, logMessage)
 
-def logError(type, message): log("error", logAction, logMessage)
+def logError(logAction, logMessage): log("error", logAction, logMessage)

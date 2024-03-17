@@ -125,11 +125,27 @@ def fetchLastCongress():
         LAST_CONGRESS_PROCESSED = 93
     return LAST_CONGRESS_PROCESSED
 
+def scriptAlreadyRunning():
+    sql = "SELECT isRunning FROM CacheStatus where source = 'bulk-bill'"
+    result = db.runReturningSql(sql)
+    if (len(result) == 1): return bool(result[0])
+    elif (len(result) == 0):
+        sql = "INSERT INTO CacheStatus (source, status, isRunning) VALUES ('bulk-bill', 93, 1)"
+        result = db.runCommitingSql(sql)
+        return False
+    return False
+
 def updateStartingCongress(startingCongress):
     global LAST_CONGRESS_PROCESSED
     LAST_CONGRESS_PROCESSED = startingCongress
     sql = "UPDATE CacheStatus SET status = {} WHERE source = 'bulk-bill'".format(startingCongress)
     db.runCommitingSql(sql)
+
+def updateRunningStatus(isRunning):
+    sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = 'bulk-bill'".format(isRunning)
+    db.runCommitingSql(sql)
+
+
 
 def getBillFolderDict(fileList):
     folders = dict()
@@ -526,54 +542,58 @@ def readBillZipFiles():
             #if zipFile.find("93") >= 0:
             #    readBillZip(zipFile)
 
-
-
-
-
-
 def exitWithError(error):
-    print("{}... Exiting.".format(error))
     logError("{}... Exiting.".format(error))
+    #Mark this script as done running in the database
+    updateRunningStatus(False)
     exit()
 
 #~2800s to run with 16MB cache (With Truncate)
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
+    try:
+        #Make sure the DB schema is valid first
+        if not db.schemaIsValid(): exitWithError("Could not validate the DB schema via API")
+        else: log("Confirmed DB Schema is valid via the API.")
+        
+        #Make sure the script isnt already running according to the DB
+        if scriptAlreadyRunning(): exitWithError("Tried running script when it is already running!")
+        else: updateRunningStatus(True)
 
-    
-    #Make sure the DB schema is valid first
-    if not db.schemaIsValid(): exitWithError("Could not validate the DB schema via API")
-    else: log("Confirmed DB Schema is valid via the API.")
-    
-    #Fetch the ThomasID => BioguideId mapping
-    if not fetchMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
-    else: log("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
-    
-    #State where the process is starting, based off the database
-    log("Starting fetch, parse, and insert at congress", fetchLastCongress())
+        #Fetch the ThomasID => BioguideId mapping
+        if not fetchMemberMapping(): exitWithError("Could not fetch thomas_id -> bioguide_id mapping from API")
+        else: log("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
+        
+        #State where the process is starting, based off the database
+        log("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
-    #If the cache exists, ensure old data is deleted
-    if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
+        #If the cache exists, ensure old data is deleted
+        if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
 
-    #Then rebuild the needed cache items
-    startDownload = datetime.now()
-    count = downloadNeededBillZips()
-    log("Took", seconds_since(startDownload),"seconds to download",count,"zip files.")
+        #Then rebuild the needed cache items
+        startDownload = datetime.now()
+        count = downloadNeededBillZips()
+        log("Took", seconds_since(startDownload),"seconds to download",count,"zip files.")
 
-    #Track how long it takes to parse and insert the bills
-    startInsert = datetime.now()
-    readBillZipFiles()
-    timeToInsert = seconds_since(startInsert)
-    
-    #Count rows in each updated table
-    billCount = countRows("Bills")
-    subjectCount = countRows("BillSubjects")
-    titlesCount = countRows("BillTitles")
-    cosponCount = countRows("BillCoSponsors")
+        #Track how long it takes to parse and insert the bills
+        startInsert = datetime.now()
+        readBillZipFiles()
+        timeToInsert = seconds_since(startInsert)
+        
+        #Count rows in each updated table
+        billCount = countRows("Bills")
+        subjectCount = countRows("BillSubjects")
+        titlesCount = countRows("BillTitles")
+        cosponCount = countRows("BillCoSponsors")
 
-    #Final log of what happened
-    log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+        #Final log of what happened
+        log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+    except Exception as e:
+        exitWithError(e)
+        
+    #Mark this script as done running in the database
+    updateRunningStatus(False)
 
 if __name__ == "__main__":   
     doBulkBillPull()
