@@ -111,7 +111,8 @@ namespace MySqlConnector {
             $columnsInDescribeFormat = array();
             foreach ($schemaColumns as $name=>$data) {
                 $primary = isset($data["primary"]) ? "PRI" : "";
-                $column = array($name, $data["type"], $data["null"], $primary, "", "");
+                $extra = isset($data["extra"]) ? $data["extra"] : "";
+                $column = array($name, $data["type"], $data["null"], $primary, "", $extra);
                 array_push($columnsInDescribeFormat, $column);
             }
             return new Columns($columnsInDescribeFormat);

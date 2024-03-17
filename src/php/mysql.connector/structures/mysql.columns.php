@@ -112,7 +112,7 @@ namespace MySqlConnector {
 
         //Return the type for this column, like "VARCHAR(50) NOT NULL"
         public function getTypeString() {
-            return "$this->type $this->canBeNull";
+            return "$this->type $this->canBeNull $this->extra";
         }
 
         public function getCreateString() {

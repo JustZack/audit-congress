@@ -5,12 +5,24 @@
         [
 
             {
+                "name": "log",
+                "columns": {
+                    "id": { "type": "INT", "null": "NO", "primary": true, "extra": "auto_increment"},
+                    "level": { "type": "VARCHAR(50)", "null": "NO" },
+                    "language": { "type": "VARCHAR(50)", "null": "NO" },
+                    "action": { "type": "VARCHAR(50)", "null": "NO" },
+                    "message": { "type": "VARCHAR(50)", "null": "NO" },
+                    "time": { "type": "DATETIME", "null": "NO" }
+                }
+            },
+            {
                 "name": "CacheStatus",
                 "columns": {
-                    "source": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "source": { "type": "VARCHAR(50)", "null": "NO", "primary": true},
                     "status": { "type": "VARCHAR(50)", "null": "YES" }
                 }
             },
+
 
 
 
