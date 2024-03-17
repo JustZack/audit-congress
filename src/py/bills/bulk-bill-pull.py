@@ -318,7 +318,7 @@ def parseBillDataXml(fileData):
 
 def parseBillDataJson(fileData):
     billData = dict()
-    jsonData = json.loads(fileData)
+    jsonData = util.getParsedJsonFile(fileData)
 
     actualBill = dict()
     
@@ -483,11 +483,9 @@ def readBillZipFiles():
     log("Started parsing", len(zips), "Zip file{}".format("s" if len(zips) != 1 else ""))
 
     #Up to 26 Threads Slows everything down
-    if fullMultiThreading:
-        threads = zjthreads.runThreads(readBillZip, zips)
+    if fullMultiThreading: threads = zjthreads.runThreads(readBillZip, zips)
     #Between 2 and 4 threads speeds things up slightly compared to sequential
-    elif threadPooling:
-        zjthreads.runThreadPool(readBillZip, zips, poolSize)
+    elif threadPooling: zjthreads.runThreadPool(readBillZip, zips, poolSize)
     #No threading seems to have the most consistent performance though
     elif noThreading:
         for zipFile in zips:

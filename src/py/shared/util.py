@@ -17,9 +17,8 @@ def ensureFoldersExist(path): os.makedirs(os.path.dirname(path), exist_ok=True)
 
 def saveFileAny(writeType, path, data):
     ensureFoldersExist(path)
-    file = open(path, writeType)
-    file.write(data)
-    file.close()
+    with open(path, writeType) as file: file.write(data)
+    
 def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
 
@@ -32,19 +31,20 @@ def chunkList(array, chunkSize):
         chunckedList.append(array[start:end])
     return chunckedList
 
-def deleteFiles(fileList):
-    for f in fileList: os.remove(f)
+def deleteFiles(fileList): [os.remove(f) for f in fileList]
 
-def get(url):
-    page = rq.get(url)
-    return page.content
+def get(url): return rq.get(url).content
 
 def getParsedSoup(url, features="html.parser"):
     soup = BeautifulSoup(get(url), features)
     return soup
 def getHtmlSoup(url): return getParsedSoup(url)
 def getXmlSoup(url): return getParsedSoup(url, "xml")
-def getParsedJson(url): return json.loads(get(url))
-def getParsedXml(url): return xml2d.parse(get(url))
+
+def getParsedJson(url): return getParsedJsonFile(get(url))
+def getParsedJsonFile(fileData): return json.loads(fileData)
+
+def getParsedXml(url): return getParsedXmlFile(get(url))
 def getParsedXmlFile(fileData): return xml2d.parse(fileData)
+
 def downloadZipFile(url, savePath): saveBinaryFile(savePath, get(url))
