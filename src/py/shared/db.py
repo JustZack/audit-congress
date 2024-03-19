@@ -5,9 +5,16 @@ import mysql.connector
 import sys, os
 sys.path.append(os.path.abspath("../"))
 
-from shared import util
+from shared import util, zjthreads
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
+
+TRUNCATE_SQL = "TRUNCATE {}"
+DELETE_SQL = "DELETE FROM {} WHERE {} = {}"
+THREADED_DELETE = False
+
+COUNT_SQL = "SELECT COUNT(*) FROM {}"
+COUNT_WHERE_SQL = "SELECT COUNT(*) FROM {} WHERE {} = {}"
 
 # Opens a connection with a MySQL host
 def mysql_connect():
@@ -57,5 +64,28 @@ def runReturningSql(sql):
     result = mysql_execute_query(mysql_conn, sql, "auditcongress")
     mysql_conn.close()
     return result
+
+def countRows(tableName, whereCol=None, whereVal=None): 
+    sql = ""
+
+    if None not in {whereVal, whereCol}: sql = COUNT_WHERE_SQL.format(tableName, whereCol, congress)
+    else: sql = COUNT_SQL.format(tableName)
+
+    count =   runReturningSql(sql)[0]
+    return count
+
+def deleteRowsFromTables(tables, whereCol=None, whereVal=None):
+    if THREADED_DELETE:
+        args = [(table, whereCol, whereVal) for table in tables]
+        zjthreads.runThreads(deleteRows, args)
+    else:
+        for table in tables: deleteRows(table, whereCol, whereVal)
+
+def deleteRows(tableName, whereCol=None, whereVal=None):
+    sql = ""
+
+    if None not in {whereVal, whereCol}: sql = DELETE_SQL.format(tableName, whereCol, whereVal)
+    else: sql = TRUNCATE_SQL.format(tableName, whereCol, whereVal)
+    runCommitingSql(sql)
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)

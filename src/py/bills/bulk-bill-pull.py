@@ -14,12 +14,22 @@ BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
 BILLS_DIR = "cache/"
 #All folders that we care about in the bills folder
-BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s" , "sconres", "sjres", "sres"]
+BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", "sres"]
 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
 LAST_CONGRESS_PROCESSED = None
+
+BILL_INSERT_SQL = "INSERT INTO Bills (id, type, number, congress, bioguideId, title, introduced, updated) "\
+                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+SUBJECT_INSERT_SQL = "INSERT INTO BillSubjects (id, type, number, congress, subjectIndex, subject) "\
+                                       "VALUES (%s, %s, %s, %s, %s, %s)"
+TTTLE_INSERT_SQL = "INSERT INTO BillTitles (id, type, number, congress, titleIndex, title, titleType, titleAs, isForPortion) "\
+                                   "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+COSPONSOR_INSERT_SQL = "INSERT INTO BillCoSponsors (id, type, number, congress, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
+                                           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+
 
 SHOW_DEBUG_MESSAGES = True
 def debug_print(*strs):
@@ -33,29 +43,10 @@ def logError(*strs):
     logger.logError("bulk-bill", " ".join(str(item) for item in strs))
     if SHOW_DEBUG_MESSAGES: print("ERR:", *strs)
     
-def countRows(inTable, congress=None): 
-    sql = ""
-    if congress is None: sql = "SELECT COUNT(*) FROM {}".format(inTable)
-    else: sql = "SELECT COUNT(*) FROM {} WHERE congress = {}".format(inTable, congress)
-
-    count =   db.runReturningSql(sql)[0]
-    return count
-
-threadedDelete = False
 def deleteBills(congress=None):
     startDelete = datetime.now()
     toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
-
-    queries = []
-    sql = ""
-    for table in toDeleteFrom:
-        if congress is None: sql = "TRUNCATE {}".format(table)
-        else: sql = "DELETE FROM {} WHERE congress = {}".format(table, congress)
-        queries.append(sql)
-
-    if threadedDelete: zjthreads.runThreads(db.runCommitingSql, queries)
-    else: [db.runCommitingSql(sql) for sql in queries]
-
+    db.deleteRowsFromTables(toDeleteFrom, "congress", congress)
     log("Took", util.seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 def getMemberByThomasId(thomasId):
@@ -359,53 +350,55 @@ def parseBillDataJson(fileData):
 
     return billData
 
+def getBillObjectId(typ, number, congress, index=None):
+    if index is None:
+        return "{}{}-{}".format(typ, number, congress)
+    else:
+        return "{}{}-{}-{}".format(typ, number, congress, index)
+
+def getSubjects(subjects, t, n, c):
+    i, subjs = 0, []
+    for subject in subjects: 
+        sid = getBillObjectId(t, n, c, i)
+        subjs.append((sid, t, n, c, i, subject))
+        i += 1
+    return subjs
+
+def getTitles(titles, t, n, c):
+    i, ttls = 0, []
+    for title in titles: 
+        tid = getBillObjectId(t, n, c, i)
+        portion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
+        ttls.append((tid, t, n, c, i, title["title"], title["type"], title["as"], portion))
+        i += 1
+    return ttls
+
+def getCoSponsors(cosponsors, t, n, c):
+    i, cospons = 0, []
+    for cosponsor in cosponsors:
+        cid = getBillObjectId(t, n, c, i)
+        cospons.append((cid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+        i += 1
+    return cospons
+
 def getInsertThreads(bills):
-    billSql = "INSERT INTO Bills (id, type, congress, number, bioguideId, title, introduced, updated) "\
-              "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    subjectSql = "INSERT INTO BillSubjects (id, type, congress, number, subjectIndex, subject) "\
-                 "VALUES (%s, %s, %s, %s, %s, %s)"
-    titleSql = "INSERT INTO BillTitles (id, type, congress, number, titleIndex, title, titleType, titleAs, isForPortion) "\
-               "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    coSponSql = "INSERT INTO BillCoSponsors (id, type, congress, number, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    
-    billData,subjectData,titleData,cosponData = [],[],[],[]
+    billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
-        t,c,n = bill["type"].lower(),bill["congress"],bill["number"]
+        tnc = (bill["type"].lower(),bill["number"],bill["congress"])
         bioguide = bill["bioguideId"]
-
-        id = "{}{}-{}".format(t, n, c)
-
-        billData.append((id, t, c, n, bioguide, bill["title"], 
-                         bill["introduced_at"], bill["updated_at"]))
+        bId = getBillObjectId(*tnc)
         
-        pid = id+"-{}"
-        i = 0        
-        for subject in parsedBill["subjects"]: 
-            sid = pid.format(i)
-            subjectData.append((sid, t, c, n, i, subject))
-            i += 1
+        billData.append((bId, *tnc, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
+        subjectData.extend(getSubjects(parsedBill["subjects"], *tnc))
+        titleData.extend(getTitles(parsedBill["titles"], *tnc))
+        cosponData.extend(getCoSponsors(parsedBill["cosponsors"], *tnc))
 
-        i = 0
-        for title in parsedBill["titles"]: 
-            tid = pid.format(i)
-            isForPortion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-            titleData.append((tid, t, c, n, i, title["title"], title["type"], title["as"], isForPortion))
-            i += 1
-        
-        i = 0
-        for cosponsor in parsedBill["cosponsors"]:
-            cid = pid.format(cosponsor["id"])+"-"+str(i)
-            cosponData.append((cid, t, c, n, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
-            i += 1
-
-    threads = []
-    threads.append(zjthreads.buildThread(db.runInsertingSql, billSql, billData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, subjectSql, subjectData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, titleSql, titleData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, coSponSql, cosponData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, BILL_INSERT_SQL, billData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, SUBJECT_INSERT_SQL, subjectData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, TTTLE_INSERT_SQL, titleData))
+    threads.append(zjthreads.buildThread(db.runInsertingSql, COSPONSOR_INSERT_SQL, cosponData))
     return threads
 
 def readZippedFiles(zipFile):
@@ -538,10 +531,10 @@ def doBulkBillPull():
     timeToInsert = util.seconds_since(startInsert)
     
     #Count rows in each updated table
-    billCount = countRows("Bills")
-    subjectCount = countRows("BillSubjects")
-    titlesCount = countRows("BillTitles")
-    cosponCount = countRows("BillCoSponsors")
+    billCount = db.countRows("Bills")
+    subjectCount = db.countRows("BillSubjects")
+    titlesCount = db.countRows("BillTitles")
+    cosponCount = db.countRows("BillCoSponsors")
 
     #Final log of what happened
     log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
