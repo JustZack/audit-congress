@@ -467,7 +467,7 @@ def readBillZip(filename):
     log("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files from", filename)
     time.sleep(2)
 
-fullMultiThreading, threadPooling, poolSize, noThreading = False, False, 2, True
+fullMultiThreading, threadPooling, poolSize = False, False, 2
 def readBillZipFiles():
     zips = getCachedZipFilePaths()
 
@@ -478,15 +478,13 @@ def readBillZipFiles():
     #Between 2 and 4 threads speeds things up slightly compared to sequential
     elif threadPooling: zjthreads.runThreadPool(readBillZip, zips, poolSize)
     #No threading seems to have the most consistent performance though
-    elif noThreading:
-        for zipFile in zips:
-            readBillZip(zipFile)
-            #The following represent each different file format
-            #if zipFile.find("93") >= 0 or zipFile.find("113") >= 0 or zipFile.find("117") >= 0:
-            #if zipFile.find("117") >= 0:
-            #if zipFile.find("113") >= 0:
-            #if zipFile.find("93") >= 0:
-            #    readBillZip(zipFile)
+    else: [readBillZip(zipFile) for zipFile in zips]
+    #The following represent each different file format
+    #if zipFile.find("93") >= 0 or zipFile.find("113") >= 0 or zipFile.find("117") >= 0:
+    #if zipFile.find("117") >= 0:
+    #if zipFile.find("113") >= 0:
+    #if zipFile.find("93") >= 0:
+    #    readBillZip(zipFile)
 
 def stopWithError(error):
     logError(error)
