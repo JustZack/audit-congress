@@ -16,6 +16,8 @@ THREADED_DELETE = False
 COUNT_SQL = "SELECT COUNT(*) FROM {}"
 COUNT_WHERE_SQL = "SELECT COUNT(*) FROM {} WHERE {} = {}"
 
+INSERT_SQL = "INSERT INTO {} ({}) VALUES ({})"\
+
 # Opens a connection with a MySQL host
 def mysql_connect():
     return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", password="?6n78$y\"\"~'Fvdy", database="auditcongress")
@@ -47,15 +49,12 @@ def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor.close()
     return result
 
-def runInsertingSql(sql, data):
+def runCommitingSql(sql, data=None):
     mysql_conn = mysql_connect()
-    mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
-    mysql_conn.commit()
-    mysql_conn.close()
-
-def runCommitingSql(sql):
-    mysql_conn = mysql_connect()
-    mysql_execute_query(mysql_conn, sql, "auditcongress")
+    if data is None:
+        mysql_execute_query(mysql_conn, sql, "auditcongress")
+    else:
+        mysql_execute_many_querys(mysql_conn, sql, data, "auditcongress")
     mysql_conn.commit()
     mysql_conn.close()
 
@@ -73,6 +72,17 @@ def countRows(tableName, whereCol=None, whereVal=None):
 
     count =   runReturningSql(sql)[0]
     return count
+
+def getInsertSql(tableName, columnsArray):
+    columns = util.csvStr(columnsArray)
+    valueFormat = util.csvStr(["%s" for c in columnsArray])
+    return INSERT_SQL.format(tableName, columns, valueFormat)
+
+def insertRows(tableName, columnsArray, valueData): 
+    runCommitingSql(getInsertSql(tableName, columnsArray), valueData)
+
+def insertRow(tableName, columnsArray, values): 
+    insertRows(tableName, columnsArray, [values])
 
 def deleteRowsFromTables(tables, whereCol=None, whereVal=None):
     if THREADED_DELETE:

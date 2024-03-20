@@ -22,15 +22,6 @@ def saveFileAny(writeType, path, data):
 def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
 
-def chunkList(array, chunkSize):
-    chunckedList = []
-    numChunks = math.ceil(len(array)/chunkSize)
-    for n in range(numChunks):
-        start = n*chunkSize
-        end = (n+1)*chunkSize
-        chunckedList.append(array[start:end])
-    return chunckedList
-
 def deleteFiles(fileList): [os.remove(f) for f in fileList]
 
 def get(url): return rq.get(url).content
@@ -48,3 +39,14 @@ def getParsedXml(url): return getParsedXmlFile(get(url))
 def getParsedXmlFile(fileData): return xml2d.parse(fileData)
 
 def downloadZipFile(url, savePath): saveBinaryFile(savePath, get(url))
+
+def chunkList(array, chunkSize):
+    chunckedList = []
+    numChunks = math.ceil(len(array)/chunkSize)
+    for n in range(numChunks):
+        start = n*chunkSize
+        end = (n+1)*chunkSize
+        chunckedList.append(array[start:end])
+    return chunckedList
+
+def csvStr(itemArray): return ",".join(itemArray)

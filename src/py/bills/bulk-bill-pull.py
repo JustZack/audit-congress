@@ -21,15 +21,10 @@ MEMBERS_MAPPING = None
 
 LAST_CONGRESS_PROCESSED = None
 
-BILL_INSERT_SQL = "INSERT INTO Bills (id, type, number, congress, bioguideId, title, introduced, updated) "\
-                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-SUBJECT_INSERT_SQL = "INSERT INTO BillSubjects (id, type, number, congress, subjectIndex, subject) "\
-                                       "VALUES (%s, %s, %s, %s, %s, %s)"
-TTTLE_INSERT_SQL = "INSERT INTO BillTitles (id, type, number, congress, titleIndex, title, titleType, titleAs, isForPortion) "\
-                                   "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-COSPONSOR_INSERT_SQL = "INSERT INTO BillCoSponsors (id, type, number, congress, bioguideId, sponsoredAt, withdrawnAt, isOriginal) "\
-                                           "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-
+BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "introduced", "updated"]
+SUBJECT_COLUMNS = ["id", "type", "number", "congress", "subjectIndex", "subject"]
+TTTLE_COLUMNS = ["id", "type", "number", "congress", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 
 SHOW_DEBUG_MESSAGES = True
 def debug_print(*strs):
@@ -97,7 +92,7 @@ def updateRunningStatus(isRunning):
 
 
 
-def getBillFolderDict(fileList):
+def getBillItemsByFolder(fileList):
     folders = dict()
     for file in fileList:
         lastDot = file.rfind(".")
@@ -105,10 +100,9 @@ def getBillFolderDict(fileList):
         
         directory = file[0:lastSlash]
         file = file[lastSlash:]
-
+        #Add directory if unset
         if directory not in folders: folders[directory] = set()
-        
-        #implies this is a file
+        #Append file to list
         if lastDot > lastSlash: folders[directory].add(file)
     return folders
 
@@ -179,7 +173,10 @@ def parseBillFDSYSXml(fileData):
     actualBill["number"] = num
 
     sponsor = bill["sponsors"]
-    actualBill["bioguideId"] = sponsor["item"]["bioguideId"] if sponsor is not None else ""
+    sponsor = sponsor["item"] if sponsor is not None else ""
+    if type(sponsor) is list: sponsor = sponsor[0]
+    actualBill["bioguideId"] = sponsor["bioguideId"]
+    
 
     actualBill["title"] = bill["title"]
     
@@ -351,10 +348,8 @@ def parseBillDataJson(fileData):
     return billData
 
 def getBillObjectId(typ, number, congress, index=None):
-    if index is None:
-        return "{}{}-{}".format(typ, number, congress)
-    else:
-        return "{}{}-{}-{}".format(typ, number, congress, index)
+    if index is None: return "{}{}-{}".format(typ, number, congress)
+    else: return "{}{}-{}-{}".format(typ, number, congress, index)
 
 def getSubjects(subjects, t, n, c):
     i, subjs = 0, []
@@ -395,55 +390,56 @@ def getInsertThreads(bills):
         titleData.extend(getTitles(parsedBill["titles"], *tnc))
         cosponData.extend(getCoSponsors(parsedBill["cosponsors"], *tnc))
 
-    threads.append(zjthreads.buildThread(db.runInsertingSql, BILL_INSERT_SQL, billData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, SUBJECT_INSERT_SQL, subjectData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, TTTLE_INSERT_SQL, titleData))
-    threads.append(zjthreads.buildThread(db.runInsertingSql, COSPONSOR_INSERT_SQL, cosponData))
+    threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billData))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, subjectData))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TTTLE_COLUMNS, titleData))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, cosponData))
     return threads
 
-def readZippedFiles(zipFile):
-    bills = []
-    files = zipFile.namelist()
-    folderDict = getBillFolderDict(files)
-    totalFilesRead = 0
-    skippedFiles = 0
+def readBillFileFromZip(zipFile, name,path):
+    file = None
+    if "data.json" in path: file = name+"data.json"
+    elif "fdsys_billstatus.xml" in path: file = name+"fdsys_billstatus.xml"
+    #elif "data.xml" in folder: file = name+"data.xml"
 
-    for name,folder in folderDict.items():
+    if file is None: return None
+
+    data, bill = zipFile.read(file), None
+    if "data.json" in file: bill = parseBillDataJson(data)
+    elif "fdsys_billstatus.xml" in file: bill = parseBillFDSYSXml(data)
+    #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
+
+    return bill
+
+def readZippedFiles(zipFile):
+    bills, files = [], zipFile.namelist()
+    folderDict, skippedFiles = getBillItemsByFolder(files), 0
+
+    for name,path in folderDict.items():
         if name.find("amendments") >= 0: continue
 
-        file = None
-        if "data.json" in folder: file = name+"data.json"
-        elif "data.xml" in folder: file = name+"data.xml"
-        elif "fdsys_billstatus.xml" in folder: file = name+"fdsys_billstatus.xml"
-
-        if file is not None:
-            data = zipFile.read(file)
-            bill = None
-            if file.find("data.json") >= 0: bill = parseBillDataJson(data)
-            #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
-            elif file.find("fdsys_billstatus.xml") >= 0: bill = parseBillFDSYSXml(data)
-
-            if bill is not None: 
-                    totalFilesRead += 1
-                    bills.append(bill)
-            else: skippedFiles += 1
+        bill = readBillFileFromZip(zipFile, name, path)
+        if bill is None: skippedFiles += 1
+        else: bills.append(bill)
 
     if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
     return bills
 
-singleThreadInsert = False
+singleThreadInsert = True
 threadPoolInsert = False
 threadPoolSize = 100
 chunkSize = 250
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
     bills, totalRead = [], 0
-
     deleteThread = zjthreads.buildThread(deleteBills, congress)
     zjthreads.startThreads([deleteThread]) 
 
+    startRead = datetime.now()
     with ZipFile(filename, 'r') as zipped: bills = readZippedFiles(zipped)
+    numBillsRead = len(bills)
     chunckedBills = util.chunkList(bills, chunkSize)
+    print("Took {} to read & chunk {} bills in congress {}".format(util.seconds_since(startRead), numBillsRead, congress))
 
     zjthreads.joinThreads([deleteThread])
     startInsert = datetime.now()
@@ -547,5 +543,5 @@ if __name__ == "__main__":
         doBulkBillPull()
     except KeyboardInterrupt: 
         stopWithError("Manually ended script via ctrl+c")
-    except Exception as e: 
-        stopWithError("Stopped with Exception {}".format(e))
+    #except Exception as e: 
+    #    stopWithError("Stopped with Exception {}".format(e))
