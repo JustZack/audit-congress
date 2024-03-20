@@ -64,15 +64,6 @@ def runReturningSql(sql):
     mysql_conn.close()
     return result
 
-def countRows(tableName, whereCol=None, whereVal=None): 
-    sql = ""
-
-    if None not in {whereVal, whereCol}: sql = COUNT_WHERE_SQL.format(tableName, whereCol, congress)
-    else: sql = COUNT_SQL.format(tableName)
-
-    count =   runReturningSql(sql)[0]
-    return count
-
 def getInsertSql(tableName, columnsArray):
     columns = util.csvStr(columnsArray)
     valueFormat = util.csvStr(["%s" for c in columnsArray])
@@ -97,5 +88,14 @@ def deleteRows(tableName, whereCol=None, whereVal=None):
     if None not in {whereVal, whereCol}: sql = DELETE_SQL.format(tableName, whereCol, whereVal)
     else: sql = TRUNCATE_SQL.format(tableName, whereCol, whereVal)
     runCommitingSql(sql)
+
+def countRows(tableName, whereCol=None, whereVal=None): 
+    sql = ""
+
+    if None not in {whereVal, whereCol}: sql = COUNT_WHERE_SQL.format(tableName, whereCol, congress)
+    else: sql = COUNT_SQL.format(tableName)
+
+    count =   runReturningSql(sql)[0]
+    return count
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)

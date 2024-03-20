@@ -95,6 +95,9 @@ def updateRunningStatus(isRunning):
 def getBillItemsByFolder(fileList):
     folders = dict()
     for file in fileList:
+        #Do not process amendents... yet
+        if "amendments" in file: continue
+
         lastDot = file.rfind(".")
         lastSlash = file.rfind("/")+1
         
@@ -416,13 +419,12 @@ def readZippedFiles(zipFile):
     folderDict, skippedFiles = getBillItemsByFolder(files), 0
 
     for name,path in folderDict.items():
-        if name.find("amendments") >= 0: continue
-
         bill = readBillFileFromZip(zipFile, name, path)
+        
         if bill is None: skippedFiles += 1
         else: bills.append(bill)
 
-    if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files")
+    if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files") 
     return bills
 
 singleThreadInsert = True
