@@ -56,10 +56,10 @@ def getPathDirectory(path):
     return path[0:lastSlash]
 
 def getPathFile(path):
-    lastSlash = file.rfind("/") + 1
-    return file[lastSlash:]
+    lastSlash = path.rfind("/") + 1
+    return path[lastSlash:]
 
 def pathIsFile(path):
-    lastSlash = file.rfind("/") + 1
-    lastDot = file.rfind(".") + 1
+    lastSlash = path.rfind("/") + 1
+    lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
