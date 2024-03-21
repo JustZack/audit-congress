@@ -50,3 +50,16 @@ def chunkList(array, chunkSize):
     return chunckedList
 
 def csvStr(itemArray): return ",".join(itemArray)
+
+def getPathDirectory(path):
+    lastSlash = path.rfind("/") + 1
+    return path[0:lastSlash]
+
+def getPathFile(path):
+    lastSlash = file.rfind("/") + 1
+    return file[lastSlash:]
+
+def pathIsFile(path):
+    lastSlash = file.rfind("/") + 1
+    lastDot = file.rfind(".") + 1
+    return lastDot > lastSlash

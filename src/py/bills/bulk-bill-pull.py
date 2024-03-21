@@ -91,22 +91,18 @@ def updateRunningStatus(isRunning):
     db.runCommitingSql(sql)
 
 
-
 def getBillItemsByFolder(fileList):
     folders = dict()
-    for file in fileList:
+    for path in fileList:
         #Do not process amendents... yet
         if "amendments" in file: continue
-
-        lastDot = file.rfind(".")
-        lastSlash = file.rfind("/")+1
-        
-        directory = file[0:lastSlash]
-        file = file[lastSlash:]
+        #Get the directory from the file path
+        directory = util.getPathDirectory(path)
+    
         #Add directory if unset
         if directory not in folders: folders[directory] = set()
-        #Append file to list
-        if lastDot > lastSlash: folders[directory].add(file)
+        #Append files to this directory listing
+        if util.pathIsFile(path): folders[directory].add(util.getPathFile(path))
     return folders
 
 def determineCongressNumberfromPath(url):
@@ -428,8 +424,6 @@ def readZippedFiles(zipFile):
     return bills
 
 singleThreadInsert = True
-threadPoolInsert = False
-threadPoolSize = 100
 chunkSize = 250
 def readBillZip(filename):   
     congress = determineCongressNumberfromPath(filename)
@@ -449,23 +443,17 @@ def readBillZip(filename):
         log("Starting insert of",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
         for chunk in range(len(chunckedBills)):
             zjthreads.startThenJoinThreads(getInsertThreads(chunckedBills[chunk]))
-    elif not threadPoolInsert:
+    else:
             threads = []
             for chunk in range(len(chunckedBills)):
                 inserts = getInsertThreads(chunckedBills[chunk])
                 threads.extend(inserts)
+
             log("Starting",len(threads),"threads to insert",len(bills),"bill data objects in",len(chunckedBills),"chunks.")
             zjthreads.startThenJoinThreads(threads)
-    else:
-        log("Starting ThreadPool({}) to insert".format(threadPoolSize),len(bills),"bill data objects in",len(chunckedBills),"chunks.")
-        #zjthreads.runThreadPool(getInsertThreads, chunckedBills, threadPoolSize)
-        #with ThreadPoolExecutor(threadPoolSize) as exec:
-        #    for chunk in range(len(chunckedBills)):
-        #            exec.submit(insertBills, chunckedBills[chunk])
            
     updateStartingCongress(congress)
     log("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files from", filename)
-    time.sleep(2)
 
 fullMultiThreading, threadPooling, poolSize = False, False, 2
 def readBillZipFiles():
@@ -490,10 +478,7 @@ def stopWithError(error):
     logError(error)
     updateRunningStatus(False)
 
-#~2800s to run with 16MB cache (With Truncate)
-#~1550s to run with 2048MB cache (With Truncate)
-#~1500s to run with 4096MB cache (With Truncate)
-def doBulkBillPull():
+def doSetup():
     #Make sure the DB schema is valid first
     if not db.schemaIsValid(): 
         logError("Could not validate the DB schema via API. Exiting.")
@@ -509,11 +494,15 @@ def doBulkBillPull():
     #Fetch the ThomasID => BioguideId mapping
     if not fetchMemberMapping(): raise Exception("Could not fetch thomas_id -> bioguide_id mapping from API")
     else: log("Found",len(MEMBERS_MAPPING),"thomas_id -> bioguide_id mappings via the API")
-    
+
+#~2800s to run with 16MB cache (With Truncate)
+#~1550s to run with 2048MB cache (With Truncate)
+#~1500s to run with 4096MB cache (With Truncate)
+def doBulkBillPull():
     #State where the process is starting, based off the database
     log("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
-    #If the cache exists, ensure old data is deleted
+    #If the cache exists, ensure old data is deleted (based on CacheStatus table)
     if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
 
     #Then rebuild the needed cache items
@@ -540,6 +529,7 @@ def doBulkBillPull():
 
 if __name__ == "__main__":   
     try:
+        doSetup()
         doBulkBillPull()
     except KeyboardInterrupt: 
         stopWithError("Manually ended script via ctrl+c")
