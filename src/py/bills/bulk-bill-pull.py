@@ -16,18 +16,6 @@ BILLS_DIR = "cache/"
 
 LAST_CONGRESS_PROCESSED = None
 
-SHOW_DEBUG_MESSAGES = True
-def debug_print(*strs):
-    if SHOW_DEBUG_MESSAGES: print(*strs)
-
-def log(*strs):
-    logger.logInfo("bulk-bill", " ".join(str(item) for item in strs))
-    if SHOW_DEBUG_MESSAGES: print(*strs)
-
-def logError(*strs):
-    logger.logError("bulk-bill", " ".join(str(item) for item in strs))
-    if SHOW_DEBUG_MESSAGES: print("ERR:", *strs)
-
 def fetchLastCongress():
     global LAST_CONGRESS_PROCESSED
 
@@ -75,7 +63,7 @@ def downloadBillZip(url):
     congress = determineCongressNumberfromPath(url)
     path = BILLS_DIR+str(congress)+".zip"
     util.downloadZipFile(url, path)
-    log("Saved bulk bill data for congress", congress, "to", path)
+    logger.logInfo("Saved bulk bill data for congress", congress, "to", path)
 
 def getBillZipUrls():
     soup = util.getHtmlSoup(PROPUBLICA_BULK_BILLS_URL)
@@ -84,7 +72,7 @@ def getBillZipUrls():
 
 def downloadNeededBillZips():
     urls = [url for url in getBillZipUrls() if determineCongressNumberfromPath(url) >= LAST_CONGRESS_PROCESSED]
-    log("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
+    logger.logInfo("started downloading", len(urls), "Zip file{}".format("s" if len(urls) != 1 else ""))
 
     zjthreads.runThreads(downloadBillZip, urls)
 
@@ -108,7 +96,7 @@ def deleteBills(congress=None):
     startDelete = datetime.now()
     toDeleteFrom = ["Bills", "BillSubjects", "BillTitles", "BillCoSponsors"]
     db.deleteRowsFromTables(toDeleteFrom, "congress", congress)
-    log("Took", util.seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
+    logger.logInfo("Took", util.seconds_since(startDelete), "seconds to drop", toDeleteFrom, "for congress", congress)
 
 chunkSize = 250
 def getAllInsertThreads(bills):
@@ -123,13 +111,13 @@ def insertBills(bills):
     threads = getAllInsertThreads(bills)
 
     if singleThreadInsert:
-        log("Starting insert of",len(bills),"bill data objects sequentially.")
+        logger.logInfo("Starting insert of",len(bills),"bill data objects sequentially.")
         for thread in threads: zjthreads.startThenJoinThreads([thread])
     else:
-        log("Starting",len(threads),"threads to insert",len(bills),"bill data objects in chunks.")
+        logger.logInfo("Starting",len(threads),"threads to insert",len(bills),"bill data objects.")
         zjthreads.startThenJoinThreads(threads)
            
-    log("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files")
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files")
 
 def parseAndInsertBills(zipFile):
     congress = determineCongressNumberfromPath(zipFile)
@@ -140,7 +128,7 @@ def parseAndInsertBills(zipFile):
 
     startRead = datetime.now()
     bills = bparse.parseBills(zipFile)
-    print("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
+    logger.logInfo("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
     zjthreads.joinThreads([deleteThread])
 
     insertBills(bills)
@@ -163,17 +151,15 @@ def readBillZipFiles():
     #if zipFile.find("93") >= 0:
     #    readBillZip(zipFile)
 
-def stopWithError(error):
-    logError(error)
-    updateRunningStatus(False)
-
 def doSetup():
+    #Set the log action
+    logger.setLogAction("bulk-bill")
+
     #Make sure the DB schema is valid first
-    if db.schemaIsValid(): log("Confirmed DB Schema is valid via the API.")
-    else: raise Exception("Could not validate the DB schema via API. Exiting.")
+    db.throwIfShemaInvalid()
     
     #Fetch the ThomasID => BioguideId mapping
-    if bparse.fetchMemberMapping(): log("Found {} thomas_id -> bioguide_id mappings via the API".format(len(bparse.MEMBERS_MAPPING)))
+    if bparse.fetchMemberMapping(): logger.logInfo("Found {} thomas_id -> bioguide_id mappings via the API".format(len(bparse.MEMBERS_MAPPING)))
     else: raise Exception("Could not fetch thomas_id -> bioguide_id mapping from API")
 
 #~2800s to run with 16MB cache (With Truncate)
@@ -185,7 +171,7 @@ def doBulkBillPull():
     else: raise Exception("Tried running script when it is already running! Exiting.")
 
     #State where the process is starting, based off the database
-    log("Starting fetch, parse, and insert at congress", fetchLastCongress())
+    logger.logInfo("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
     #If the cache exists, ensure old data is deleted (based on CacheStatus table)
     if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
@@ -193,7 +179,7 @@ def doBulkBillPull():
     #Then rebuild the needed cache items
     startDownload = datetime.now()
     count = downloadNeededBillZips()
-    log("Took", util.seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
+    logger.logInfo("Took", util.seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
 
     #Track how long it takes to parse and insert the bills
     startInsert = datetime.now()
@@ -207,14 +193,10 @@ def doBulkBillPull():
     cosponCount = db.countRows("BillCoSponsors")
 
     #Final log of what happened
-    log("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+    logger.logInfo("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
-    #Mark this script as done running in the database
-    updateRunningStatus(False)
+def main():
+    doSetup()
+    doBulkBillPull()
 
-if __name__ == "__main__":   
-    try:
-        doSetup()
-        doBulkBillPull()
-    except KeyboardInterrupt: stopWithError("Manually ended script via ctrl+c")
-    except Exception as e: stopWithError("Stopped with Exception: {}".format(e))
+if __name__ == "__main__": util.runAndCatchMain(main, updateRunningStatus, False)

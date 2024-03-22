@@ -27,6 +27,8 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+
+
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
     
@@ -221,6 +223,8 @@ def parseBillDataJson(fileData):
 
     return billData
 
+
+
 def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)
     else: return "{}{}-{}-{}".format(typ, number, congress, index)
@@ -249,6 +253,8 @@ def getCoSponsorRows(cosponsors, t, n, c):
         cospons.append((cid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
         i += 1
     return cospons
+
+
 
 def getInsertThreads(bills):
     billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]

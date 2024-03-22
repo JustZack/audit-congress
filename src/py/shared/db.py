@@ -5,7 +5,7 @@ import mysql.connector
 import sys, os
 sys.path.append(os.path.abspath("../"))
 
-from shared import util, zjthreads
+from shared import util, zjthreads, logger
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
 
@@ -99,3 +99,8 @@ def countRows(tableName, whereCol=None, whereVal=None):
     return count
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
+
+def throwIfShemaInvalid():
+    #Make sure the DB schema is valid first
+    if schemaIsValid(): logger.logInfo("Confirmed DB Schema is valid via the API.")
+    else: raise Exception("Could not validate the DB schema via API. Exiting.")

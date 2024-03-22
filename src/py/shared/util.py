@@ -5,6 +5,7 @@ import requests as rq
 from bs4 import BeautifulSoup
 import xmltodict as xml2d
 
+from shared import logger
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
@@ -63,3 +64,13 @@ def pathIsFile(path):
     lastSlash = path.rfind("/") + 1
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
+
+def runAndCatchMain(mainFunction, finallyFunction, *finallyArguments):
+    try:
+        mainFunction()
+    except KeyboardInterrupt: 
+        logger.logError("Manually ended script via ctrl+c")
+    except Exception as e: 
+        logger.logError("Stopped with Exception: {}".format(e))
+    finally:
+        finallyFunction(*finallyArguments)
