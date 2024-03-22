@@ -150,8 +150,6 @@ fullMultiThreading, threadPooling, poolSize = False, False, 2
 def readBillZipFiles():
     zips = getCachedZipFilePaths()
 
-    log("Started parsing", len(zips), "Zip file{}".format("s" if len(zips) != 1 else ""))
-
     #Up to 26 Threads Slows everything down
     if fullMultiThreading: threads = zjthreads.runThreads(parseAndInsertBills, zips)
     #Between 2 and 4 threads speeds things up slightly compared to sequential
@@ -178,14 +176,14 @@ def doSetup():
     if bparse.fetchMemberMapping(): log("Found {} thomas_id -> bioguide_id mappings via the API".format(len(bparse.MEMBERS_MAPPING)))
     else: raise Exception("Could not fetch thomas_id -> bioguide_id mapping from API")
 
-    #Make sure the script isnt already running according to the DB
-    if not scriptAlreadyRunning(): updateRunningStatus(True)
-    else: raise Exception("Tried running script when it is already running! Exiting.")
-
 #~2800s to run with 16MB cache (With Truncate)
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
+    #Make sure the script isnt already running according to the DB
+    if not scriptAlreadyRunning(): updateRunningStatus(True)
+    else: raise Exception("Tried running script when it is already running! Exiting.")
+
     #State where the process is starting, based off the database
     log("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
@@ -219,4 +217,4 @@ if __name__ == "__main__":
         doSetup()
         doBulkBillPull()
     except KeyboardInterrupt: stopWithError("Manually ended script via ctrl+c")
-    #except Exception as e: stopWithError("Stopped with Exception: {}".format(e))
+    except Exception as e: stopWithError("Stopped with Exception: {}".format(e))

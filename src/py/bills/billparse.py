@@ -27,16 +27,6 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
-
-def getKeyIfSet(dictionary, defaultValue, *keys):
-    item = dictionary
-    if item is not None:
-        for key in keys:
-            if key in item: item = item[key]
-            if item is None: break
-            
-    return defaultValue
-
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
     
@@ -235,7 +225,7 @@ def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)
     else: return "{}{}-{}-{}".format(typ, number, congress, index)
 
-def getSubjects(subjects, t, n, c):
+def getSubjectRows(subjects, t, n, c):
     i, subjs = 0, []
     for subject in subjects: 
         sid = getBillObjectId(t, n, c, i)
@@ -243,7 +233,7 @@ def getSubjects(subjects, t, n, c):
         i += 1
     return subjs
 
-def getTitles(titles, t, n, c):
+def getTitleRows(titles, t, n, c):
     i, ttls = 0, []
     for title in titles: 
         tid = getBillObjectId(t, n, c, i)
@@ -252,7 +242,7 @@ def getTitles(titles, t, n, c):
         i += 1
     return ttls
 
-def getCoSponsors(cosponsors, t, n, c):
+def getCoSponsorRows(cosponsors, t, n, c):
     i, cospons = 0, []
     for cosponsor in cosponsors:
         cid = getBillObjectId(t, n, c, i)
@@ -270,9 +260,9 @@ def getInsertThreads(bills):
         bId = getBillObjectId(*tnc)
         
         billData.append((bId, *tnc, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
-        subjectData.extend(getSubjects(parsedBill["subjects"], *tnc))
-        titleData.extend(getTitles(parsedBill["titles"], *tnc))
-        cosponData.extend(getCoSponsors(parsedBill["cosponsors"], *tnc))
+        subjectData.extend(getSubjectRows(parsedBill["subjects"], *tnc))
+        titleData.extend(getTitleRows(parsedBill["titles"], *tnc))
+        cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tnc))
 
     threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billData))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, subjectData))
@@ -325,5 +315,6 @@ def readZippedFiles(zipFile):
     return bills
 
 def parseBills(zipFile):
-    with ZipFile(zipFile, 'r') as zipped: bills = readZippedFiles(zipped)
+    with ZipFile(zipFile, 'r') as zipped: 
+        bills = readZippedFiles(zipped)
     return bills
