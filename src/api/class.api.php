@@ -3,6 +3,7 @@
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
 
+
 class API {
     /*
         Generic API functions to complete the response
@@ -208,6 +209,27 @@ class API {
             }
         } else {
             API::NotFound("fullMember/$member");
+        }
+    }
+
+    public static function HandleBioguideToThomasMapping() {
+        try {
+            $data = \AuditCongress\Members::getBioguideToThomasIdMapping();
+            $mapping = array("mapping" => $data);
+            API::Success($mapping);
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
+
+    public static function HandleValidateSchema() {
+        try {
+            $enforcer = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
+            $enforcer->enforceSchema();
+            $operations = $enforcer::getDBOperationsList();
+            API::Success(array("valid" => true, "operations" => $operations));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
         }
     }
 }

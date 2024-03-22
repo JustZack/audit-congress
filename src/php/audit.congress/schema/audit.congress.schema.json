@@ -3,6 +3,30 @@
     "version": ".2",
     "tables": 
         [
+
+            {
+                "name": "log",
+                "columns": {
+                    "id": { "type": "INT", "null": "NO", "primary": true, "extra": "auto_increment"},
+                    "level": { "type": "VARCHAR(50)", "null": "NO" },
+                    "language": { "type": "VARCHAR(50)", "null": "NO" },
+                    "action": { "type": "VARCHAR(50)", "null": "NO" },
+                    "message": { "type": "VARCHAR(10000)", "null": "NO" },
+                    "time": { "type": "DATETIME", "null": "NO" }
+                }
+            },
+            {
+                "name": "CacheStatus",
+                "columns": {
+                    "source": { "type": "VARCHAR(50)", "null": "NO", "primary": true},
+                    "status": { "type": "VARCHAR(50)", "null": "YES" },
+                    "isRunning": { "type": "TINYINT(1)", "null": "NO" }
+                }
+            },
+
+
+
+
             {
                 "name": "Members",
                 "columns": {
@@ -27,8 +51,8 @@
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
                     "isCurrent": { "type": "TINYINT(1)", "null": "NO" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -37,8 +61,8 @@
                     "fecId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
                     
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -54,8 +78,8 @@
                     "instagram": { "type": "VARCHAR(250)", "null": "YES" },
                     "instagramId": { "type": "VARCHAR(250)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -67,7 +91,7 @@
                     "end": { "type": "DATE", "null": "YES" },
                     
                     "state": { "type": "VARCHAR(50)", "null": "YES" },
-                    "district": { "type": "INT(11)", "null": "YES" },
+                    "district": { "type": "INT", "null": "YES" },
                     "party": { "type": "VARCHAR(100)", "null": "YES" },
                     "class": { "type": "VARCHAR(100)", "null": "YES" },
                     "how": { "type": "VARCHAR(250)", "null": "YES" },
@@ -80,8 +104,8 @@
                     "office": { "type": "VARCHAR(100)", "null": "YES" },
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
                 }
             },
             {
@@ -103,8 +127,114 @@
                     "phone": { "type": "VARCHAR(25)", "null": "YES" },
                     "fax": { "type": "VARCHAR(25)", "null": "YES" },
 
-                    "lastUpdate":  { "type": "INT(11)", "null": "YES" },
-                    "nextUpdate":  { "type": "INT(11)", "null": "YES" }
+                    "lastUpdate":  { "type": "INT", "null": "YES" },
+                    "nextUpdate":  { "type": "INT", "null": "YES" }
+                }
+            },
+
+
+
+            {
+                "name": "Bills",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
+
+                    "title": { "type": "VARCHAR(500)", "null": "YES" },
+                    
+                    "introduced": { "type": "VARCHAR(50)", "null": "NO" },
+                    "updated": { "type": "VARCHAR(50)", "null": "NO" }
+                }
+            },
+            {
+                "name": "BillSubjects",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "subjectIndex": { "type": "INT", "null": "NO" },
+
+                    "subject": { "type": "VARCHAR(250)", "null": "NO" }
+                }
+            },
+            {
+                "name": "BillTitles",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "titleIndex": { "type": "INT", "null": "NO" },
+
+                    "title": { "type": "VARCHAR(500)", "null": "NO" },
+                    "titleAs": { "type": "VARCHAR(250)", "null": "YES" },
+                    "titleType": { "type": "VARCHAR(250)", "null": "YES" },
+                    "isForPortion": { "type": "VARCHAR(250)", "null": "YES" }
+                }
+            },            
+            {
+                "name": "BillCoSponsors",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
+                    "sponsoredAt": { "type": "DATE", "null": "NO" },
+                    "withdrawnAt": { "type": "DATE", "null": "NO" },
+
+                    "isOriginal": { "type": "TINYINT(1)", "null": "NO" }
+                }
+            },
+
+
+
+
+
+
+
+
+            {
+                "name": "BillActions",
+                "columns": {
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "index": { "type": "INT", "null": "NO" },
+
+                    "actionType": { "type": "VARCHAR(250)", "null": "NO" },
+                    "actionCode": { "type": "DATE", "null": "YES" },
+                    
+                    "text": { "type": "VARCHAR(250)", "null": "YES" },
+                    "how": { "type": "VARCHAR(250)", "null": "YES" },
+
+                    "acted": { "type": "DATE", "null": "NO" }
+                }
+            },
+            {
+                "name": "BillActionRefrences",
+                "columns": {
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+
+                    "index": { "type": "INT", "null": "NO" },
+
+                    "refrence": { "type": "VARCHAR(250)", "null": "YES" },
+                    "refrenceType": { "type": "VARCHAR(250)", "null": "YES" }
                 }
             }
         ]
