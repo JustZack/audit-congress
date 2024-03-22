@@ -5,7 +5,7 @@ import requests as rq
 from bs4 import BeautifulSoup
 import xmltodict as xml2d
 
-from shared import logger
+from shared import logger, db
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
@@ -65,12 +65,32 @@ def pathIsFile(path):
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
 
-def runAndCatchMain(mainFunction, finallyFunction, *finallyArguments):
-    try:
+def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments):
+        logger.logError(exceptionMessage)
+        if onExceptFunction is not None: onExceptFunction(*onExceptArguments)
+
+def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
+    try:                      
         mainFunction()
     except KeyboardInterrupt: 
-        logger.logError("Manually ended script via ctrl+c")
-    except Exception as e: 
-        logger.logError("Stopped with Exception: {}".format(e))
-    finally:
-        finallyFunction(*finallyArguments)
+        logExceptionThen("Manually ended script via ctrl+c", onExceptFunction, *onExceptArguments)
+    except Exception as e:    
+        logExceptionThen("Stopped with Exception: {}".format(e), onExceptFunction, *onExceptArguments)
+
+def isScriptRunning(scriptName):
+    sql = "SELECT isRunning FROM CacheStatus where source = '{}'".format(scriptName)
+    result = db.runReturningSql(sql)
+    if (len(result) == 1): return bool(result[0])
+    elif (len(result) == 0):
+        sql = "INSERT INTO CacheStatus (source, status, isRunning) VALUES ('{}', 0, 0)".format(scriptName)
+        result = db.runCommitingSql(sql)
+        return False
+    return False
+
+def throwIfScriptAlreadyRunning(scriptName):
+    #Make sure the script isnt already running according to the DB
+    if isScriptRunning(scriptName): raise Exception("Tried running script '{}' when it is already running! Exiting.".format(scriptName))
+
+def updateScriptRunningStatus(scriptName, isRunning):
+    sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = '{}'".format(isRunning, scriptName)
+    db.runCommitingSql(sql)

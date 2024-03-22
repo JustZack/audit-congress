@@ -8,43 +8,36 @@ sys.path.append(os.path.abspath("../"))
 
 from shared import logger, db, zjthreads, util
 
-def stopWithError(error):
-    logger.logError(error)
-    updateRunningStatus(False)
+SCRIPT_NAME = "bulk-member"
 
+BASE_URL = "https://theunitedstates.io/congress-legislators/"
 
-def scriptAlreadyRunning():
-    sql = "SELECT isRunning FROM CacheStatus where source = 'bulk-member'"
-    result = db.runReturningSql(sql)
-    if (len(result) == 1): return bool(result[0])
-    elif (len(result) == 0):
-        sql = "INSERT INTO CacheStatus (source, status, isRunning) VALUES ('bulk-member', 'n/a', 1)"
-        result = db.runCommitingSql(sql)
-        return False
-    return False
-
-def updateRunningStatus(isRunning):
-    sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = 'bulk-member'".format(isRunning)
-    db.runCommitingSql(sql)
-
+CURRENT_LEGISLATORS_URL = "{}legislators-current.json".format(BASE_URL)
+HISTORICAL_LEGISLATORS_URL = "{}legislators-historical.json".format(BASE_URL)
+LEGISLATORS_SOCIALS_URL = "{}legislators-social-media.json".format(BASE_URL)
+LEGISLATORS_OFFICES_URL = "{}legislators-district-offices.json".format(BASE_URL)
+PRESIDENTS_URL = "{}executive.json".format(BASE_URL)
+CURRENT_COMMITTEES_URL = "{}committees-current.json".format(BASE_URL)
+CURRENT_COMMITTEE_LEGISLATORS_URL = "{}committee-membership-current.json".format(BASE_URL)
+HISTORICAL_COMMITTEES_URL = "{}committees-historical.json".format(BASE_URL)
 
 
 def doSetup():
-    logger.setLogAction("bulk-member")
+    logger.setLogAction(SCRIPT_NAME)
 
     #Make sure the DB schema is valid first
     db.throwIfShemaInvalid()
 
-#~2800s to run with 16MB cache (With Truncate)
-#~1550s to run with 2048MB cache (With Truncate)
-#~1500s to run with 4096MB cache (With Truncate)
 def doBulkMemberPull():
-    #Make sure the script isnt already running according to the DB
-    if not scriptAlreadyRunning(): updateRunningStatus(True)
-    else: raise Exception("Tried running script when it is already running! Exiting.")
+    return
 
 def main():
     doSetup()
-    doBulkMemberPull()
 
-if __name__ == "__main__": util.runAndCatchMain(main, updateRunningStatus, False)
+    util.throwIfScriptAlreadyRunning(SCRIPT_NAME)
+
+    util.updateScriptRunningStatus(SCRIPT_NAME, True)
+    doBulkMemberPull()
+    util.updateScriptRunningStatus(SCRIPT_NAME, False)
+
+if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)

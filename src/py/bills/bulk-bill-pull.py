@@ -9,6 +9,8 @@ sys.path.append(os.path.abspath("../"))
 from shared import logger, db, zjthreads, util
 from bills import billparse as bparse
 
+SCRIPT_NAME = "bulk-bill"
+
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
@@ -28,24 +30,10 @@ def fetchLastCongress():
         LAST_CONGRESS_PROCESSED = 93
     return LAST_CONGRESS_PROCESSED
 
-def scriptAlreadyRunning():
-    sql = "SELECT isRunning FROM CacheStatus where source = 'bulk-bill'"
-    result = db.runReturningSql(sql)
-    if (len(result) == 1): return bool(result[0])
-    elif (len(result) == 0):
-        sql = "INSERT INTO CacheStatus (source, status, isRunning) VALUES ('bulk-bill', 93, 1)"
-        result = db.runCommitingSql(sql)
-        return False
-    return False
-
 def updateStartingCongress(startingCongress):
     global LAST_CONGRESS_PROCESSED
     LAST_CONGRESS_PROCESSED = startingCongress
     sql = "UPDATE CacheStatus SET status = {} WHERE source = 'bulk-bill'".format(startingCongress)
-    db.runCommitingSql(sql)
-
-def updateRunningStatus(isRunning):
-    sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = 'bulk-bill'".format(isRunning)
     db.runCommitingSql(sql)
 
 
@@ -153,7 +141,7 @@ def readBillZipFiles():
 
 def doSetup():
     #Set the log action
-    logger.setLogAction("bulk-bill")
+    logger.setLogAction(SCRIPT_NAME)
 
     #Make sure the DB schema is valid first
     db.throwIfShemaInvalid()
@@ -166,10 +154,6 @@ def doSetup():
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
-    #Make sure the script isnt already running according to the DB
-    if not scriptAlreadyRunning(): updateRunningStatus(True)
-    else: raise Exception("Tried running script when it is already running! Exiting.")
-
     #State where the process is starting, based off the database
     logger.logInfo("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
@@ -197,6 +181,11 @@ def doBulkBillPull():
 
 def main():
     doSetup()
-    doBulkBillPull()
 
-if __name__ == "__main__": util.runAndCatchMain(main, updateRunningStatus, False)
+    util.throwIfScriptAlreadyRunning(SCRIPT_NAME)
+
+    util.updateScriptRunningStatus(SCRIPT_NAME, True)
+    doBulkBillPull()
+    util.updateScriptRunningStatus(SCRIPT_NAME, False)
+
+if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)
