@@ -30,11 +30,10 @@ TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "part
                 "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone",
                 "lastUpdate", "nextUpdate"]
 ELECTION_COLUMNS = ["fecId", "bioguideId", "lastUpdate", "nextUpdate"]
-
+SOCIAL_COLUMNS = []
+OFFICES_COLUMNS = []
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
-
-def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
 
 def appendMemberUpdateTimes(row):
     now = time.time()
@@ -42,27 +41,29 @@ def appendMemberUpdateTimes(row):
     row.append(now + (60*60*24*7))
     return row
 
+
+
 def getMemberRow(member, isCurrent):
     mRow = []
     mId, mName, mBio = member["id"], member["name"], member["bio"]
     mRow.append(mId["bioguide"])
-    mRow.append(getFieldIfExists(mId, "thomas"))
-    mRow.append(getFieldIfExists(mId, "lis"))
-    mRow.append(getFieldIfExists(mId, "govtrack"))
-    mRow.append(getFieldIfExists(mId, "opensecrets"))
-    mRow.append(getFieldIfExists(mId, "votesmart"))
-    mRow.append(getFieldIfExists(mId, "cspan"))
-    mRow.append(getFieldIfExists(mId, "maplight"))
-    mRow.append(getFieldIfExists(mId, "icpsr"))
-    mRow.append(getFieldIfExists(mId, "wikidata"))
-    mRow.append(getFieldIfExists(mId, "google_entity_id"))
+    mRow.append(util.getFieldIfExists(mId, "thomas"))
+    mRow.append(util.getFieldIfExists(mId, "lis"))
+    mRow.append(util.getFieldIfExists(mId, "govtrack"))
+    mRow.append(util.getFieldIfExists(mId, "opensecrets"))
+    mRow.append(util.getFieldIfExists(mId, "votesmart"))
+    mRow.append(util.getFieldIfExists(mId, "cspan"))
+    mRow.append(util.getFieldIfExists(mId, "maplight"))
+    mRow.append(util.getFieldIfExists(mId, "icpsr"))
+    mRow.append(util.getFieldIfExists(mId, "wikidata"))
+    mRow.append(util.getFieldIfExists(mId, "google_entity_id"))
 
-    mRow.append(getFieldIfExists(mName, "official_full"))
-    mRow.append(getFieldIfExists(mName, "first"))
-    mRow.append(getFieldIfExists(mName, "last"))
+    mRow.append(util.getFieldIfExists(mName, "official_full"))
+    mRow.append(util.getFieldIfExists(mName, "first"))
+    mRow.append(util.getFieldIfExists(mName, "last"))
 
-    mRow.append(getFieldIfExists(mBio, "gender"))
-    mRow.append(getFieldIfExists(mBio, "birthday"))
+    mRow.append(util.getFieldIfExists(mBio, "gender"))
+    mRow.append(util.getFieldIfExists(mBio, "birthday"))
 
     mRow.append(isCurrent)
     
@@ -73,21 +74,21 @@ def getTermRows(terms, bioguideId):
     for term in terms:
         mTerm = []
         mTerm.append(bioguideId)
-        mTerm.append(getFieldIfExists(term, "type"))
-        mTerm.append(getFieldIfExists(term, "start"))
-        mTerm.append(getFieldIfExists(term, "end"))
-        mTerm.append(getFieldIfExists(term, "state"))
-        mTerm.append(getFieldIfExists(term, "district"))
-        mTerm.append(getFieldIfExists(term, "party"))
-        mTerm.append(getFieldIfExists(term, "class"))
-        mTerm.append(getFieldIfExists(term, "how"))
-        mTerm.append(getFieldIfExists(term, "state_rank"))
-        mTerm.append(getFieldIfExists(term, "url"))
-        mTerm.append(getFieldIfExists(term, "rss_url"))
-        mTerm.append(getFieldIfExists(term, "contact_form"))
-        mTerm.append(getFieldIfExists(term, "address"))
-        mTerm.append(getFieldIfExists(term, "office"))
-        mTerm.append(getFieldIfExists(term, "phone"))
+        mTerm.append(util.getFieldIfExists(term, "type"))
+        mTerm.append(util.getFieldIfExists(term, "start"))
+        mTerm.append(util.getFieldIfExists(term, "end"))
+        mTerm.append(util.getFieldIfExists(term, "state"))
+        mTerm.append(util.getFieldIfExists(term, "district"))
+        mTerm.append(util.getFieldIfExists(term, "party"))
+        mTerm.append(util.getFieldIfExists(term, "class"))
+        mTerm.append(util.getFieldIfExists(term, "how"))
+        mTerm.append(util.getFieldIfExists(term, "state_rank"))
+        mTerm.append(util.getFieldIfExists(term, "url"))
+        mTerm.append(util.getFieldIfExists(term, "rss_url"))
+        mTerm.append(util.getFieldIfExists(term, "contact_form"))
+        mTerm.append(util.getFieldIfExists(term, "address"))
+        mTerm.append(util.getFieldIfExists(term, "office"))
+        mTerm.append(util.getFieldIfExists(term, "phone"))
 
         mTerms.append(appendMemberUpdateTimes(mTerm))
     return mTerms
@@ -100,6 +101,8 @@ def getElectionRows(elections, bioguideId):
         mElection.append(bioguideId)
         mElections.append(appendMemberUpdateTimes(mElection))
     return mElections
+
+
 
 def getMemberInsertThreads(members, isCurrent):
     threads = []
@@ -117,13 +120,11 @@ def getMemberInsertThreads(members, isCurrent):
     
     return threads
 
-
 def getChunkedMemberInsertThreads(chunkedMembers, isCurrent):
     threads = []
     for chunk in range(len(chunkedMembers)): 
         threads.extend(getMemberInsertThreads(chunkedMembers[chunk], isCurrent))
     return threads
-
 
 def parseAndInsertMembers(members, isCurrent):
     startInsert, threads, memCount = datetime.now(), [], len(members)
@@ -134,23 +135,19 @@ def parseAndInsertMembers(members, isCurrent):
     logger.logInfo("Starting insert of", memCount, "members and their sub data with", len(threads), "threads.")
     zjthreads.startThenJoinThreads(threads)
     logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", memCount, "members.")
-    
-def doCurrentMemberInsert():
-    current = util.getParsedJson(CURRENT_LEGISLATORS_URL)
-    parseAndInsertMembers(current, True)
 
-def doHistoricalMemberInsert():
-    historical = util.getParsedJson(HISTORICAL_LEGISLATORS_URL)
-    parseAndInsertMembers(historical, False)
+
+
+def doMemberInsertGroup(isCurrent):
+    url = CURRENT_LEGISLATORS_URL if isCurrent else HISTORICAL_LEGISLATORS_URL
+    members = util.getParsedJson(url)
+    parseAndInsertMembers(members, isCurrent)
 
 def doMemberInsert():
-    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections"])
-    threads = []
-    
-    threads.append(zjthreads.buildThread(doCurrentMemberInsert))
-    threads.append(zjthreads.buildThread(doHistoricalMemberInsert))
-    
-    zjthreads.startThenJoinThreads(threads)
+    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections", "MemberSocials", "MemberOffices"])
+    zjthreads.runThreads(doMemberInsertGroup, [True, False])
+
+
 
 def doSetup(): util.genericBulkScriptSetup(SCRIPT_NAME)
 
@@ -160,13 +157,6 @@ def doBulkMemberPull():
     threads.append(zjthreads.buildThread(doMemberInsert))
 
     zjthreads.startThenJoinThreads(threads)
-    #mems = util.getParsedJson(LEGISLATORS_SOCIALS_URL)
-    #memo = util.getParsedJson(LEGISLATORS_OFFICES_URL)
-    #print("found", len(memc))
-    #print("found", len(memh))
-    #print("found", len(mems))
-    #print("found", len(memo))
-    return
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull, SCRIPT_NAME)
 

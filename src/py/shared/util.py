@@ -7,6 +7,9 @@ import xmltodict as xml2d
 
 from shared import logger, db
 
+def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
+
+
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
 def countFiles(inDir):
