@@ -19,8 +19,8 @@ LEGISLATORS_SOCIALS_URL = "{}legislators-social-media.json".format(BASE_URL)
 LEGISLATORS_OFFICES_URL = "{}legislators-district-offices.json".format(BASE_URL)
 
 CURRENT_COMMITTEES_URL = "{}committees-current.json".format(BASE_URL)
-CURRENT_COMMITTEE_LEGISLATORS_URL = "{}committee-membership-current.json".format(BASE_URL)
 HISTORICAL_COMMITTEES_URL = "{}committees-historical.json".format(BASE_URL)
+CURRENT_COMMITTEE_LEGISLATORS_URL = "{}committee-membership-current.json".format(BASE_URL)
 
 MEMBER_COLUMNS = ["bioguideId", "thomasId", "lisId", "govTrackId", "openSecretsId", "voteSmartId",
                   "cspanId", "mapLightId", "icpsrId", "wikidataId", "googleEntityId",
@@ -30,6 +30,8 @@ TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "part
                 "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone",
                 "lastUpdate", "nextUpdate"]
 ELECTION_COLUMNS = ["fecId", "bioguideId", "lastUpdate", "nextUpdate"]
+
+MEMBER_CHUNK_SIZE = 1000
 
 def getFieldIfExists(theDict, theField):
     return theDict[theField] if theField in theDict else ""
@@ -122,24 +124,29 @@ def getChunkedMemberInsertThreads(chunkedMembers, isCurrent):
         threads.extend(getMemberInsertThreads(chunkedMembers[chunk], isCurrent))
     return threads
 
-chunkSize = 1000
-def parseAndInsertMembers():
-    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections"])
 
-    current = util.getParsedJson(CURRENT_LEGISLATORS_URL)
-    historical = util.getParsedJson(HISTORICAL_LEGISLATORS_URL)
+def parseAndInsertMembers(members, isCurrent):
+    startInsert, threads, memCount = datetime.now(), [], len(members)
 
-    chunkedCurrent = util.chunkList(current, chunkSize)
-    chunkedHistorical = util.chunkList(historical, chunkSize)
-    startInsert = datetime.now()
+    chunkedMembers = util.chunkList(members, MEMBER_CHUNK_SIZE)
+    threads.extend(getChunkedMemberInsertThreads(chunkedMembers, isCurrent))
 
-    threads = []
-    threads.extend(getChunkedMemberInsertThreads(chunkedCurrent, True))
-    threads.extend(getChunkedMemberInsertThreads(chunkedHistorical, False))
-
+    logger.logInfo("Starting insert of", memCount, "members and their sub data with", len(threads), "threads.")
     zjthreads.startThenJoinThreads(threads)
-    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", len(current)+len(historical), "members.")
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", memCount, "members.")
     
+def doCurrentMemberInsert():
+    current = util.getParsedJson(CURRENT_LEGISLATORS_URL)
+    parseAndInsertMembers(current, True)
+
+def doHistoricalMemberInsert():
+    historical = util.getParsedJson(HISTORICAL_LEGISLATORS_URL)
+    parseAndInsertMembers(historical, False)
+
+def doMemberInsert():
+    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections"])
+    doCurrentMemberInsert()
+    doHistoricalMemberInsert()
 
 def doSetup():
     logger.setLogAction(SCRIPT_NAME)
@@ -148,7 +155,7 @@ def doSetup():
     db.throwIfShemaInvalid()
 
 def doBulkMemberPull():
-    parseAndInsertMembers()
+    doMemberInsert()
     #mems = util.getParsedJson(LEGISLATORS_SOCIALS_URL)
     #memo = util.getParsedJson(LEGISLATORS_OFFICES_URL)
     #print("found", len(memc))
