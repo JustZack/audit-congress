@@ -31,10 +31,10 @@ TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "part
                 "lastUpdate", "nextUpdate"]
 ELECTION_COLUMNS = ["fecId", "bioguideId", "lastUpdate", "nextUpdate"]
 
+#Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
 
-def getFieldIfExists(theDict, theField):
-    return theDict[theField] if theField in theDict else ""
+def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
 
 def appendMemberUpdateTimes(row):
     now = time.time()
@@ -145,17 +145,21 @@ def doHistoricalMemberInsert():
 
 def doMemberInsert():
     db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections"])
-    doCurrentMemberInsert()
-    doHistoricalMemberInsert()
+    threads = []
+    
+    threads.append(zjthreads.buildThread(doCurrentMemberInsert))
+    threads.append(zjthreads.buildThread(doHistoricalMemberInsert))
+    
+    zjthreads.startThenJoinThreads(threads)
 
-def doSetup():
-    logger.setLogAction(SCRIPT_NAME)
-
-    #Make sure the DB schema is valid first
-    db.throwIfShemaInvalid()
+def doSetup(): util.genericBulkScriptSetup(SCRIPT_NAME)
 
 def doBulkMemberPull():
-    doMemberInsert()
+    threads = []
+
+    threads.append(zjthreads.buildThread(doMemberInsert))
+
+    zjthreads.startThenJoinThreads(threads)
     #mems = util.getParsedJson(LEGISLATORS_SOCIALS_URL)
     #memo = util.getParsedJson(LEGISLATORS_OFFICES_URL)
     #print("found", len(memc))
@@ -164,13 +168,6 @@ def doBulkMemberPull():
     #print("found", len(memo))
     return
 
-def main():
-    doSetup()
-
-    util.throwIfScriptAlreadyRunning(SCRIPT_NAME)
-
-    util.updateScriptRunningStatus(SCRIPT_NAME, True)
-    doBulkMemberPull()
-    util.updateScriptRunningStatus(SCRIPT_NAME, False)
+def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull, SCRIPT_NAME)
 
 if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)

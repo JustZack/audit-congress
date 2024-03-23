@@ -140,11 +140,7 @@ def readBillZipFiles():
     #    readBillZip(zipFile)
 
 def doSetup():
-    #Set the log action
-    logger.setLogAction(SCRIPT_NAME)
-
-    #Make sure the DB schema is valid first
-    db.throwIfShemaInvalid()
+    util.genericBulkScriptSetup(SCRIPT_NAME)
     
     #Fetch the ThomasID => BioguideId mapping
     if bparse.fetchMemberMapping(): logger.logInfo("Found {} thomas_id -> bioguide_id mappings via the API".format(len(bparse.MEMBERS_MAPPING)))
@@ -179,13 +175,6 @@ def doBulkBillPull():
     #Final log of what happened
     logger.logInfo("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
-def main():
-    doSetup()
-
-    util.throwIfScriptAlreadyRunning(SCRIPT_NAME)
-
-    util.updateScriptRunningStatus(SCRIPT_NAME, True)
-    doBulkBillPull()
-    util.updateScriptRunningStatus(SCRIPT_NAME, False)
+def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull, SCRIPT_NAME)
 
 if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)

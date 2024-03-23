@@ -77,6 +77,7 @@ def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
     except Exception as e:    
         logExceptionThen("Stopped with Exception: {}".format(e), onExceptFunction, *onExceptArguments)
 
+
 def isScriptRunning(scriptName):
     sql = "SELECT isRunning FROM CacheStatus where source = '{}'".format(scriptName)
     result = db.runReturningSql(sql)
@@ -94,3 +95,19 @@ def throwIfScriptAlreadyRunning(scriptName):
 def updateScriptRunningStatus(scriptName, isRunning):
     sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = '{}'".format(isRunning, scriptName)
     db.runCommitingSql(sql)
+
+def genericBulkScriptSetup(scriptName):
+    #Set the log action
+    logger.setLogAction(scriptName)
+
+    #Make sure the DB schema is valid first
+    db.throwIfShemaInvalid()
+
+def genericBulkScriptMain(setupFunction, mainFunction, scriptName):
+    setupFunction()
+
+    throwIfScriptAlreadyRunning(scriptName)
+
+    updateScriptRunningStatus(scriptName, True)
+    mainFunction()
+    updateScriptRunningStatus(scriptName, False)
