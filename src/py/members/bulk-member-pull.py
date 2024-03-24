@@ -30,8 +30,11 @@ TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "part
                 "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone",
                 "lastUpdate", "nextUpdate"]
 ELECTION_COLUMNS = ["fecId", "bioguideId", "lastUpdate", "nextUpdate"]
-SOCIAL_COLUMNS = []
-OFFICES_COLUMNS = []
+SOCIAL_COLUMNS = ["bioguideId", "twitter", "twitterId", "facebook", "facebookId", "youtube", "youtubeId", 
+                  "instagram", "instagramId", "lastUpdate", "nextUpdate"]
+OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "city", "state", "zip", 
+                   "latitude", "longitude", "phone", "fax", "lastUpdate", "nextUpdate"]
+
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
 
@@ -136,27 +139,114 @@ def parseAndInsertMembers(members, isCurrent):
     zjthreads.startThenJoinThreads(threads)
     logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", memCount, "members.")
 
-
-
 def doMemberInsertGroup(isCurrent):
     url = CURRENT_LEGISLATORS_URL if isCurrent else HISTORICAL_LEGISLATORS_URL
     members = util.getParsedJson(url)
     parseAndInsertMembers(members, isCurrent)
 
 def doMemberInsert():
-    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections", "MemberSocials", "MemberOffices"])
+    db.deleteRowsFromTables(["Members", "MemberTerms", "MemberElections"])
     zjthreads.runThreads(doMemberInsertGroup, [True, False])
+
+
+
+def getSocialRow(social):
+    sRow = []
+    sId, sSocial = social["id"], social["social"]
+
+    sRow.append(sId["bioguide"])
+    sRow.append(util.getFieldIfExists(sSocial, "twitter"))
+    sRow.append(util.getFieldIfExists(sSocial, "twitter_id"))
+    sRow.append(util.getFieldIfExists(sSocial, "facebook"))
+    sRow.append(util.getFieldIfExists(sSocial, "facebook_id"))
+    sRow.append(util.getFieldIfExists(sSocial, "youtube"))
+    sRow.append(util.getFieldIfExists(sSocial, "youtube_id"))
+    sRow.append(util.getFieldIfExists(sSocial, "instagram"))
+    sRow.append(util.getFieldIfExists(sSocial, "instagram_id"))
+
+    return appendMemberUpdateTimes(sRow)
+
+def getSocialInsertThread(socials):
+    socData = []
+    for social in socials: socData.append(getSocialRow(social))
+    
+    return zjthreads.buildThread(db.insertRows, "MemberSocials", SOCIAL_COLUMNS, socData)
+
+def parseAndInsertSocials(socials):
+    startInsert, threads, socCount = datetime.now(), [], len(socials)
+
+    thread = getSocialInsertThread(socials)
+
+    logger.logInfo("Starting insert of", socCount, "socials.")
+    zjthreads.startThenJoinThreads([thread])
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", socCount, "member socials.")
+
+def doSocialsInsert():
+    db.deleteRowsFromTables(["MemberSocials"])
+    socials = util.getParsedJson(LEGISLATORS_SOCIALS_URL)
+    parseAndInsertSocials(socials)
+
+
+
+def getOfficeRows(bioguideId, offices):
+    mOffices = []
+    for office in offices:
+        mOffice = []
+
+        mOffice.append(util.getFieldIfExists(office, "id"))
+        mOffice.append(bioguideId)
+        mOffice.append(util.getFieldIfExists(office, "address"))
+        mOffice.append(util.getFieldIfExists(office, "suite"))
+        mOffice.append(util.getFieldIfExists(office, "building"))
+        mOffice.append(util.getFieldIfExists(office, "city"))
+        mOffice.append(util.getFieldIfExists(office, "state"))
+        mOffice.append(util.getFieldIfExists(office, "zip"))
+        mOffice.append(util.getFieldIfExists(office, "latitude"))
+        mOffice.append(util.getFieldIfExists(office, "longitude"))
+        mOffice.append(util.getFieldIfExists(office, "phone"))
+        mOffice.append(util.getFieldIfExists(office, "fax"))
+
+        mOffices.append(appendMemberUpdateTimes(mOffice))
+    return mOffices
+
+def getOfficeInsertThread(offices):
+    offData = []
+    for memberOffices in offices: 
+        bioguideId = memberOffices["id"]["bioguide"]
+        mOffices = memberOffices["offices"]
+        offData.extend(getOfficeRows(bioguideId, mOffices))
+
+    return zjthreads.buildThread(db.insertRows, "MemberOffices", OFFICES_COLUMNS, offData)
+
+def parseAndInsertOffices(offices):
+    startInsert, threads, offCount = datetime.now(), [], len(offices)
+
+    thread = getOfficeInsertThread(offices)
+
+    logger.logInfo("Starting insert of", offCount, "offices.")
+    zjthreads.startThenJoinThreads([thread])
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", offCount, "members offices.")
+
+def doOfficesInsert():
+    db.deleteRowsFromTables(["MemberOffices"])
+    offices = util.getParsedJson(LEGISLATORS_OFFICES_URL)
+    parseAndInsertOffices(offices)
 
 
 
 def doSetup(): util.genericBulkScriptSetup(SCRIPT_NAME)
 
 def doBulkMemberPull():
+    startPull = datetime.now()
     threads = []
 
     threads.append(zjthreads.buildThread(doMemberInsert))
+    threads.append(zjthreads.buildThread(doSocialsInsert))
+    threads.append(zjthreads.buildThread(doOfficesInsert))
 
     zjthreads.startThenJoinThreads(threads)
+
+    logger.logInfo("Took", util.seconds_since(startPull), "seconds to insert member based data.")
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull, SCRIPT_NAME)
 
