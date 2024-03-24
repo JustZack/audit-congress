@@ -44,6 +44,19 @@ def appendMemberUpdateTimes(row):
     row.append(now + (60*60*24*7))
     return row
 
+def doSingleThreadedMemberInsert(data, threadFunction, insertType):
+    startInsert, threads, count = datetime.now(), [], len(data)
+
+    logger.logInfo("Starting insert of", count, "member's {}.".format(insertType))
+    zjthreads.startThenJoinThreads([threadFunction(data)])
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", count, "member's {}.".format(insertType))
+
+def doSimpleInsert(tableName, dataSourceUrl, threadInsertFunction, insertType):
+    db.deleteRows(tableName)
+    data = util.getParsedJson(dataSourceUrl)
+    doSingleThreadedMemberInsert(data, threadInsertFunction, insertType)
+
+
 
 
 def getMemberRow(member, isCurrent):
@@ -172,19 +185,8 @@ def getSocialInsertThread(socials):
     
     return zjthreads.buildThread(db.insertRows, "MemberSocials", SOCIAL_COLUMNS, socData)
 
-def parseAndInsertSocials(socials):
-    startInsert, threads, socCount = datetime.now(), [], len(socials)
-
-    thread = getSocialInsertThread(socials)
-
-    logger.logInfo("Starting insert of", socCount, "socials.")
-    zjthreads.startThenJoinThreads([thread])
-    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", socCount, "member socials.")
-
-def doSocialsInsert():
-    db.deleteRowsFromTables(["MemberSocials"])
-    socials = util.getParsedJson(LEGISLATORS_SOCIALS_URL)
-    parseAndInsertSocials(socials)
+def doSocialsInsert(): 
+    doSimpleInsert("MemberSocials", LEGISLATORS_SOCIALS_URL, getSocialInsertThread, "socials")
 
 
 
@@ -218,19 +220,8 @@ def getOfficeInsertThread(offices):
 
     return zjthreads.buildThread(db.insertRows, "MemberOffices", OFFICES_COLUMNS, offData)
 
-def parseAndInsertOffices(offices):
-    startInsert, threads, offCount = datetime.now(), [], len(offices)
-
-    thread = getOfficeInsertThread(offices)
-
-    logger.logInfo("Starting insert of", offCount, "offices.")
-    zjthreads.startThenJoinThreads([thread])
-    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", offCount, "members offices.")
-
 def doOfficesInsert():
-    db.deleteRowsFromTables(["MemberOffices"])
-    offices = util.getParsedJson(LEGISLATORS_OFFICES_URL)
-    parseAndInsertOffices(offices)
+    doSimpleInsert("MemberOffices", LEGISLATORS_OFFICES_URL, getOfficeInsertThread, "offices")
 
 
 
