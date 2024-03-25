@@ -230,13 +230,11 @@ def doOfficesInsert():
 
 
 
-def getCommitteeRow(committee, parentId=None):
+def getCommitteeRow(committee):
     cRow = []
 
-    cId = parentId+committee["thomas_id"] if parentId is not None else committee["thomas_id"]
-
-    cRow.append(cId)
-    cRow.append(parentId)
+    cRow.append(committee["thomas_id"])
+    cRow.append(util.getFieldIfExists(committee, "parent_id"))
     cRow.append(util.getFieldIfExists(committee, "type"))
     cRow.append(util.getFieldIfExists(committee, "name"))
     cRow.append(util.getFieldIfExists(committee, "wikipedia"))
@@ -258,7 +256,9 @@ def getSubCommitteeRows(subcommitees, parentId, parentType):
     for sub in subcommitees: 
         subCom = subcommitees[sub]
         subCom["type"] = parentType
-        subComData.append(getCommitteeRow(subCom, parentId))
+        subCom["parent_id"] = parentId
+        subCom["thomas_id"] = parentId+subCom["thomas_id"]
+        subComData.append(getCommitteeRow(subCom))
     return subComData
 
 def getCommitteeInsertThreads(committees):
@@ -304,8 +304,8 @@ def getAggregatedCommittees(current, historic):
             
         if code in historic:
             if isCurrent:
-                data["names_historic"] = historic[code]["names"]
-                data["congresses_historic"] = historic[code]["congresses"]
+                data["names"] = historic[code]["names"]
+                data["congresses"] = historic[code]["congresses"]
             else: 
                 data = historic[code]
 
@@ -342,9 +342,9 @@ def doBulkMemberPull():
     startPull = datetime.now()
     threads = []
 
-    #threads.append(zjthreads.buildThread(doMemberInsert))
-    #threads.append(zjthreads.buildThread(doSocialsInsert))
-    #threads.append(zjthreads.buildThread(doOfficesInsert))
+    threads.append(zjthreads.buildThread(doMemberInsert))
+    threads.append(zjthreads.buildThread(doSocialsInsert))
+    threads.append(zjthreads.buildThread(doOfficesInsert))
     threads.append(zjthreads.buildThread(doCommitteeInsert))
 
     zjthreads.startThenJoinThreads(threads)
