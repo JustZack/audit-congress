@@ -35,6 +35,10 @@ SOCIAL_COLUMNS = ["bioguideId", "twitter", "twitterId", "facebook", "facebookId"
 OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "city", "state", "zip", 
                    "latitude", "longitude", "phone", "fax", "lastUpdate", "nextUpdate"]
 
+COMMITTEE_COLUMNS = ["thomasId", "parentId", "type", "name", "wikipedia", "jurisdiction", "jurisdiction_source", 
+                     "url", "rss_url", "minority_url", "minority_rss_url", "youtubeId", 
+                     "address", "phone", "isCurrent"]
+
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
 
@@ -225,15 +229,123 @@ def doOfficesInsert():
 
 
 
+
+def getCommitteeRow(committee, parentId=None):
+    cRow = []
+
+    cId = parentId+committee["thomas_id"] if parentId is not None else committee["thomas_id"]
+
+    cRow.append(cId)
+    cRow.append(parentId)
+    cRow.append(util.getFieldIfExists(committee, "type"))
+    cRow.append(util.getFieldIfExists(committee, "name"))
+    cRow.append(util.getFieldIfExists(committee, "wikipedia"))
+    cRow.append(util.getFieldIfExists(committee, "jurisdiction"))
+    cRow.append(util.getFieldIfExists(committee, "jurisdiction_source"))
+    cRow.append(util.getFieldIfExists(committee, "url"))
+    cRow.append(util.getFieldIfExists(committee, "rss_url"))
+    cRow.append(util.getFieldIfExists(committee, "minority_url"))
+    cRow.append(util.getFieldIfExists(committee, "minority_rss_url"))
+    cRow.append(util.getFieldIfExists(committee, "youtube_id"))
+    cRow.append(util.getFieldIfExists(committee, "address"))
+    cRow.append(util.getFieldIfExists(committee, "phone"))
+    cRow.append(committee["isCurrent"])
+
+    return cRow
+
+def getSubCommitteeRows(subcommitees, parentId, parentType):
+    subComData = []
+    for sub in subcommitees: 
+        subCom = subcommitees[sub]
+        subCom["type"] = parentType
+        subComData.append(getCommitteeRow(subCom, parentId))
+    return subComData
+
+def getCommitteeInsertThreads(committees):
+    threads, commData, ComHistData = [], [], []
+    for code in committees:
+        com = committees[code]
+        commData.append(getCommitteeRow(com))
+        if "subcommittees" in com: 
+            commData.extend(getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
+
+    print("Found",len(commData),"committees & subcommittees.")
+    threads.append(zjthreads.buildThread(db.insertRows, "Committees", COMMITTEE_COLUMNS, commData))
+    
+    return threads
+
+
+def insertCommittees(committees):
+    startInsert, threads, comCount = datetime.now(), [], len(committees)
+
+    threads.extend(getCommitteeInsertThreads(committees))
+
+    logger.logInfo("Starting insert of", comCount, "committees and their sub data with", len(threads), "threads.")
+    zjthreads.startThenJoinThreads(threads)
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", comCount, "committees.")
+
+def getCommitteesAsDict(url):
+    committees = util.getParsedJson(url)
+    return util.dictArrayToDict(committees, "thomas_id")
+
+def getAggregatedCommittees(current, historic):
+    aggregated = dict()
+    cSet = set(current.keys())
+    cSet.update(historic.keys())
+
+    for code in cSet:
+        currentSub, historicSub = [], []
+        isCurrent = False
+        data = None
+        if code in current:
+            if "subcommittees" in current[code]: currentSub = current[code]["subcommittees"]
+            isCurrent = True
+            data = current[code]
+            
+        if code in historic:
+            if isCurrent:
+                data["names_historic"] = historic[code]["names"]
+                data["congresses_historic"] = historic[code]["congresses"]
+            else: 
+                data = historic[code]
+
+            if "subcommittees" in historic[code]: historicSub = historic[code]["subcommittees"]
+        
+        if len(currentSub) > 0 or len(historicSub) > 0:
+            subCurrent = util.dictArrayToDict(currentSub, "thomas_id")
+            subHistoric = util.dictArrayToDict(historicSub, "thomas_id")
+            data["subcommittees"] = getAggregatedCommittees(subCurrent, subHistoric)
+
+        data["isCurrent"] = isCurrent
+        aggregated[code] = data
+    return aggregated
+
+def parseCommittees():
+    current = getCommitteesAsDict(CURRENT_COMMITTEES_URL)
+    historic = getCommitteesAsDict(HISTORICAL_COMMITTEES_URL)
+    return getAggregatedCommittees(current, historic)
+
+    #parseAndInsertCommittees(committees, isCurrent)
+
+def doCommitteeInsert():
+    db.deleteRowsFromTables(["Committees"])
+    committees = parseCommittees()
+    insertCommittees(committees)
+    
+
+
+
+
 def doSetup(): util.genericBulkScriptSetup(SCRIPT_NAME)
 
 def doBulkMemberPull():
     startPull = datetime.now()
     threads = []
 
-    threads.append(zjthreads.buildThread(doMemberInsert))
-    threads.append(zjthreads.buildThread(doSocialsInsert))
-    threads.append(zjthreads.buildThread(doOfficesInsert))
+    #threads.append(zjthreads.buildThread(doMemberInsert))
+    #threads.append(zjthreads.buildThread(doSocialsInsert))
+    #threads.append(zjthreads.buildThread(doOfficesInsert))
+    threads.append(zjthreads.buildThread(doCommitteeInsert))
 
     zjthreads.startThenJoinThreads(threads)
 

@@ -9,6 +9,10 @@ from shared import logger, db
 
 def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
 
+def dictArrayToDict(dictArray, dictKeyToUse):
+    newDict = dict()
+    for aDict in dictArray: newDict[aDict[dictKeyToUse]] = aDict
+    return newDict
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
