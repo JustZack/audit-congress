@@ -27,7 +27,7 @@ def joinThreads(threads):
     numAlive = len(threads)
     while numAlive > 0:
         numAlive = len(getLivingThreads(threads))
-        time.sleep(1/10)      
+        time.sleep(1/100)      
 
 def startThenJoinThreads(threads):
     startThreads(threads)

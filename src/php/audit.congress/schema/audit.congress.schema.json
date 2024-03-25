@@ -201,6 +201,33 @@
 
 
 
+            {
+                "name": "Committees",
+                "columns": {
+                    "thomasId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "parentId": { "type": "VARCHAR(50)", "null": "YES" },
+
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "name": { "type": "VARCHAR(250)", "null": "NO" },
+
+                    "wikipedia": { "type": "VARCHAR(250)", "null": "YES" },
+                    
+                    "jurisdiction": { "type": "VARCHAR(250)", "null": "YES" },
+                    "jurisdiction_source": { "type": "VARCHAR(250)", "null": "YES" },
+
+                    "url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "rss_url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "minority_url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "minority_rss_url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "youtubeId": { "type": "VARCHAR(250)", "null": "YES" },
+
+                    "address": { "type": "VARCHAR(100)", "null": "YES" },
+                    "phone": { "type": "VARCHAR(25)", "null": "YES" },
+                    
+                    "isCurrent": { "type": "TINYINT(1)", "null": "NO" }
+                }
+            },
+
 
 
 
