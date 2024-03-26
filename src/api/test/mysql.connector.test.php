@@ -119,6 +119,19 @@ namespace APITest {
         static function testEnforceSchema() {
             $schema = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
         }
+
+        static function testGetCacheStatus($cacheName) {
+            $status = new \AuditCongress\CacheTracker($cacheName);
+            var_dump($status->getSource());
+            var_dump($status->getStatus());
+            var_dump($status->isRunning());
+        }
+
+        
+        static function testInsertCacheStatus($cacheName, $status, $isRunning) {
+            $insert = new \AuditCongress\CacheTracker($cacheName);
+            $insert->setCacheStatus($status, $isRunning);
+        }
     }
 }
 ?>
