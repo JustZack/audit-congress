@@ -39,5 +39,8 @@ require_once "test/autoload.php";
 
 //echo "Total Queries: ".\MySqlConnector\Query::$totalQueries . "\n";
 
-MySqlConnector::testInsertCacheStatus("test1", "eee", false)
+//MySqlConnector::testSetCacheStatus("test2", time(), true);
+//MySqlConnector::testSetCacheStatus("test4", time()+77, false);
+//MySqlConnector::testSetCacheStatus("test666", time()*2, true);
+//MySqlConnector::testSetCacheStatus("testasd2", time()/2, false);
 ?>

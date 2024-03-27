@@ -29,12 +29,16 @@ namespace AuditCongress {
         public function isRunning() { return $this->getCacheColumn("isRunning"); }
 
         public function isSet() { return $this->getRow() != null; }
-
+ 
         public function setCacheStatus($status, $isRunning) {
             $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
             if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
             $function($this->cacheName, $status, $isRunning);
         }
+
+        public function setRunning($isRunning) { $this->setCacheStatus(null, $isRunning); }
+        public function setStatus($status) { $this->setCacheStatus($status, null); }
+
     }
 }
 

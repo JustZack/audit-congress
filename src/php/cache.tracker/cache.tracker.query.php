@@ -25,11 +25,19 @@ namespace AuditCongress {
         }
 
         public static function updateCacheStatus($cacheName, $status, $isRunning) {
+            $colsToSet = []; $valsToSet = [];
+            if ($status != null) {
+                array_push($colsToSet, "status"); array_push($valsToSet, $status);
+            }
+            if (is_bool($isRunning)) {
+                array_push($colsToSet, "isRunning"); array_push($valsToSet, $isRunning);
+            }
+
             $cache = new CacheTrackerQuery();
             $cache->setSearchColumns(["source"]);
             $cache->setSearchValues([$cacheName]);
-            $cache->setColumns(["status", "isRunning"]);
-            $cache->setValues([$status, $isRunning]);
+            $cache->setColumns($colsToSet);
+            $cache->setValues($valsToSet);
             return $cache->updateInDb();
         }
     }

@@ -126,11 +126,16 @@ namespace APITest {
             var_dump($status->getStatus());
             var_dump($status->isRunning());
         }
-
         
         static function testInsertCacheStatus($cacheName, $status, $isRunning) {
             $insert = new \AuditCongress\CacheTracker($cacheName);
             $insert->setCacheStatus($status, $isRunning);
+        }
+
+        static function testSetCacheStatus($cacheName, $status, $isRunning) {
+            $set = new \AuditCongress\CacheTracker($cacheName);
+            $set->setStatus($status);
+            $set->setRunning($isRunning);
         }
     }
 }
