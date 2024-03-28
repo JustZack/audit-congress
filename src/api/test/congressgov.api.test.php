@@ -106,6 +106,11 @@ namespace APITest {
             $mem = new \CongressGov\Titles($congress, $type, $number);
             $mem->printAsJson();
         }
+
+        static function getCongressesTest() {
+            $cong = new \CongressGov\Congresses();
+            $cong->printAsJson();
+        }
     }
 }
 ?>

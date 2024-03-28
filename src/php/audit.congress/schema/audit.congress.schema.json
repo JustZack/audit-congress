@@ -135,6 +135,33 @@
 
 
             {
+                "name": "Congresses",
+                "columns": {
+                    "number": { "type": "INT", "null": "NO", "primary": true },
+                    
+                    "name": { "type": "VARCHAR(50)", "null": "NO" },
+
+                    "startYear": { "type": "VARCHAR(4)", "null": "NO" },
+                    "endYear": { "type": "VARCHAR(4)", "null": "NO" }
+                }
+            },
+            {
+                "name": "Sessions",
+                "columns": {
+                    "congress": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "number": { "type": "VARCHAR(50)", "null": "NO" },
+                    
+                    "chamber": { "type": "VARCHAR(50)", "null": "NO" },
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+
+                    "startDate": { "type": "DATE", "null": "NO" },
+                    "endDate": { "type": "DATE", "null": "NO" }
+                }
+            },
+
+
+
+            {
                 "name": "Bills",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
