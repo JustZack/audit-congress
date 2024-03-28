@@ -232,6 +232,18 @@ class API {
             API::Error($e->getMessage());
         }
     }
+
+    public static function HandleGetCongress() {
+        $number = API::getQueryArgIfSet("number");
+        try {
+            $data = null;
+            if (isset($number)) $data = \AuditCongress\Congresses::getByNumber($number);
+            else $data = \AuditCongress\Congresses::getAll();
+            API::Success(array("congress" => $data));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
 }
 
 ?>

@@ -49,5 +49,5 @@ require_once "test/autoload.php";
 //CongressGov::getSubjectsTest(117, "hr", "3076");
 //CongressGov::getSummariesTest(117, "hr", "3076");
 //CongressGov::getTitlesTest(117, "hr", "3076");
-
+//CongressGov::getCongressesTest();
 ?>
