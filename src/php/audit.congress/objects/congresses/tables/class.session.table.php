@@ -43,6 +43,14 @@ namespace AuditCongress {
             return self::simpleQuery("getByCongress", $congressNumber);
         }
 
+        public static function getByChamber($chamber) {
+            return self::simpleQuery("getByChamber", $chamber);
+        }
+
+        public static function getByNumber($number) {
+            return self::simpleQuery("getByNumber", $number);
+        }
+
         public static function getByCongressAndNumber($congress, $session) {
             Congresses::enforceCache();
             $result = \AuditCongress\SessionQuery::getByCongressAndNumber($congress, $session);
@@ -59,6 +67,12 @@ namespace AuditCongress {
             Congresses::enforceCache();
             $result = \AuditCongress\SessionQuery::getByCongressNumberAndChamber(
                 $congress, $number, $chamber);
+            return self::parseResult($result);
+        }
+
+        public static function getByNumberAndChamber($number, $chamber) {
+            Congresses::enforceCache();
+            $result = \AuditCongress\SessionQuery::getByNumberAndChamber($number, $chamber);
             return self::parseResult($result);
         }
 

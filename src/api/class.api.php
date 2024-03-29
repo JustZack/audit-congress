@@ -253,6 +253,23 @@ class API {
         }
     }
 
+    private static function getSessionsByCongressNumberChamber($congress, $number, $chamber) {
+        if (isset($congress) && isset($number) && isset($chamber))
+            return \AuditCongress\Sessions::getByCongressNumberAndChamber(                               $congress, $number, $chamber);
+        if (isset($congress) && isset($number))
+            return \AuditCongress\Sessions::getByCongressAndNumber($congress, $number);
+        if (isset($congress) && isset($chamber))
+            return \AuditCongress\Sessions::getByCongressAndChamber($congress, $chamber);
+        if (isset($number) && isset($chamber))
+            return \AuditCongress\Sessions::getByNumberAndChamber($number, $chamber);
+        if (isset($congress))
+            return \AuditCongress\Sessions::getByCongress($congress);
+        if (isset($number))
+            return \AuditCongress\Sessions::getByNumber($number);
+        if (isset($chamber))
+            return \AuditCongress\Sessions::getByChamber($chamber);
+    }
+
     private static function getSessionData() {
         $congress = API::getQueryArgIfSet("congress");
         $number = API::getQueryArgIfSet("number");
@@ -261,15 +278,8 @@ class API {
         $current = API::getQueryArgIfSet("current");
 
 
-        if (isset($congress) && isset($number) && isset($chamber))
-            return \AuditCongress\Sessions::getByCongressNumberAndChamber(
-                                            $congress, $number, $chamber);
-        if (isset($congress) && isset($number))
-            return \AuditCongress\Sessions::getByCongressAndNumber($congress, $number);
-        if (isset($congress) && isset($chamber))
-            return \AuditCongress\Sessions::getByCongressAndChamber($congress, $chamber);
-        if (isset($congress))
-            return \AuditCongress\Sessions::getByCongress($congress);
+        if (isset($congress) || isset($number) || isset($chamber))
+            return API::getSessionsByCongressNumberChamber($congress, $number, $chamber);
         if (isset($date))
             return \AuditCongress\Sessions::getByDate($date);
         if (isset($current))

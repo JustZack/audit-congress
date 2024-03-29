@@ -14,6 +14,29 @@ namespace AuditCongress {
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
+        public static function getByChamber($chamber) {
+            $congresses = new SessionQuery();
+            $congresses->setEqualityOperators(["like"]);
+            $congresses->setSearchColumns(["chamber"]);
+            $congresses->setSearchValues([$chamber]);
+            return $congresses->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getByNumber($session) {
+            $congresses = new SessionQuery();
+            $congresses->setSearchColumns(["number"]);
+            $congresses->setSearchValues([$session]);
+            return $congresses->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getByNumberAndChamber($session, $chamber) {
+            $congresses = new SessionQuery();
+            $congresses->setEqualityOperators(["like", "="]);
+            $congresses->setSearchColumns(["chamber", "number"]);
+            $congresses->setSearchValues([$chamber, $session]);
+            return $congresses->selectFromDB()->fetchAllAssoc();
+        }
+
         public static function getByCongressAndNumber($congress, $number) {
             $congresses = new SessionQuery();
             $congresses->setSearchColumns(["congress", "number"]);
