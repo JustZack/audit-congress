@@ -252,6 +252,39 @@ class API {
             API::Error($e->getMessage());
         }
     }
+
+    private static function getSessionData() {
+        $congress = API::getQueryArgIfSet("congress");
+        $number = API::getQueryArgIfSet("number");
+        $chamber = API::getQueryArgIfSet("chamber");
+        $date = API::getQueryArgIfSet("date");
+        $current = API::getQueryArgIfSet("current");
+
+
+        if (isset($congress) && isset($number) && isset($chamber))
+            return \AuditCongress\Sessions::getByCongressNumberAndChamber(
+                                            $congress, $number, $chamber);
+        if (isset($congress) && isset($number))
+            return \AuditCongress\Sessions::getByCongressAndNumber($congress, $number);
+        if (isset($congress) && isset($chamber))
+            return \AuditCongress\Sessions::getByCongressAndChamber($congress, $chamber);
+        if (isset($congress))
+            return \AuditCongress\Sessions::getByCongress($congress);
+        if (isset($date))
+            return \AuditCongress\Sessions::getByDate($date);
+        if (isset($current))
+            return \AuditCongress\Sessions::getCurrent();
+        return \AuditCongress\Sessions::getAll();
+    }
+
+    public static function HandleGetSession() {
+        try {
+            $data = API::getSessionData();
+            API::Success(array("session" => $data));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
 }
 
 ?>

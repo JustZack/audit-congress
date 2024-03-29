@@ -29,19 +29,30 @@ namespace AuditCongress {
 
         public function updateCache() {
             self::$cacheTracker->setRunning(true);
-
+            $sessionsInstance = Sessions::getInstance();
+            
             $congresses = new \CongressGov\Congresses();
+
             $this->clearRows();
+            $sessionsInstance->clearRows();
+
             $this->insertCongresses($congresses->congresses);
+
             $this->commitInsert();
+            $sessionsInstance->commitInsert();
+            
             $this->cacheIsValid = true;
 
             self::$cacheTracker->setCacheStatus("done", false);
         }
 
         public function insertCongresses($congresses) {
-            foreach ($congresses as $congress) {                
+            $sessionsInstance = Sessions::getInstance();
+            foreach ($congresses as $congress) {  
+                $sessions = $congress->sessions;
                 $congress = new CongressRow($congress);
+                $current = $congress->number;
+                $sessionsInstance->insertSessions($current, $sessions);
                 $this->queueInsert($congress);
             }
         }

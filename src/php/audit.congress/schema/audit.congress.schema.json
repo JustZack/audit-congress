@@ -148,14 +148,14 @@
             {
                 "name": "Sessions",
                 "columns": {
-                    "congress": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
-                    "number": { "type": "VARCHAR(50)", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO"},
+                    "number": { "type": "INT", "null": "NO" },
                     
                     "chamber": { "type": "VARCHAR(50)", "null": "NO" },
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
 
                     "startDate": { "type": "DATE", "null": "NO" },
-                    "endDate": { "type": "DATE", "null": "NO" }
+                    "endDate": { "type": "DATE", "null": "YES" }
                 }
             },
 
