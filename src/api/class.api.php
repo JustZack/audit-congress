@@ -277,9 +277,11 @@ class API {
         $date = API::getQueryArgIfSet("date");
         $current = API::getQueryArgIfSet("current");
 
-
+        $data = null;
         if (isset($congress) || isset($number) || isset($chamber))
-            return API::getSessionsByCongressNumberChamber($congress, $number, $chamber);
+            $data = API::getSessionsByCongressNumberChamber($congress, $number, $chamber);
+        if ($data != null) return $data;
+
         if (isset($date))
             return \AuditCongress\Sessions::getByDate($date);
         if (isset($current))
