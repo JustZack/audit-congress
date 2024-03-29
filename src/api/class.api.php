@@ -233,16 +233,23 @@ class API {
         }
     }
 
-    public static function HandleGetCongress() {
+    private static function getCongressData() {
         $number = API::getQueryArgIfSet("number");
         $year = API::getQueryArgIfSet("year");
         $current = API::getQueryArgIfSet("current");
+
+        $data = null;
+        if (isset($number)) $data = \AuditCongress\Congresses::getByNumber($number);
+        else if (isset($year)) $data = \AuditCongress\Congresses::getByYear($year);
+        else if (isset($current)) $data = \AuditCongress\Congresses::getCurrent();
+        else $data = \AuditCongress\Congresses::getAll();
+
+        return $data;
+    }
+
+    public static function HandleGetCongress() {
         try {
-            $data = null;
-            if (isset($number)) $data = \AuditCongress\Congresses::getByNumber($number);
-            else if (isset($year)) $data = \AuditCongress\Congresses::getByYear($year);
-            else if (isset($current)) $data = \AuditCongress\Congresses::getCurrent();
-            else $data = \AuditCongress\Congresses::getAll();
+            $data = API::getCongressData();
             API::Success(array("congress" => $data));
         } catch (Exception $e) {
             API::Error($e->getMessage());
