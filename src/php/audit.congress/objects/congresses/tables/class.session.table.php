@@ -33,61 +33,50 @@ namespace AuditCongress {
             return SessionRow::rowsToObjects($resultRows);
         }
 
-        private static function simpleQuery($function, $argument = null) {
+        private static function genericQuery($function, ...$arguments) {
             Congresses::enforceCache();
-            $result = ("\AuditCongress\SessionQuery::$function")($argument);
+            $result = ("\AuditCongress\SessionQuery::$function")(...$arguments);
             return self::parseResult($result);
         }
 
         public static function getByCongress($congressNumber) {
-            return self::simpleQuery("getByCongress", $congressNumber);
+            return self::genericQuery("getByCongress", $congressNumber);
         }
 
         public static function getByChamber($chamber) {
-            return self::simpleQuery("getByChamber", $chamber);
+            return self::genericQuery("getByChamber", $chamber);
         }
 
         public static function getByNumber($number) {
-            return self::simpleQuery("getByNumber", $number);
+            return self::genericQuery("getByNumber", $number);
         }
 
         public static function getByCongressAndNumber($congress, $session) {
-            Congresses::enforceCache();
-            $result = \AuditCongress\SessionQuery::getByCongressAndNumber($congress, $session);
-            return self::parseResult($result);
+            return self::genericQuery("getByCongressAndNumber", $congress, $session);
         }
 
         public static function getByCongressAndChamber($congress, $chamber) {
-            Congresses::enforceCache();
-            $result = \AuditCongress\SessionQuery::getByCongressAndChamber($congress, $chamber);
-            return self::parseResult($result);
+            return self::genericQuery("getByCongressAndChamber", $congress, $chamber);
         }
 
         public static function getByCongressNumberAndChamber($congress, $number, $chamber) {
-            Congresses::enforceCache();
-            $result = \AuditCongress\SessionQuery::getByCongressNumberAndChamber(
-                $congress, $number, $chamber);
-            return self::parseResult($result);
+            return self::genericQuery("getByCongressNumberAndChamber", $congress, $number, $chamber);
         }
 
         public static function getByNumberAndChamber($number, $chamber) {
-            Congresses::enforceCache();
-            $result = \AuditCongress\SessionQuery::getByNumberAndChamber($number, $chamber);
-            return self::parseResult($result);
+            return self::genericQuery("getByNumberAndChamber", $number, $chamber);
         }
 
         public static function getByDate($date) { 
-            return self::simpleQuery("getByDate", $date); 
+            return self::genericQuery("getByDate", $date); 
         }
 
         public static function getCurrent() {
-            Congresses::enforceCache();
-            $result = \AuditCongress\SessionQuery::getCurrent();
-            return self::parseResult($result);
+            return self::genericQuery("getCurrent");
         }
 
         public static function getAll() { 
-            return self::simpleQuery("getAll"); 
+            return self::genericQuery("getAll"); 
         }
     }
 }

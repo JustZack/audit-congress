@@ -268,6 +268,7 @@ class API {
             return \AuditCongress\Sessions::getByNumber($number);
         if (isset($chamber))
             return \AuditCongress\Sessions::getByChamber($chamber);
+        return null;
     }
 
     private static function getSessionData() {

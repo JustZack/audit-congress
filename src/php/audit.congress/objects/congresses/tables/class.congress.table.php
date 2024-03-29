@@ -61,19 +61,19 @@ namespace AuditCongress {
             return CongressRow::rowsToObjects($resultRows);
         }
 
-        private static function simpleQuery($function, $argument = null) {
+        private static function genericQuery($function, ...$arguments) {
             self::enforceCache();
-            $result = ("\AuditCongress\CongressQuery::$function")($argument);
+            $result = ("\AuditCongress\CongressQuery::$function")(...$arguments);
             return self::parseResult($result);
         }
 
         public static function getByNumber($congressNumber) {
-            $result = self::simpleQuery("getByNumber", $congressNumber);
+            $result = self::genericQuery("getByNumber", $congressNumber);
             return self::returnFirst($result);
         }
 
         public static function getByYear($year) { 
-            $result = self::simpleQuery("getByYear", $year); 
+            $result = self::genericQuery("getByYear", $year); 
             return self::returnFirst($result);
         }
 
@@ -82,7 +82,7 @@ namespace AuditCongress {
         }
 
         public static function getAll() { 
-            return self::simpleQuery("getAll"); 
+            return self::genericQuery("getAll"); 
         }
     }
 }
