@@ -14,8 +14,17 @@ namespace AuditCongress {
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
+        public static function getByYear($year) {
+            $congresses = new CongressQuery();
+            $congresses->setEqualityOperators(["<=", ">="]);
+            $congresses->setSearchColumns(["startYear", "endYear"]);
+            $congresses->setSearchValues([$year, $year]);
+            return $congresses->selectFromDB()->fetchAllAssoc();
+        }
+
         public static function getAll() {
             $congresses = new CongressQuery();
+            $congresses->setOrderBy(["number"], false);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
     }

@@ -235,9 +235,13 @@ class API {
 
     public static function HandleGetCongress() {
         $number = API::getQueryArgIfSet("number");
+        $year = API::getQueryArgIfSet("year");
+        $current = API::getQueryArgIfSet("current");
         try {
             $data = null;
             if (isset($number)) $data = \AuditCongress\Congresses::getByNumber($number);
+            else if (isset($year)) $data = \AuditCongress\Congresses::getByYear($year);
+            else if (isset($current)) $data = \AuditCongress\Congresses::getCurrent();
             else $data = \AuditCongress\Congresses::getAll();
             API::Success(array("congress" => $data));
         } catch (Exception $e) {

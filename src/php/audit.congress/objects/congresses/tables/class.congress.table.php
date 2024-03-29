@@ -6,6 +6,7 @@ namespace AuditCongress {
         
         private function __construct() {
             parent::__construct("Congresses");
+            self::$cacheTracker = new CacheTracker("bulk-congress");
         }
 
         private static $congressTable = null;
@@ -19,27 +20,22 @@ namespace AuditCongress {
         public function cacheIsValid() {
             if ($this->cacheIsValid != null) return $this->cacheIsValid;
 
-            if (self::$cacheTracker == null) 
-                self::$cacheTracker = new CacheTracker("bulk-congress");
-            if (!self::$cacheTracker->isSet()) {
-                self::$cacheTracker->setCacheStatus("", 0);
-                $this->cacheIsValid = false;
-            } else {
-                $status = self::$cacheTracker->getStatus();
-                $this->cacheIsValid = $status == "done";
-            }
+            $status = self::$cacheTracker->getStatus();
+
+            $this->cacheIsValid = $status == "done";
 
             return $this->cacheIsValid;
         }
 
         public function updateCache() {
             self::$cacheTracker->setRunning(true);
-            try {
-                $congresses = new \CongressGov\Congresses();
-                $this->insertCongresses($congresses->congresses);
-                $this->commitInsert();
-                $this->cacheIsValid = true;
-            } catch(\Exception $e) { }
+
+            $congresses = new \CongressGov\Congresses();
+            $this->clearRows();
+            $this->insertCongresses($congresses->congresses);
+            $this->commitInsert();
+            $this->cacheIsValid = true;
+
             self::$cacheTracker->setCacheStatus("done", false);
         }
 
@@ -54,16 +50,28 @@ namespace AuditCongress {
             return CongressRow::rowsToObjects($resultRows);
         }
 
-        public static function getByNumber($congressNumber) {
+        private static function simpleQuery($function, $argument = null) {
             self::enforceCache();
-            $congress = CongressQuery::getByNumber($congressNumber);
-            return self::parseResult($congress);
+            $result = ("\AuditCongress\CongressQuery::$function")($argument);
+            return self::parseResult($result);
         }
 
-        public static function getAll() {
-            self::enforceCache();
-            $congresses = CongressQuery::getAll();
-            return self::parseResult($congresses);
+        public static function getByNumber($congressNumber) {
+            $result = self::simpleQuery("getByNumber", $congressNumber);
+            return self::returnFirst($result);
+        }
+
+        public static function getByYear($year) { 
+            $result = self::simpleQuery("getByYear", $year); 
+            return self::returnFirst($result);
+        }
+
+        public static function getCurrent() {
+            return self::getByYear(date("Y"));
+        }
+
+        public static function getAll() { 
+            return self::simpleQuery("getAll"); 
         }
     }
 }
