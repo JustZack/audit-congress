@@ -45,12 +45,6 @@ COMMITTEE_MEMBERSHIP_COLUMNS = ["thomasId", "bioguideId", "party", "title", "mem
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
 
-def appendMemberUpdateTimes(row):
-    now = time.time()
-    row.append(now)
-    row.append(now + (60*60*24*7))
-    return row
-
 def doSingleThreadedMemberInsert(data, threadFunction, insertType):
     startInsert, threads, count = datetime.now(), [], len(data)
 
@@ -210,23 +204,10 @@ def getCommitteeMembershipInsertThread(membership):
         memData.extend(mparse.getMembersipRows(members, code))
 
     logger.logInfo("Found",len(memData),"membership entries.")
-    threads.append(zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData))
-    
-    return threads
-
-def insertCommitteeMembership(membership):
-    startInsert, threads, comCount = datetime.now(), [], len(membership)
-
-    threads.extend(getCommitteeMembershipInsertThread(membership))
-
-    logger.logInfo("Starting insert of", comCount, "committees membership lists with", len(threads), "threads.")
-    zjthreads.startThenJoinThreads(threads)
-    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", comCount, "committees.")
+    return zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData)
 
 def doCommitteeMembershipInsert():
-    db.deleteRowsFromTables(["Committees"])
-    membership = util.getParsedJson(CURRENT_COMMITTEE_LEGISLATORS_URL)
-    insertCommitteeMembership(membership)
+    doSimpleInsert("CommitteeMembership", CURRENT_COMMITTEE_LEGISLATORS_URL, getCommitteeMembershipInsertThread, "committee membership")
 
 
 
