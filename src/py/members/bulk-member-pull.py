@@ -39,6 +39,7 @@ OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "ci
 COMMITTEE_COLUMNS = ["thomasId", "parentId", "type", "name", "wikipedia", "jurisdiction", "jurisdiction_source", 
                      "url", "rss_url", "minority_url", "minority_rss_url", "youtubeId", 
                      "address", "phone", "isCurrent"]
+COMMITTEE_HISTORY_COLUMNS = ["thomasId", "parentId", "type", "congress", "name"]
 COMMITTEE_MEMBERSHIP_COLUMNS = ["thomasId", "bioguideId", "party", "title", "memberRank"]
 
 
@@ -128,14 +129,20 @@ def doOfficesInsert():
 
 
 def getCommitteeInsertThreads(committees):
-    threads, commData, ComHistData = [], [], []
+    threads, commData, commHistData = [], [], []
     for code in committees:
         com = committees[code]
+        tId, typ = com["thomas_id"], com["type"]
+
         commData.append(mparse.getCommitteeRow(com))
+        commHistData.extend(mparse.getCommitteeHistoryRows(com))
         if "subcommittees" in com: 
-            commData.extend(mparse.getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
+            subcomm = com["subcommittees"]
+            commData.extend(mparse.getSubCommitteeRows(subcomm, tId, typ))
+            commHistData.extend(mparse.getSubCommitteeHistoryRows(subcomm))
 
     threads.append(zjthreads.buildThread(db.insertRows, "Committees", COMMITTEE_COLUMNS, commData))
+    threads.append(zjthreads.buildThread(db.insertRows, "CommitteeHistory", COMMITTEE_HISTORY_COLUMNS, commHistData))
     
     return threads
 
@@ -159,7 +166,7 @@ def parseCommittees():
 
 def doCommitteeInsert():
     #TODO: Manage committee history aswell
-    db.deleteRowsFromTables(["Committees"])
+    db.deleteRowsFromTables(["Committees", "CommitteeHistory"])
     committees = parseCommittees()
     insertCommittees(committees)
 
@@ -178,7 +185,12 @@ def doCommitteeMembershipInsert():
 
 
 
-def doSetup(): util.genericBulkScriptSetup(SCRIPT_NAME)
+def doSetup(): 
+    util.genericBulkScriptSetup(SCRIPT_NAME)
+
+    if mparse.fetchCurrentCongress(): 
+        logger.logInfo("Found the current congress to be {} via the API".format(mparse.CURRENT_CONGRESS))
+    else: raise Exception("Could not fetch current congress from API")
 
 def doBulkMemberPull():
     startPull = datetime.now()

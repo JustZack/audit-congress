@@ -1,5 +1,20 @@
 import time
 from shared import util
+from pprint import pprint
+
+CURRENT_CONGRESS_API_URL = "http://localhost/audit-congress/src/api/api.php?route=congress&current"
+CURRENT_CONGRESS = None
+
+def fetchCurrentCongress():
+    global CURRENT_CONGRESS
+    resp = util.getParsedJson(CURRENT_CONGRESS_API_URL)
+    if "congress" in resp:
+        CURRENT_CONGRESS =  resp["congress"]["number"]
+        return True
+    else:
+        return False
+
+
 
 def appendMemberUpdateTimes(row):
     now = time.time()
@@ -111,10 +126,30 @@ def getOfficeRows(bioguideId, offices):
     return mOffices
 
 
-def getSubCommitteeRows(subcommitees, parentId, parentType):
+
+def getSubCommitteeHistoryRows(subcommittees):
+    subComHistData = []
+    for sub in subcommittees: 
+        subComHistData.extend(getCommitteeHistoryRows(subcommittees[sub]))
+    return subComHistData
+
+def getCommitteeHistoryRows(committee):
+    commHistData = []
+    for congress in committee["congresses"]:
+        histData = []
+        name = committee["names"][str(congress)]
+        histData.append(committee["thomas_id"])
+        histData.append(util.getFieldIfExists(committee, "parent_id"))
+        histData.append(util.getFieldIfExists(committee, "type"))
+        histData.append(congress)
+        histData.append(name)
+        commHistData.append(histData)
+    return commHistData
+
+def getSubCommitteeRows(subcommittees, parentId, parentType):
     subComData = []
-    for sub in subcommitees: 
-        subCom = subcommitees[sub]
+    for sub in subcommittees: 
+        subCom = subcommittees[sub]
         subCom["type"] = parentType
         subCom["parent_id"] = parentId
         subCom["thomas_id"] = parentId+subCom["thomas_id"]
@@ -154,15 +189,18 @@ def getCombinedCommittee(code, current, historic):
         currentSub = getSubCommitteesIfSet(current[code])
         isCurrent = True
         data = current[code]
+        data["names"] = dict()
+        data["names"][CURRENT_CONGRESS] = data["name"]
+        data["congresses"] = [int(CURRENT_CONGRESS)]
         
     if code in historic:
         historicSub = getSubCommitteesIfSet(historic[code])
         if isCurrent:
-            data["names"] = historic[code]["names"]
-            data["congresses"] = historic[code]["congresses"]
+            data["names"].update(historic[code]["names"])
+            data["congresses"].extend(historic[code]["congresses"])
         else: 
             data = historic[code]
-    
+
     if len(currentSub) > 0 or len(historicSub) > 0:
         subCurrent = util.dictArrayToDict(currentSub, "thomas_id")
         subHistoric = util.dictArrayToDict(historicSub, "thomas_id")

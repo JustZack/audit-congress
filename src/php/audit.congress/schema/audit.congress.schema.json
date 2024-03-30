@@ -255,6 +255,17 @@
                 }
             },
             {
+                "name": "CommitteeHistory",
+                "columns": {
+                    "thomasId": { "type": "VARCHAR(50)", "null": "NO"},
+                    "parentId": { "type": "VARCHAR(50)", "null": "YES" },
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+
+                    "congress": { "type": "INT", "null": "NO" },
+                    "name": { "type": "VARCHAR(250)", "null": "NO" }
+                }
+            },
+            {
                 "name": "CommitteeMembership",
                 "columns": {
                     "thomasId": { "type": "VARCHAR(50)", "null": "NO" },
