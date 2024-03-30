@@ -6,7 +6,7 @@ from pprint import pprint
 import sys
 sys.path.append(os.path.abspath("../"))
 
-from shared import logger, db, zjthreads, util
+from shared import logger, db, zjthreads, util, cache
 
 SCRIPT_NAME = "bulk-member"
 
@@ -353,4 +353,4 @@ def doBulkMemberPull():
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull, SCRIPT_NAME)
 
-if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)
+if __name__ == "__main__": util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)
