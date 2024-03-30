@@ -81,22 +81,24 @@ namespace AuditCongress {
 
 
         private static function getByMultiple($congress, $number, $chamber) {
+            $data = false;
             if (isset($congress) && isset($number) && isset($chamber))
-                return self::getByCongressNumberAndChamber($congress, $number, $chamber);
-            if (isset($congress) && isset($number));
-                return self::getByCongressAndNumber($congress, $number);
-            if (isset($congress) && isset($chamber))
-                return self::getByCongressAndChamber($congress, $chamber);
-            if (isset($number) && isset($chamber))
-                return self::getByNumberAndChamber($number, $chamber);
-            return false;
+                $data = self::getByCongressNumberAndChamber($congress, $number, $chamber);
+            else if (isset($congress) && isset($number))
+                $data = self::getByCongressAndNumber($congress, $number);
+            else if (isset($congress) && isset($chamber))
+                $data = self::getByCongressAndChamber($congress, $chamber);
+            else if (isset($number) && isset($chamber))
+                $data = self::getByNumberAndChamber($number, $chamber);
+            return $data;
         }
 
         private static function getByIndividual($congress, $number, $chamber) {
-            if (isset($congress)) return self::getByCongress($congress);
-            if (isset($number)) return self::getByNumber($number);
-            if (isset($chamber)) return self::getByChamber($chamber);
-            return false;
+            $data = false;
+            if (isset($congress)) $data = self::getByCongress($congress);
+            if (isset($number))   $data = self::getByNumber($number);
+            if (isset($chamber))  $data = self::getByChamber($chamber);
+            return $data;
         }
         public static function getByCongressNumberOrChamber($congress, $number, $chamber) {
             $result = self::getByMultiple($congress, $number, $chamber);
