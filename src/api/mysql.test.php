@@ -19,7 +19,7 @@ require_once "test/autoload.php";
 
 //MySqlConnector::testDatabase("auditcongress");
 
-MySqlConnector::testEnforceSchema();
+//MySqlConnector::testEnforceSchema();
 //MySqlConnector::testSqlMemberById("A5");
 //MySqlConnector::testSqlMemberByName("Zach", null, null);
 //MySqlConnector::testSqlMemberOfficeById("A000055");
@@ -33,10 +33,14 @@ MySqlConnector::testEnforceSchema();
 
 
 //MySqlConnector::testGetSenators("CO", true);
-MySqlConnector::testGetReps("CO", true);
+//MySqlConnector::testGetReps("CO", true);
 //MySqlConnector::testGetReps("NY", true);
 //MySqlConnector::testGetByState("TX", false);
 
-echo "Total Queries: ".\MySqlConnector\Query::$totalQueries . "\n";
+//echo "Total Queries: ".\MySqlConnector\Query::$totalQueries . "\n";
 
+//MySqlConnector::testSetCacheStatus("test2", time(), true);
+//MySqlConnector::testSetCacheStatus("test4", time()+77, false);
+//MySqlConnector::testSetCacheStatus("test666", time()*2, true);
+//MySqlConnector::testSetCacheStatus("testasd2", time()/2, false);
 ?>

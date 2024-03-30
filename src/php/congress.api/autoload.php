@@ -12,6 +12,7 @@ require_once CONGRESSGOV_FOLDER."\\member\\class.legislation.php";
 require_once CONGRESSGOV_FOLDER."\\member\\class.memberlist.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.bill.php";
 require_once CONGRESSGOV_FOLDER."\\bill\\class.billlist.php";
+require_once CONGRESSGOV_FOLDER."\\congress\\class.congresses.php";
 require_once CONGRESSGOV_FOLDER."\\subroutes\\class.actions.php";
 require_once CONGRESSGOV_FOLDER."\\subroutes\\class.amendments.php";
 require_once CONGRESSGOV_FOLDER."\\subroutes\\class.cosponsors.php";

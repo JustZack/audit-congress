@@ -1,5 +1,9 @@
 <?php
 
+use \AuditCongress\Members;
+use \AuditCongress\Congresses;
+use \AuditCongress\Sessions;
+
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
 
@@ -214,7 +218,7 @@ class API {
 
     public static function HandleBioguideToThomasMapping() {
         try {
-            $data = \AuditCongress\Members::getBioguideToThomasIdMapping();
+            $data = Members::getBioguideToThomasIdMapping();
             $mapping = array("mapping" => $data);
             API::Success($mapping);
         } catch (Exception $e) {
@@ -228,6 +232,49 @@ class API {
             $enforcer->enforceSchema();
             $operations = $enforcer::getDBOperationsList();
             API::Success(array("valid" => true, "operations" => $operations));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
+
+    private static function getCongressData() {
+        $number = API::getQueryArgIfSet("number");
+        $year = API::getQueryArgIfSet("year");
+        $current = API::getQueryArgIfSet("current");
+
+        if (isset($number))  return Congresses::getByNumber($number);
+        if (isset($year))    return Congresses::getByYear($year);
+        if (isset($current)) return Congresses::getCurrent();
+                             return Congresses::getAll();
+    }
+
+    public static function HandleGetCongress() {
+        try {
+            $data = API::getCongressData();
+            API::Success(array("congress" => $data));
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
+        }
+    }
+
+    private static function getSessionData() {
+        $congress = API::getQueryArgIfSet("congress");
+        $number = API::getQueryArgIfSet("number");
+        $chamber = API::getQueryArgIfSet("chamber");
+        $date = API::getQueryArgIfSet("date");
+        $current = API::getQueryArgIfSet("current");
+
+        if (isset($congress) || isset($number) || isset($chamber)) 
+            return Sessions::getByCongressNumberOrChamber($congress, $number, $chamber);
+        if (isset($date)) return Sessions::getByDate($date);
+        if (isset($current)) return Sessions::getCurrent();
+        return Sessions::getAll();
+    }
+
+    public static function HandleGetSession() {
+        try {
+            $data = API::getSessionData();
+            API::Success(array("session" => $data));
         } catch (Exception $e) {
             API::Error($e->getMessage());
         }

@@ -17,6 +17,9 @@ if ($route !== null) {
         case "member": API::HandleMemberRoute(); break;
         case "fullMember": API::HandleFullMemberRoute(); break;
         
+        case "congress": API::HandleGetCongress(); break;
+        case "session": API::HandleGetSession(); break;
+
         case "recentBills": API::HandleRecentBillsRoute(); break;
         case "bioguideToThomas": API::HandleBioguideToThomasMapping(); break;
         case "validateSchema": API::HandleValidateSchema(); break;

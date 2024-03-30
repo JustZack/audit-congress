@@ -135,9 +135,7 @@ namespace MySqlConnector {
                 throw new SqlException("QueryBuilder Build Insert: columns and values length mismatch");
             $colList = self::buildItemList($columns, true, "`");
             $valList = self::buildItemList($values, true, "'");
-
             $sql = sprintf($sql, $colList, $valList);
-
             return $sql;
         }
     }

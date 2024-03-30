@@ -30,7 +30,7 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 
     mysql_cursor.execute(sql)
 
-    result = [row[0] for row in mysql_cursor.fetchall()]
+    result = mysql_cursor.fetchall()
 
     mysql_cursor.close()
     return result
@@ -45,7 +45,7 @@ def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor.executemany(sql, data)
 
     mysql_conn.commit()
-    result = [row[0] for row in mysql_cursor.fetchall()]
+    result = mysql_cursor.fetchall()
     mysql_cursor.close()
     return result
 
