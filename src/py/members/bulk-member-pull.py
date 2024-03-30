@@ -38,6 +38,8 @@ OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "ci
 COMMITTEE_COLUMNS = ["thomasId", "parentId", "type", "name", "wikipedia", "jurisdiction", "jurisdiction_source", 
                      "url", "rss_url", "minority_url", "minority_rss_url", "youtubeId", 
                      "address", "phone", "isCurrent"]
+COMMITTEE_MEMBERSHIP_COLUMNS = ["thomasId", "bioguideId", "party", "title", "memberRank"]
+
 
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
@@ -119,7 +121,7 @@ def getElectionRows(elections, bioguideId):
         mElection = []
         mElection.append(election)
         mElection.append(bioguideId)
-        
+
         mElections.append(appendMemberUpdateTimes(mElection))
     return mElections
 
@@ -330,8 +332,45 @@ def doCommitteeInsert():
     db.deleteRowsFromTables(["Committees"])
     committees = parseCommittees()
     insertCommittees(committees)
-    
 
+
+
+def getMembersipRows(members, committee):
+    membershipData = []
+    for mem in members:
+        cMember = []
+        cMember.append(committee)
+        cMember.append(util.getFieldIfExists(mem, "bioguide"))
+        cMember.append(util.getFieldIfExists(mem, "party"))
+        cMember.append(util.getFieldIfExists(mem, "title"))
+        cMember.append(util.getFieldIfExists(mem, "rank"))
+        membershipData.append(cMember)
+    return membershipData
+
+def getCommitteeMembershipInsertThreads(membership):
+    threads, memData = [], []
+    for code in membership:
+        members = membership[code]
+        memData.extend(getMembersipRows(members, code))
+
+    logger.logInfo("Found",len(memData),"membership entries.")
+    threads.append(zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData))
+    
+    return threads
+
+def insertCommitteeMembership(membership):
+    startInsert, threads, comCount = datetime.now(), [], len(membership)
+
+    threads.extend(getCommitteeMembershipInsertThreads(membership))
+
+    logger.logInfo("Starting insert of", comCount, "committees membership lists with", len(threads), "threads.")
+    zjthreads.startThenJoinThreads(threads)
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", comCount, "committees.")
+
+def doCommitteeMembershipInsert():
+    db.deleteRowsFromTables(["Committees"])
+    membership = util.getParsedJson(CURRENT_COMMITTEE_LEGISLATORS_URL)
+    insertCommitteeMembership(membership)
 
 
 
@@ -345,6 +384,7 @@ def doBulkMemberPull():
     threads.append(zjthreads.buildThread(doSocialsInsert))
     threads.append(zjthreads.buildThread(doOfficesInsert))
     threads.append(zjthreads.buildThread(doCommitteeInsert))
+    threads.append(zjthreads.buildThread(doCommitteeMembershipInsert))
 
     zjthreads.startThenJoinThreads(threads)
 

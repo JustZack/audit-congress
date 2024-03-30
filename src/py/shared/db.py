@@ -38,7 +38,6 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 # Executes Many querys, based on executeMany. Best for inserts.
 def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor = mysql_conn.cursor()
-
     if database is not None:
         mysql_cursor.execute("USE "+database)
 

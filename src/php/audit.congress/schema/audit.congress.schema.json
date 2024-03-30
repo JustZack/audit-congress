@@ -254,7 +254,17 @@
                     "isCurrent": { "type": "TINYINT(1)", "null": "NO" }
                 }
             },
+            {
+                "name": "CommitteeMembership",
+                "columns": {
+                    "thomasId": { "type": "VARCHAR(50)", "null": "NO" },
+                    "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
 
+                    "party": { "type": "VARCHAR(50)", "null": "NO" },
+                    "title": { "type": "VARCHAR(50)", "null": "YES" },
+                    "memberRank": { "type": "INT", "null": "NO" }
+                }
+            },
 
 
 
