@@ -142,6 +142,42 @@ def getCommitteeRow(committee):
 
     return cRow
 
+def getSubCommitteesIfSet(committee):
+    if "subcommittees" in committee: return committee["subcommittees"]
+    else: return []
+
+
+def getAggregatedCommittees(current, historic):
+    aggregated = dict()
+    cSet = set(current.keys())
+    cSet.update(historic.keys())
+
+    for code in cSet:
+        currentSub, historicSub = [], []
+        isCurrent = False
+        data = None
+        if code in current:
+            currentSub = getSubCommitteesIfSet(current[code])
+            isCurrent = True
+            data = current[code]
+            
+        if code in historic:
+            historicSub = getSubCommitteesIfSet(historic[code])
+            if isCurrent:
+                data["names"] = historic[code]["names"]
+                data["congresses"] = historic[code]["congresses"]
+            else: 
+                data = historic[code]
+            
+        
+        if len(currentSub) > 0 or len(historicSub) > 0:
+            subCurrent = util.dictArrayToDict(currentSub, "thomas_id")
+            subHistoric = util.dictArrayToDict(historicSub, "thomas_id")
+            data["subcommittees"] = getAggregatedCommittees(subCurrent, subHistoric)
+
+        data["isCurrent"] = isCurrent
+        aggregated[code] = data
+    return aggregated
 
 
 def getMembersipRows(members, committee):

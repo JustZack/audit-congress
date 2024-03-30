@@ -135,7 +135,6 @@ def getCommitteeInsertThreads(committees):
         if "subcommittees" in com: 
             commData.extend(mparse.getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
 
-    logger.logInfo("Found",len(commData),"committees & subcommittees.")
     threads.append(zjthreads.buildThread(db.insertRows, "Committees", COMMITTEE_COLUMNS, commData))
     
     return threads
@@ -153,42 +152,10 @@ def getCommitteesAsDict(url):
     committees = util.getParsedJson(url)
     return util.dictArrayToDict(committees, "thomas_id")
 
-def getAggregatedCommittees(current, historic):
-    aggregated = dict()
-    cSet = set(current.keys())
-    cSet.update(historic.keys())
-
-    for code in cSet:
-        currentSub, historicSub = [], []
-        isCurrent = False
-        data = None
-        if code in current:
-            if "subcommittees" in current[code]: currentSub = current[code]["subcommittees"]
-            isCurrent = True
-            data = current[code]
-            
-        if code in historic:
-            if isCurrent:
-                data["names"] = historic[code]["names"]
-                data["congresses"] = historic[code]["congresses"]
-            else: 
-                data = historic[code]
-
-            if "subcommittees" in historic[code]: historicSub = historic[code]["subcommittees"]
-        
-        if len(currentSub) > 0 or len(historicSub) > 0:
-            subCurrent = util.dictArrayToDict(currentSub, "thomas_id")
-            subHistoric = util.dictArrayToDict(historicSub, "thomas_id")
-            data["subcommittees"] = getAggregatedCommittees(subCurrent, subHistoric)
-
-        data["isCurrent"] = isCurrent
-        aggregated[code] = data
-    return aggregated
-
 def parseCommittees():
     current = getCommitteesAsDict(CURRENT_COMMITTEES_URL)
     historic = getCommitteesAsDict(HISTORICAL_COMMITTEES_URL)
-    return getAggregatedCommittees(current, historic)
+    return mparse.getAggregatedCommittees(current, historic)
 
 def doCommitteeInsert():
     db.deleteRowsFromTables(["Committees"])
@@ -203,7 +170,6 @@ def getCommitteeMembershipInsertThread(membership):
         members = membership[code]
         memData.extend(mparse.getMembersipRows(members, code))
 
-    logger.logInfo("Found",len(memData),"membership entries.")
     return zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData)
 
 def doCommitteeMembershipInsert():
