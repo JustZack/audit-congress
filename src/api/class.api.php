@@ -1,6 +1,8 @@
 <?php
 
-use AuditCongress\Sessions;
+use \AuditCongress\Members;
+use \AuditCongress\Congresses;
+use \AuditCongress\Sessions;
 
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
@@ -216,7 +218,7 @@ class API {
 
     public static function HandleBioguideToThomasMapping() {
         try {
-            $data = \AuditCongress\Members::getBioguideToThomasIdMapping();
+            $data = Members::getBioguideToThomasIdMapping();
             $mapping = array("mapping" => $data);
             API::Success($mapping);
         } catch (Exception $e) {
@@ -240,10 +242,10 @@ class API {
         $year = API::getQueryArgIfSet("year");
         $current = API::getQueryArgIfSet("current");
 
-        if (isset($number))  return \AuditCongress\Congresses::getByNumber($number);
-        if (isset($year))    return \AuditCongress\Congresses::getByYear($year);
-        if (isset($current)) return \AuditCongress\Congresses::getCurrent();
-                             return \AuditCongress\Congresses::getAll();
+        if (isset($number))  return Congresses::getByNumber($number);
+        if (isset($year))    return Congresses::getByYear($year);
+        if (isset($current)) return Congresses::getCurrent();
+                             return Congresses::getAll();
     }
 
     public static function HandleGetCongress() {
