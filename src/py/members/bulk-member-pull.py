@@ -7,6 +7,7 @@ import sys
 sys.path.append(os.path.abspath("../"))
 
 from shared import logger, db, zjthreads, util, cache
+from members import memberparse as mparse
 
 SCRIPT_NAME = "bulk-member"
 
@@ -64,78 +65,15 @@ def doSimpleInsert(tableName, dataSourceUrl, threadInsertFunction, insertType):
 
 
 
-
-def getMemberRow(member, isCurrent):
-    mRow = []
-    mId, mName, mBio = member["id"], member["name"], member["bio"]
-    mRow.append(mId["bioguide"])
-    mRow.append(util.getFieldIfExists(mId, "thomas"))
-    mRow.append(util.getFieldIfExists(mId, "lis"))
-    mRow.append(util.getFieldIfExists(mId, "govtrack"))
-    mRow.append(util.getFieldIfExists(mId, "opensecrets"))
-    mRow.append(util.getFieldIfExists(mId, "votesmart"))
-    mRow.append(util.getFieldIfExists(mId, "cspan"))
-    mRow.append(util.getFieldIfExists(mId, "maplight"))
-    mRow.append(util.getFieldIfExists(mId, "icpsr"))
-    mRow.append(util.getFieldIfExists(mId, "wikidata"))
-    mRow.append(util.getFieldIfExists(mId, "google_entity_id"))
-
-    mRow.append(util.getFieldIfExists(mName, "official_full"))
-    mRow.append(util.getFieldIfExists(mName, "first"))
-    mRow.append(util.getFieldIfExists(mName, "last"))
-
-    mRow.append(util.getFieldIfExists(mBio, "gender"))
-    mRow.append(util.getFieldIfExists(mBio, "birthday"))
-
-    mRow.append(isCurrent)
-    
-    return appendMemberUpdateTimes(mRow)
-
-def getTermRows(terms, bioguideId):
-    mTerms = []
-    for term in terms:
-        mTerm = []
-        mTerm.append(bioguideId)
-        mTerm.append(util.getFieldIfExists(term, "type"))
-        mTerm.append(util.getFieldIfExists(term, "start"))
-        mTerm.append(util.getFieldIfExists(term, "end"))
-        mTerm.append(util.getFieldIfExists(term, "state"))
-        mTerm.append(util.getFieldIfExists(term, "district"))
-        mTerm.append(util.getFieldIfExists(term, "party"))
-        mTerm.append(util.getFieldIfExists(term, "class"))
-        mTerm.append(util.getFieldIfExists(term, "how"))
-        mTerm.append(util.getFieldIfExists(term, "state_rank"))
-        mTerm.append(util.getFieldIfExists(term, "url"))
-        mTerm.append(util.getFieldIfExists(term, "rss_url"))
-        mTerm.append(util.getFieldIfExists(term, "contact_form"))
-        mTerm.append(util.getFieldIfExists(term, "address"))
-        mTerm.append(util.getFieldIfExists(term, "office"))
-        mTerm.append(util.getFieldIfExists(term, "phone"))
-
-        mTerms.append(appendMemberUpdateTimes(mTerm))
-    return mTerms
-
-def getElectionRows(elections, bioguideId):
-    mElections = []
-    for election in elections:
-        mElection = []
-        mElection.append(election)
-        mElection.append(bioguideId)
-
-        mElections.append(appendMemberUpdateTimes(mElection))
-    return mElections
-
-
-
 def getMemberInsertThreads(members, isCurrent):
     threads = []
     memberData, termData, electData = [], [], []
     for member in members:
         bioguideId = member["id"]["bioguide"]
-        memberData.append(getMemberRow(member, isCurrent))
-        termData.extend(getTermRows(member["terms"], bioguideId))
+        memberData.append(mparse.getMemberRow(member, isCurrent))
+        termData.extend(mparse.getTermRows(member["terms"], bioguideId))
         if "fec" in member["id"]:
-            electData.extend(getElectionRows(member["id"]["fec"], bioguideId))
+            electData.extend(mparse.getElectionRows(member["id"]["fec"], bioguideId))
 
     threads.append(zjthreads.buildThread(db.insertRows, "Members", MEMBER_COLUMNS, memberData))
     threads.append(zjthreads.buildThread(db.insertRows, "MemberTerms", TERM_COLUMNS, termData))
@@ -170,25 +108,9 @@ def doMemberInsert():
 
 
 
-def getSocialRow(social):
-    sRow = []
-    sId, sSocial = social["id"], social["social"]
-
-    sRow.append(sId["bioguide"])
-    sRow.append(util.getFieldIfExists(sSocial, "twitter"))
-    sRow.append(util.getFieldIfExists(sSocial, "twitter_id"))
-    sRow.append(util.getFieldIfExists(sSocial, "facebook"))
-    sRow.append(util.getFieldIfExists(sSocial, "facebook_id"))
-    sRow.append(util.getFieldIfExists(sSocial, "youtube"))
-    sRow.append(util.getFieldIfExists(sSocial, "youtube_id"))
-    sRow.append(util.getFieldIfExists(sSocial, "instagram"))
-    sRow.append(util.getFieldIfExists(sSocial, "instagram_id"))
-
-    return appendMemberUpdateTimes(sRow)
-
 def getSocialInsertThread(socials):
     socData = []
-    for social in socials: socData.append(getSocialRow(social))
+    for social in socials: socData.append(mparse.getSocialRow(social))
     
     return zjthreads.buildThread(db.insertRows, "MemberSocials", SOCIAL_COLUMNS, socData)
 
@@ -197,33 +119,12 @@ def doSocialsInsert():
 
 
 
-def getOfficeRows(bioguideId, offices):
-    mOffices = []
-    for office in offices:
-        mOffice = []
-
-        mOffice.append(util.getFieldIfExists(office, "id"))
-        mOffice.append(bioguideId)
-        mOffice.append(util.getFieldIfExists(office, "address"))
-        mOffice.append(util.getFieldIfExists(office, "suite"))
-        mOffice.append(util.getFieldIfExists(office, "building"))
-        mOffice.append(util.getFieldIfExists(office, "city"))
-        mOffice.append(util.getFieldIfExists(office, "state"))
-        mOffice.append(util.getFieldIfExists(office, "zip"))
-        mOffice.append(util.getFieldIfExists(office, "latitude"))
-        mOffice.append(util.getFieldIfExists(office, "longitude"))
-        mOffice.append(util.getFieldIfExists(office, "phone"))
-        mOffice.append(util.getFieldIfExists(office, "fax"))
-
-        mOffices.append(appendMemberUpdateTimes(mOffice))
-    return mOffices
-
 def getOfficeInsertThread(offices):
     offData = []
     for memberOffices in offices: 
         bioguideId = memberOffices["id"]["bioguide"]
         mOffices = memberOffices["offices"]
-        offData.extend(getOfficeRows(bioguideId, mOffices))
+        offData.extend(mparse.getOfficeRows(bioguideId, mOffices))
 
     return zjthreads.buildThread(db.insertRows, "MemberOffices", OFFICES_COLUMNS, offData)
 
@@ -232,51 +133,18 @@ def doOfficesInsert():
 
 
 
-
-def getCommitteeRow(committee):
-    cRow = []
-
-    cRow.append(committee["thomas_id"])
-    cRow.append(util.getFieldIfExists(committee, "parent_id"))
-    cRow.append(util.getFieldIfExists(committee, "type"))
-    cRow.append(util.getFieldIfExists(committee, "name"))
-    cRow.append(util.getFieldIfExists(committee, "wikipedia"))
-    cRow.append(util.getFieldIfExists(committee, "jurisdiction"))
-    cRow.append(util.getFieldIfExists(committee, "jurisdiction_source"))
-    cRow.append(util.getFieldIfExists(committee, "url"))
-    cRow.append(util.getFieldIfExists(committee, "rss_url"))
-    cRow.append(util.getFieldIfExists(committee, "minority_url"))
-    cRow.append(util.getFieldIfExists(committee, "minority_rss_url"))
-    cRow.append(util.getFieldIfExists(committee, "youtube_id"))
-    cRow.append(util.getFieldIfExists(committee, "address"))
-    cRow.append(util.getFieldIfExists(committee, "phone"))
-    cRow.append(committee["isCurrent"])
-
-    return cRow
-
-def getSubCommitteeRows(subcommitees, parentId, parentType):
-    subComData = []
-    for sub in subcommitees: 
-        subCom = subcommitees[sub]
-        subCom["type"] = parentType
-        subCom["parent_id"] = parentId
-        subCom["thomas_id"] = parentId+subCom["thomas_id"]
-        subComData.append(getCommitteeRow(subCom))
-    return subComData
-
 def getCommitteeInsertThreads(committees):
     threads, commData, ComHistData = [], [], []
     for code in committees:
         com = committees[code]
-        commData.append(getCommitteeRow(com))
+        commData.append(mparse.getCommitteeRow(com))
         if "subcommittees" in com: 
-            commData.extend(getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
+            commData.extend(mparse.getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
 
     logger.logInfo("Found",len(commData),"committees & subcommittees.")
     threads.append(zjthreads.buildThread(db.insertRows, "Committees", COMMITTEE_COLUMNS, commData))
     
     return threads
-
 
 def insertCommittees(committees):
     startInsert, threads, comCount = datetime.now(), [], len(committees)
@@ -335,23 +203,11 @@ def doCommitteeInsert():
 
 
 
-def getMembersipRows(members, committee):
-    membershipData = []
-    for mem in members:
-        cMember = []
-        cMember.append(committee)
-        cMember.append(util.getFieldIfExists(mem, "bioguide"))
-        cMember.append(util.getFieldIfExists(mem, "party"))
-        cMember.append(util.getFieldIfExists(mem, "title"))
-        cMember.append(util.getFieldIfExists(mem, "rank"))
-        membershipData.append(cMember)
-    return membershipData
-
-def getCommitteeMembershipInsertThreads(membership):
+def getCommitteeMembershipInsertThread(membership):
     threads, memData = [], []
     for code in membership:
         members = membership[code]
-        memData.extend(getMembersipRows(members, code))
+        memData.extend(mparse.getMembersipRows(members, code))
 
     logger.logInfo("Found",len(memData),"membership entries.")
     threads.append(zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData))
@@ -361,7 +217,7 @@ def getCommitteeMembershipInsertThreads(membership):
 def insertCommitteeMembership(membership):
     startInsert, threads, comCount = datetime.now(), [], len(membership)
 
-    threads.extend(getCommitteeMembershipInsertThreads(membership))
+    threads.extend(getCommitteeMembershipInsertThread(membership))
 
     logger.logInfo("Starting insert of", comCount, "committees membership lists with", len(threads), "threads.")
     zjthreads.startThenJoinThreads(threads)
