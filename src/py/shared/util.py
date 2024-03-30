@@ -84,10 +84,6 @@ def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
     except Exception as e:    
         logExceptionThen("Stopped with Exception: {}".format(e), onExceptFunction, *onExceptArguments)
 
-def throwIfScriptAlreadyRunning(scriptName):
-    #Make sure the script isnt already running according to the DB
-    if cache.isScriptRunning(scriptName): raise Exception("Tried running script '{}' when it is already running! Exiting.".format(scriptName))
-
 def genericBulkScriptSetup(scriptName):
     #Set the log action
     logger.setLogAction(scriptName)
@@ -98,7 +94,7 @@ def genericBulkScriptSetup(scriptName):
 def genericBulkScriptMain(setupFunction, mainFunction, scriptName):
     setupFunction()
 
-    throwIfScriptAlreadyRunning(scriptName)
+    cache.throwIfScriptAlreadyRunning(scriptName)
 
     cache.setScriptRunning(scriptName, True)
     mainFunction()

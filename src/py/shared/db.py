@@ -95,7 +95,7 @@ def countRows(tableName, whereCol=None, whereVal=None):
     if None not in {whereVal, whereCol}: sql = COUNT_WHERE_SQL.format(tableName, whereCol, congress)
     else: sql = COUNT_SQL.format(tableName)
 
-    count =   runReturningSql(sql)[0]
+    count = runReturningSql(sql)[0][0]
     return count
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
