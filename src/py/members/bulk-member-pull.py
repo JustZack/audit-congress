@@ -158,6 +158,7 @@ def parseCommittees():
     return mparse.getAggregatedCommittees(current, historic)
 
 def doCommitteeInsert():
+    #TODO: Manage committee history aswell
     db.deleteRowsFromTables(["Committees"])
     committees = parseCommittees()
     insertCommittees(committees)
