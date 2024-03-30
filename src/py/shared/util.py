@@ -88,10 +88,6 @@ def throwIfScriptAlreadyRunning(scriptName):
     #Make sure the script isnt already running according to the DB
     if cache.isScriptRunning(scriptName): raise Exception("Tried running script '{}' when it is already running! Exiting.".format(scriptName))
 
-def updateScriptRunningStatus(scriptName, isRunning):
-    sql = "UPDATE CacheStatus SET isRunning = {} WHERE source = '{}'".format(isRunning, scriptName)
-    db.runCommitingSql(sql)
-
 def genericBulkScriptSetup(scriptName):
     #Set the log action
     logger.setLogAction(scriptName)

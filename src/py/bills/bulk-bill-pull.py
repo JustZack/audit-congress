@@ -6,7 +6,7 @@ from pprint import pprint
 import sys
 sys.path.append(os.path.abspath("../"))
 
-from shared import logger, db, zjthreads, util
+from shared import logger, db, zjthreads, util, cache
 from bills import billparse as bparse
 
 SCRIPT_NAME = "bulk-bill"
@@ -23,7 +23,7 @@ def fetchLastCongress():
 
     sql = "SELECT status FROM CacheStatus where source = 'bulk-bill'"
     result = db.runReturningSql(sql)
-    if (len(result) == 1): LAST_CONGRESS_PROCESSED = int(result[0])
+    if (len(result) == 1): LAST_CONGRESS_PROCESSED = int(result[0][0])
     elif (len(result) == 0):
         sql = "INSERT INTO CacheStatus (source, status) VALUES ('bulk-bill', 93)"
         result = db.runCommitingSql(sql)
@@ -177,4 +177,6 @@ def doBulkBillPull():
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull, SCRIPT_NAME)
 
-if __name__ == "__main__": util.runAndCatchMain(main, util.updateScriptRunningStatus, SCRIPT_NAME, False)
+if __name__ == "__main__": 
+    main()
+    #util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)

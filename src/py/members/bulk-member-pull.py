@@ -119,6 +119,7 @@ def getElectionRows(elections, bioguideId):
         mElection = []
         mElection.append(election)
         mElection.append(bioguideId)
+        
         mElections.append(appendMemberUpdateTimes(mElection))
     return mElections
 
@@ -269,7 +270,7 @@ def getCommitteeInsertThreads(committees):
         if "subcommittees" in com: 
             commData.extend(getSubCommitteeRows(com["subcommittees"], com["thomas_id"], com["type"]))
 
-    print("Found",len(commData),"committees & subcommittees.")
+    logger.logInfo("Found",len(commData),"committees & subcommittees.")
     threads.append(zjthreads.buildThread(db.insertRows, "Committees", COMMITTEE_COLUMNS, commData))
     
     return threads
@@ -324,8 +325,6 @@ def parseCommittees():
     current = getCommitteesAsDict(CURRENT_COMMITTEES_URL)
     historic = getCommitteesAsDict(HISTORICAL_COMMITTEES_URL)
     return getAggregatedCommittees(current, historic)
-
-    #parseAndInsertCommittees(committees, isCurrent)
 
 def doCommitteeInsert():
     db.deleteRowsFromTables(["Committees"])
