@@ -1,6 +1,5 @@
 import time
 from shared import util
-from pprint import pprint
 
 CURRENT_CONGRESS_API_URL = "http://localhost/audit-congress/src/api/api.php?route=congress&current"
 CURRENT_CONGRESS = None
