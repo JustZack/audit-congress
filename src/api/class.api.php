@@ -1,5 +1,7 @@
 <?php
 
+use AuditCongress\Sessions;
+
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
 
@@ -253,24 +255,6 @@ class API {
         }
     }
 
-    private static function getSessionsByCongressNumberChamber($congress, $number, $chamber) {
-        if (isset($congress) && isset($number) && isset($chamber))
-            return \AuditCongress\Sessions::getByCongressNumberAndChamber(                               $congress, $number, $chamber);
-        if (isset($congress) && isset($number))
-            return \AuditCongress\Sessions::getByCongressAndNumber($congress, $number);
-        if (isset($congress) && isset($chamber))
-            return \AuditCongress\Sessions::getByCongressAndChamber($congress, $chamber);
-        if (isset($number) && isset($chamber))
-            return \AuditCongress\Sessions::getByNumberAndChamber($number, $chamber);
-        if (isset($congress))
-            return \AuditCongress\Sessions::getByCongress($congress);
-        if (isset($number))
-            return \AuditCongress\Sessions::getByNumber($number);
-        if (isset($chamber))
-            return \AuditCongress\Sessions::getByChamber($chamber);
-        return null;
-    }
-
     private static function getSessionData() {
         $congress = API::getQueryArgIfSet("congress");
         $number = API::getQueryArgIfSet("number");
@@ -278,16 +262,11 @@ class API {
         $date = API::getQueryArgIfSet("date");
         $current = API::getQueryArgIfSet("current");
 
-        $data = null;
-        if (isset($congress) || isset($number) || isset($chamber))
-            $data = API::getSessionsByCongressNumberChamber($congress, $number, $chamber);
-        if ($data != null) return $data;
-
-        if (isset($date))
-            return \AuditCongress\Sessions::getByDate($date);
-        if (isset($current))
-            return \AuditCongress\Sessions::getCurrent();
-        return \AuditCongress\Sessions::getAll();
+        if (isset($congress) || isset($number) || isset($chamber)) 
+            return Sessions::getByCongressNumberOrChamber($congress, $number, $chamber);
+        if (isset($date)) return Sessions::getByDate($date);
+        if (isset($current)) return Sessions::getCurrent();
+        return Sessions::getAll();
     }
 
     public static function HandleGetSession() {
