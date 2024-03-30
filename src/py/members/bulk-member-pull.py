@@ -46,17 +46,17 @@ COMMITTEE_MEMBERSHIP_COLUMNS = ["thomasId", "bioguideId", "party", "title", "mem
 #Works best with chunk size > len(currentMembers) and size <= 1000
 MEMBER_CHUNK_SIZE = 1000
 
-def doSingleThreadedMemberInsert(data, threadFunction, insertType):
+def doThreadedInsert(data, threadFunction, insertType):
     startInsert, threads, count = datetime.now(), [], len(data)
 
     logger.logInfo("Starting insert of", count, "member's {}.".format(insertType))
-    zjthreads.startThenJoinThreads([threadFunction(data)])
+    zjthreads.startThenJoinThreads(threadFunction(data))
     logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", count, "member's {}.".format(insertType))
 
 def doSimpleInsert(tableName, dataSourceUrl, threadInsertFunction, insertType):
     db.deleteRows(tableName)
     data = util.getParsedJson(dataSourceUrl)
-    doSingleThreadedMemberInsert(data, threadInsertFunction, insertType)
+    doThreadedInsert(data, threadInsertFunction, insertType)
 
 
 
@@ -107,7 +107,7 @@ def getSocialInsertThread(socials):
     socData = []
     for social in socials: socData.append(mparse.getSocialRow(social))
     
-    return zjthreads.buildThread(db.insertRows, "MemberSocials", SOCIAL_COLUMNS, socData)
+    return [zjthreads.buildThread(db.insertRows, "MemberSocials", SOCIAL_COLUMNS, socData)]
 
 def doSocialsInsert(): 
     doSimpleInsert("MemberSocials", LEGISLATORS_SOCIALS_URL, getSocialInsertThread, "socials")
@@ -121,7 +121,7 @@ def getOfficeInsertThread(offices):
         mOffices = memberOffices["offices"]
         offData.extend(mparse.getOfficeRows(bioguideId, mOffices))
 
-    return zjthreads.buildThread(db.insertRows, "MemberOffices", OFFICES_COLUMNS, offData)
+    return [zjthreads.buildThread(db.insertRows, "MemberOffices", OFFICES_COLUMNS, offData)]
 
 def doOfficesInsert():
     doSimpleInsert("MemberOffices", LEGISLATORS_OFFICES_URL, getOfficeInsertThread, "offices")
@@ -146,15 +146,6 @@ def getCommitteeInsertThreads(committees):
     
     return threads
 
-def insertCommittees(committees):
-    startInsert, threads, comCount = datetime.now(), [], len(committees)
-
-    threads.extend(getCommitteeInsertThreads(committees))
-
-    logger.logInfo("Starting insert of", comCount, "committees and their sub data with", len(threads), "threads.")
-    zjthreads.startThenJoinThreads(threads)
-    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", comCount, "committees.")
-
 def getCommitteesAsDict(url):
     committees = util.getParsedJson(url)
     return util.dictArrayToDict(committees, "thomas_id")
@@ -165,10 +156,9 @@ def parseCommittees():
     return mparse.getAggregatedCommittees(current, historic)
 
 def doCommitteeInsert():
-    #TODO: Manage committee history aswell
     db.deleteRowsFromTables(["Committees", "CommitteeHistory"])
     committees = parseCommittees()
-    insertCommittees(committees)
+    doThreadedInsert(committees, getCommitteeInsertThreads, "committees")
 
 
 
@@ -178,7 +168,7 @@ def getCommitteeMembershipInsertThread(membership):
         members = membership[code]
         memData.extend(mparse.getMembersipRows(members, code))
 
-    return zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData)
+    return [zjthreads.buildThread(db.insertRows, "CommitteeMembership", COMMITTEE_MEMBERSHIP_COLUMNS, memData)]
 
 def doCommitteeMembershipInsert():
     doSimpleInsert("CommitteeMembership", CURRENT_COMMITTEE_LEGISLATORS_URL, getCommitteeMembershipInsertThread, "committee membership")
