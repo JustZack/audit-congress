@@ -5,6 +5,14 @@ import requests as rq
 from bs4 import BeautifulSoup
 import xmltodict as xml2d
 
+from shared import logger, db, cache
+
+def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
+
+def dictArrayToDict(dictArray, dictKeyToUse):
+    newDict = dict()
+    for aDict in dictArray: newDict[aDict[dictKeyToUse]] = aDict
+    return newDict
 
 def seconds_since(a): return (datetime.now()-a).total_seconds()
 
@@ -63,3 +71,31 @@ def pathIsFile(path):
     lastSlash = path.rfind("/") + 1
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
+
+def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments):
+        logger.logError(exceptionMessage)
+        if onExceptFunction is not None: onExceptFunction(*onExceptArguments)
+
+def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
+    try:                      
+        mainFunction()
+    except KeyboardInterrupt: 
+        logExceptionThen("Manually ended script via ctrl+c", onExceptFunction, *onExceptArguments)
+    except Exception as e:    
+        logExceptionThen("Stopped with Exception: {}".format(e), onExceptFunction, *onExceptArguments)
+
+def genericBulkScriptSetup(scriptName):
+    #Set the log action
+    logger.setLogAction(scriptName)
+
+    #Make sure the DB schema is valid first
+    db.throwIfShemaInvalid()
+
+def genericBulkScriptMain(setupFunction, mainFunction, scriptName):
+    setupFunction()
+
+    cache.throwIfScriptAlreadyRunning(scriptName)
+
+    cache.setScriptRunning(scriptName, True)
+    mainFunction()
+    cache.setScriptRunning(scriptName, False)

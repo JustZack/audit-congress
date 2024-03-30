@@ -5,7 +5,7 @@ import mysql.connector
 import sys, os
 sys.path.append(os.path.abspath("../"))
 
-from shared import util, zjthreads
+from shared import util, zjthreads, logger
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
 
@@ -38,7 +38,6 @@ def mysql_execute_query(mysql_conn, sql, use_database):
 # Executes Many querys, based on executeMany. Best for inserts.
 def mysql_execute_many_querys(mysql_conn, sql, data, database):
     mysql_cursor = mysql_conn.cursor()
-
     if database is not None:
         mysql_cursor.execute("USE "+database)
 
@@ -95,7 +94,12 @@ def countRows(tableName, whereCol=None, whereVal=None):
     if None not in {whereVal, whereCol}: sql = COUNT_WHERE_SQL.format(tableName, whereCol, congress)
     else: sql = COUNT_SQL.format(tableName)
 
-    count =   runReturningSql(sql)[0]
+    count = runReturningSql(sql)[0][0]
     return count
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
+
+def throwIfShemaInvalid():
+    #Make sure the DB schema is valid first
+    if schemaIsValid(): logger.logInfo("Confirmed DB Schema is valid via the API.")
+    else: raise Exception("Could not validate the DB schema via API. Exiting.")

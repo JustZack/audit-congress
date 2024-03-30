@@ -12,6 +12,7 @@ Ideal user experience:
 If I ever complete this project, a public link will be hosted here. For now this is just for my own fun and portfolio. 
 
 Note SQL Server properties changed for performance:
+
 [mysqld]
 max_connections = 500
 max_allowed_packet=500M
