@@ -9,7 +9,7 @@ namespace AuditCongress {
         }
         
         static function getConfig() {
-            $configFile = file_get_contents(ROOTFOLDER."config");
+            $configFile = file_get_contents(AUDITCONGRESS_CONFIG);
             $config = explode("\r\n",$configFile);
 
             $settings = array();
@@ -21,6 +21,15 @@ namespace AuditCongress {
                 }
             }
             return $settings;
+        }
+
+        static function getCacheSettings() {
+            $settings = json_decode(file_get_contents(AUDITCONGRESS_CACHE_SETTINGS), true);
+            return $settings;
+        }
+
+        static function getSchemaPath() {
+            return AUDITCONGRESS_DB_SCHEMA;
         }
     }
 }
