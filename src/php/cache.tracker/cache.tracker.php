@@ -5,7 +5,9 @@ namespace AuditCongress {
     use DateTime;
 
     class CacheTracker {
-        public $cacheName;
+        public 
+            $cacheName,
+            $cacheSettings;
         private static $settings = null;
         private static $defaultSettings = null;
 
@@ -13,8 +15,13 @@ namespace AuditCongress {
             $this->cacheName = $cacheName;
             if (CacheTrackerQuery::$tableName == null)
                 throw new \Exception("CacheTracker: Must call static::initCacheTracker first");
+            if (self::hasDefinedSettings()) $this->cacheSettings = self::getCacheSettings($cacheName);
         }
         
+        private static function hasDefinedSettings() {
+            return isset(self::$settings) || isset(self::$defaultSettings);
+        }
+
         public static function initCacheTracker($tableName, $settings) { 
             CacheTrackerQuery::$tableName = $tableName; 
             self::$settings = $settings["caches"];
@@ -29,35 +36,56 @@ namespace AuditCongress {
             return isset($settings["updateTimesIn24HrUTC"]) && count($settings["updateTimesIn24HrUTC"]);
         }
 
-        private static function getNextCacheUpdate($settings) {
+        private static function hoursToSeconds($hours) { return $hours*60*60; }
+        private static function secondsToHours($seconds) { return (int)($seconds/60/60)%24; }
+
+        private static function getFirstHourPastNow($hoursArray) {
+            $currentHour = self::secondsToHours(time());
+            foreach ($hoursArray as $hour) if ($currentHour < $hour) return $hour;
+            return -1;
+        }
+
+        public function getNextCacheUpdate() {
             $nextUpdate = 0;
             //If updateTimesIn24Hr has values, use these as the basis for $nextUpdate
-            if (self::settingsUseSpecificTimes($settings)) {
-                $currentHour = (int)(time()/60/60)%24;
-                $updateHours = $settings["updateTimesIn24HrUTC"];
-                foreach ($updateHours as $hour) {
-                    if ($currentHour < $hour) {
-                        $d = new DateTime(date("Y-m-d $hour:00:00"));
-                        $nextUpdate = $d->getTimestamp();
-                        break;
-                    }
+            if (self::settingsUseSpecificTimes($this->cacheSettings)) {
+                $updateHours = $this->cacheSettings["updateTimesIn24HrUTC"];
+                $nextHour = self::getFirstHourPastNow($updateHours);
+                $offset = 0;
+                //$nextHour == -1 => time() is later than all given hours
+                //  So instead use the first hour for the next day
+                if ($nextHour == -1) {
+                    $nextHour = $updateHours[0];
+                    $offset = self::hoursToSeconds(24);
                 }
-            } else $nextUpdate = time() + $settings["updateIntervalInHours"]*60*60;
+                $d = new DateTime(date("Y-m-d $nextHour:00:00"));
+                $nextUpdate = $d->getTimestamp() + $offset;
+            } else {
+                $nextUpdate = time() + self::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
+            }
 
             return self::getTimeStr($nextUpdate);
+        }
+
+        private static function setNeededDefaults($settings) {
+            //Ensure required fields are set via the default settings if they are not present.
+            if (!self::settingsUseSpecificTimes($settings) && !isset($settings["updateIntervalInHours"]))
+                $settings["updateIntervalInHours"] = self::$defaultSettings["updateIntervalInHours"];
+            if (!isset($settings["status"]))
+                $settings["status"] = self::$defaultSettings["status"];
+            return $settings;
         }
 
         public static function getCacheSettings($cacheName) {
             $cSettings = null;
             
-            if (isset(self::$settings[$cacheName])) {
-                $cSettings = self::$settings[$cacheName];
-                //Ensure some required fields are set via the default settings if not present.
-                if (!self::settingsUseSpecificTimes($cSettings) && !isset($cSettings["updateIntervalInHours"]))
-                    $cacheSettings["updateIntervalInHours"] = self::$defaultSettings["updateIntervalInHours"];
-                if (!isset($cSettings["status"]))
-                    $cacheSettings["status"] = self::$defaultSettings["status"];
-            } else $cSettings = self::$defaultSettings;
+            //If this cache is defined in the settings array
+            if (isset(self::$settings[$cacheName]))
+                //Pull it and set any missing fields via the default settings
+                $cSettings = self::setNeededDefaults(self::$settings[$cacheName]);
+            else
+                //Otherwise use the default settings
+                $cSettings = self::$defaultSettings;
 
             return $cSettings;
         }

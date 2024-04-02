@@ -22,7 +22,7 @@
     "caches": {
         "bulk-bill": {
             "status": 0,
-            "updateTimesIn24HrUTC": [2, 18],
+            "updateTimesIn24HrUTC": [8, 16],
             "scriptPath": "src/py/bills/bulk-bill-pull.py"
         },
         "bulk-member": {

@@ -2,8 +2,6 @@
 //Use the testing namespace
 namespace APITest;
 
-use AuditCongress\CacheTracker;
-
 //Load everything needed for any congress API calls all at once
 require_once "test/autoload.php";
 
@@ -53,4 +51,5 @@ require_once "test/autoload.php";
 //CongressGov::getTitlesTest(117, "hr", "3076");
 //CongressGov::getCongressesTest();
 
+CacheTracker::testGetCacheNextUpdate("bulk-bill");
 ?>
