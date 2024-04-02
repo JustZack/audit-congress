@@ -26,48 +26,40 @@ namespace AuditCongress {
             self::$defaultSettings = $settings["default"];
         }
 
-        private static function getTimeStr($secondsSinceEpoch) {
-            return date("Y-m-d H:i:s", $secondsSinceEpoch);
-        }
-
-        private static function settingsUseSpecificTimes($settings) {
+        private static function cacheUsesSpecificTimes($settings) {
             return isset($settings["updateTimesIn24HrUTC"]) && count($settings["updateTimesIn24HrUTC"]);
         }
 
-        private static function hoursToSeconds($hours) { return $hours*60*60; }
-        private static function secondsToHours($seconds) { return (int)($seconds/60/60)%24; }
-
-        private static function getFirstHourPastNow($hoursArray) {
-            $currentHour = self::secondsToHours(time());
-            foreach ($hoursArray as $hour) if ($currentHour < $hour) return $hour;
-            return -1;
+        private static function cacheUsesScript($settings) {
+            return isset($settings["scriptPath"]);
         }
 
         public function getNextCacheUpdate() {
             $nextUpdate = 0;
             //If updateTimesIn24Hr has values, use these as the basis for $nextUpdate
-            if (self::settingsUseSpecificTimes($this->cacheSettings)) {
+            if (self::cacheUsesSpecificTimes($this->cacheSettings)) {
                 $updateHours = $this->cacheSettings["updateTimesIn24HrUTC"];
-                $nextHour = self::getFirstHourPastNow($updateHours);
+                
+                $nextHour = \Util\Time::getFirstHourPastNow($updateHours);
                 $offset = 0;
                 //$nextHour == -1 => time() is later than all given hours
                 //  So instead use the first hour for the next day
                 if ($nextHour == -1) {
                     $nextHour = $updateHours[0];
-                    $offset = self::hoursToSeconds(24);
+                    $offset = \Util\Time::hoursToSeconds(24);
                 }
                 $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
                 $nextUpdate = $d->getTimestamp() + $offset;
             } else {
-                $nextUpdate = time() + self::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
+                $nextUpdate = time() + \Util\Time::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
             }
 
-            return self::getTimeStr($nextUpdate);
+            return \Util\Time::getDateTimeStr($nextUpdate);
         }
 
         private static function setNeededDefaults($settings) {
             //Ensure required fields are set via the default settings if they are not present.
-            if (!self::settingsUseSpecificTimes($settings) && !isset($settings["updateIntervalInHours"]))
+            if (!self::cacheUsesSpecificTimes($settings) && !isset($settings["updateIntervalInHours"]))
                 $settings["updateIntervalInHours"] = self::$defaultSettings["updateIntervalInHours"];
             if (!isset($settings["status"]))
                 $settings["status"] = self::$defaultSettings["status"];
@@ -104,27 +96,28 @@ namespace AuditCongress {
 
         public function isRunning() { return $this->getCacheColumn("isRunning"); }
 
-        public function runCachingScript() {
-            $out = array();
-            if ($this->cacheSettings["scriptPath"]) {
-                $runner = $this->cacheSettings["scriptRunner"];
-                $path = realpath(ROOTFOLDER.$this->cacheSettings["scriptPath"]);
-                $lastSlash = strrpos($path, DIRECTORY_SEPARATOR);
-
-                $dir = substr($path, 0, $lastSlash);
-                $file = substr($path, $lastSlash+1);
-
-                exec("cd $dir && $runner $file", $out);
-            }
-            return $out;
-        }
-
         public function isSet() { return $this->getRow() != null; }
  
         public function setCacheStatus($status, $isRunning) {
             $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
             if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
             $function($this->cacheName, $status, $isRunning);
+        }
+
+        public function runCachingScript($waitForComplete = true) {
+            $out = array();
+            if (self::cacheUsesScript($this->cacheSettings)) {
+                $runner = $this->cacheSettings["scriptRunner"];
+                $path = \Util\File::getAbsolutePath($this->cacheSettings["scriptPath"]);
+                $dir = \Util\File::getFolderPath($path);
+                $file = \Util\File::getFileName($path);
+
+                //$post = !$waitForComplete ? " > /dev/null &" : "";
+                $cmd = "cd $dir && $runner $file";
+                array_push($out, $cmd);
+                exec($cmd, $out);
+            }
+            return $out;
         }
 
         public function setRunning($isRunning) { $this->setCacheStatus(null, $isRunning); }

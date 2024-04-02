@@ -15,7 +15,7 @@ namespace APITest {
 
         static function testRunCacheScript($cacheName) {
             $ct = self::testGetCache($cacheName);
-            $output = $ct->runCachingScript();
+            $output = $ct->runCachingScript(false);
             var_dump($output);
         }
     }
