@@ -4,7 +4,7 @@ define("AUDITCONGRESS_FOLDER", __DIR__);
 define("ROOTFOLDER", __DIR__."\\..\\..\\..\\");
 define("AUDITCONGRESS_DB_SCHEMA", ROOTFOLDER."audit.congress.schema.json");
 define("AUDITCONGRESS_CACHE_SETTINGS", ROOTFOLDER."audit.congress.cache.settings.json");
-define("AUDITCONGRESS_CONFIG", ROOTFOLDER."config");
+define("AUDITCONGRESS_CONFIG", ROOTFOLDER."config.json");
 
 require_once AUDITCONGRESS_FOLDER."\..\mysql.connector\autoload.php";
 require_once AUDITCONGRESS_FOLDER."\..\propublica.api\autoload.php";

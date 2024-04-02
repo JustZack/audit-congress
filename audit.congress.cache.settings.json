@@ -9,15 +9,16 @@
             "status": "The initializing value for the 'status' column.",
             "updateIntervalInHours": "Define how long to wait between cache updates. Set to null",
             "updateTimesIn24HrUTC": "Define specific (UTC) times when this cache should be updated every day. Overrides 'updateIntervalInHours' if not null/empty array",
-            "scriptPath": "If applicable, define the path (relative to ROOTFOLDER) the script which updates the cache"
-
+            "scriptPath": "If applicable, define the path (relative to ROOTFOLDER) the script which updates the cache",
+            "scriptRunner": "If applicable, define the command used to run this script"
         }
     },
     "default": {
         "status": "",
         "updateIntervalInHours": 24,
         "updateTimesIn24HrUTC": [],
-        "scriptPath": null
+        "scriptPath": null,
+        "scriptRunner": ""
     },
     "caches": {
         "bulk-bill": {

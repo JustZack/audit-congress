@@ -9,23 +9,11 @@ namespace AuditCongress {
         }
         
         static function getConfig() {
-            $configFile = file_get_contents(AUDITCONGRESS_CONFIG);
-            $config = explode("\r\n",$configFile);
-
-            $settings = array();
-            foreach ($config as $setting) {
-                //Only process valid settings like: a;=;b
-                if (strlen($setting) >= 5) {
-                    $parts = explode(";=;", $setting);
-                    $settings[$parts[0]] = $parts[1];
-                }
-            }
-            return $settings;
+            return \Util\File::readJSONFile(AUDITCONGRESS_CONFIG);
         }
 
         static function getCacheSettings() {
-            $settings = json_decode(file_get_contents(AUDITCONGRESS_CACHE_SETTINGS), true);
-            return $settings;
+            return \Util\File::readJSONFile(AUDITCONGRESS_CACHE_SETTINGS);
         }
 
         static function getSchemaPath() {

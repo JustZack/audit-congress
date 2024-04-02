@@ -19,6 +19,11 @@ namespace Util {
             $lastSlash = self::getLastSlashPos($absolutePathToFile);
             return substr($absolutePathToFile, $lastSlash+1);
         }
+        
+        public static function readJSONFile($path) {
+            $file =  file_get_contents($path);
+            return json_decode($file, true);
+        }
     }
 }
 
