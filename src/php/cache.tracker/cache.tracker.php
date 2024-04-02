@@ -2,8 +2,6 @@
 
 namespace AuditCongress {
 
-    use DateTime;
-
     class CacheTracker {
         public 
             $cacheName,
@@ -58,7 +56,7 @@ namespace AuditCongress {
                     $nextHour = $updateHours[0];
                     $offset = self::hoursToSeconds(24);
                 }
-                $d = new DateTime(date("Y-m-d $nextHour:00:00"));
+                $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
                 $nextUpdate = $d->getTimestamp() + $offset;
             } else {
                 $nextUpdate = time() + self::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
@@ -105,6 +103,21 @@ namespace AuditCongress {
         public function getStatus() { return $this->getCacheColumn("status"); }
 
         public function isRunning() { return $this->getCacheColumn("isRunning"); }
+
+        public function runCachingScript() {
+            $out = array();
+            if ($this->cacheSettings["scriptPath"]) {
+                $runner = $this->cacheSettings["scriptRunner"];
+                $path = realpath(ROOTFOLDER.$this->cacheSettings["scriptPath"]);
+                $lastSlash = strrpos($path, DIRECTORY_SEPARATOR);
+
+                $dir = substr($path, 0, $lastSlash);
+                $file = substr($path, $lastSlash+1);
+
+                exec("cd $dir && $runner $file", $out);
+            }
+            return $out;
+        }
 
         public function isSet() { return $this->getRow() != null; }
  

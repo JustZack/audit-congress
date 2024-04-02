@@ -23,11 +23,13 @@
         "bulk-bill": {
             "status": 0,
             "updateTimesIn24HrUTC": [8, 16],
-            "scriptPath": "src/py/bills/bulk-bill-pull.py"
+            "scriptPath": "src/py/bills/bulk-bill-pull.py",
+            "scriptRunner": "py"
         },
         "bulk-member": {
             "updateIntervalInHours": 48,
-            "scriptPath": "src/py/members/bulk-member-pull.py"
+            "scriptPath": "src/py/members/bulk-member-pull.py",
+            "scriptRunner": "py"
         },
         "bulk-congress": {
             "updateIntervalInHours": 168
