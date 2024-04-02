@@ -16,8 +16,8 @@ namespace AuditCongress {
             return \Util\File::readJSONFile(AUDITCONGRESS_CACHE_SETTINGS);
         }
 
-        static function getSchemaPath() {
-            return AUDITCONGRESS_DB_SCHEMA;
+        static function getDatabaseSchema() {
+            return \Util\File::readJSONFile(AUDITCONGRESS_DB_SCHEMA);
         }
     }
 }

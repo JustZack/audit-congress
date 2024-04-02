@@ -230,8 +230,8 @@ class API {
 
     public static function HandleValidateSchema() {
         try {
-            $path = Enviroment::getSchemaPath();
-            $enforcer = new \MySqlConnector\SchemaEnforcer($path);
+            $schema = Enviroment::getDatabaseSchema();
+            $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();
             $operations = $enforcer::getDBOperationsList();
             API::Success(array("valid" => true, "operations" => $operations));
