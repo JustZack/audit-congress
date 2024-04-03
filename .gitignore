@@ -6,4 +6,4 @@ package-lock.json
 api.congress.1.key
 api.congress.key
 api.propublica.key
-config
+config.json

@@ -4,6 +4,8 @@ use \AuditCongress\Members;
 use \AuditCongress\Congresses;
 use \AuditCongress\Sessions;
 
+use \AuditCongress\Enviroment;
+
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
 
@@ -228,7 +230,8 @@ class API {
 
     public static function HandleValidateSchema() {
         try {
-            $enforcer = new \MySqlConnector\SchemaEnforcer(AUDITCONGRESS_DB_SCHEMA);
+            $schema = Enviroment::getDatabaseSchema();
+            $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();
             $operations = $enforcer::getDBOperationsList();
             API::Success(array("valid" => true, "operations" => $operations));

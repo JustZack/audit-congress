@@ -1,0 +1,39 @@
+{
+    "name": "Audit Congress Cache Settings",
+    "version": ".1",
+    "description": {
+        "goal": "Define settings to use for cache tracking purposes.",
+        "fields": {
+            "default": "Use these settings for any caches or properties not explicity mentioned.",
+            "name": "The value to use for the 'source' column.",
+            "status": "The initializing value for the 'status' column.",
+            "updateIntervalInHours": "Define how long to wait between cache updates. Set to null",
+            "updateTimesIn24HrUTC": "Define specific (UTC) times when this cache should be updated every day. Overrides 'updateIntervalInHours' if not null/empty array",
+            "scriptPath": "If applicable, define the path (relative to ROOTFOLDER) the script which updates the cache",
+            "scriptRunner": "If applicable, define the command used to run this script"
+        }
+    },
+    "default": {
+        "status": "",
+        "updateIntervalInHours": 24,
+        "updateTimesIn24HrUTC": [],
+        "scriptPath": null,
+        "scriptRunner": ""
+    },
+    "caches": {
+        "bulk-bill": {
+            "status": 0,
+            "updateTimesIn24HrUTC": [8, 16],
+            "scriptPath": "src/py/bills/bulk-bill-pull.py",
+            "scriptRunner": "py"
+        },
+        "bulk-member": {
+            "updateIntervalInHours": 48,
+            "scriptPath": "src/py/members/bulk-member-pull.py",
+            "scriptRunner": "py"
+        },
+        "bulk-congress": {
+            "updateIntervalInHours": 168
+        }
+    }
+}

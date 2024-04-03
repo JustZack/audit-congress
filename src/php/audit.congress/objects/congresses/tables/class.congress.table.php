@@ -4,6 +4,7 @@ namespace AuditCongress {
 
     class Congresses extends AuditCongressTable {
         
+        private static ?CacheTracker $cacheTracker = null;
         private function __construct() {
             parent::__construct("Congresses");
             self::$cacheTracker = new CacheTracker("bulk-congress");
@@ -16,19 +17,14 @@ namespace AuditCongress {
             return self::$congressTable;
         }
 
-        private static $cacheTracker = null;
         public function cacheIsValid() {
-            if ($this->cacheIsValid != null) return $this->cacheIsValid;
-
-            $status = self::$cacheTracker->getStatus();
-
-            $this->cacheIsValid = $status == "done";
-
+            if ($this->cacheIsValid == null)
+                $this->cacheIsValid = !self::$cacheTracker->isReadyForUpdate();
             return $this->cacheIsValid;
         }
 
         public function updateCache() {
-            self::$cacheTracker->setRunning(true);
+            self::$cacheTracker->setRunning(true, "updating");
             $sessionsInstance = Sessions::getInstance();
             
             $congresses = new \CongressGov\Congresses();
@@ -43,7 +39,7 @@ namespace AuditCongress {
             
             $this->cacheIsValid = true;
 
-            self::$cacheTracker->setCacheStatus("done", false);
+            self::$cacheTracker->setRunning(false, "done");
         }
 
         public function insertCongresses($congresses) {

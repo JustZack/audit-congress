@@ -50,4 +50,7 @@ require_once "test/autoload.php";
 //CongressGov::getSummariesTest(117, "hr", "3076");
 //CongressGov::getTitlesTest(117, "hr", "3076");
 //CongressGov::getCongressesTest();
+
+//CacheTracker::testGetCacheNextUpdate("bulk-bill");
+CacheTracker::testRunCacheScript("bulk-member");
 ?>

@@ -1,0 +1,6 @@
+{
+    "db": "NAME OF DB",
+    "dburl": "URL TO DB",
+    "dbuser": "DB USER",
+    "dbpassword": "DB PASSWORD"
+}

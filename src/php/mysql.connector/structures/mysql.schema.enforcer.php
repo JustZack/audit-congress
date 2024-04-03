@@ -7,8 +7,8 @@ namespace MySqlConnector {
         private static $debug_log = false;
         private static $operations = array();
 
-        public function __construct($schemaFilePath) {
-            $this->schema = json_decode(file_get_contents($schemaFilePath), true);
+        public function __construct($schema) {
+            $this->schema = $schema;
 
         }
 
