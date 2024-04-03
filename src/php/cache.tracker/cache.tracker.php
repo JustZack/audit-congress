@@ -14,17 +14,18 @@ namespace AuditCongress {
             $this->cacheName = $cacheName;
             if (CacheTrackerQuery::$tableName == null)
                 throw new \Exception("CacheTracker: Must call static::initCacheTracker first");
-            if (self::hasDefinedSettings()) $this->cacheSettings = self::getCacheSettings($cacheName);
+            if (isset(self::$settings) || isset(self::$defaultSettings)) 
+                $this->cacheSettings = self::getCacheSettings($cacheName);
         }
         
-        private static function hasDefinedSettings() {
-            return isset(self::$settings) || isset(self::$defaultSettings);
-        }
 
-        public static function initCacheTracker($tableName, $settings) { 
+        
+        public static function initCacheTracker($tableName, $settings = null) { 
             CacheTrackerQuery::$tableName = $tableName; 
-            self::$settings = $settings["caches"];
-            self::$defaultSettings = $settings["default"];
+            if ($settings != null) {
+                self::$settings = $settings["caches"];
+                self::$defaultSettings = $settings["default"];
+            }
         }
 
         private static function cacheUsesSpecificTimes($settings) {
@@ -33,29 +34,6 @@ namespace AuditCongress {
 
         private static function cacheUsesScript($settings) {
             return isset($settings["scriptPath"]);
-        }
-
-        public function getNextCacheUpdate() {
-            $nextUpdate = 0;
-            //If updateTimesIn24Hr has values, use these as the basis for $nextUpdate
-            if (self::cacheUsesSpecificTimes($this->cacheSettings)) {
-                $updateHours = $this->cacheSettings["updateTimesIn24HrUTC"];
-                
-                $nextHour = \Util\Time::getFirstHourPastNow($updateHours);
-                $offset = 0;
-                //$nextHour == -1 => time() is later than all given hours
-                //  So instead use the first hour for the next day
-                if ($nextHour == -1) {
-                    $nextHour = $updateHours[0];
-                    $offset = \Util\Time::hoursToSeconds(24);
-                }
-                $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
-                $nextUpdate = $d->getTimestamp() + $offset;
-            } else {
-                $nextUpdate = time() + \Util\Time::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
-            }
-
-            return \Util\Time::getDateTimeStr($nextUpdate);
         }
 
         private static function setNeededDefaults($settings) {
@@ -81,6 +59,8 @@ namespace AuditCongress {
             return $cSettings;
         }
 
+
+        
         public function getRow() {
             if ($this->cacheRow == null) $this->refreshRow();
             return $this->cacheRow;
@@ -95,6 +75,31 @@ namespace AuditCongress {
             if ($row != null) return $row[$column];
             else              return false;
         }
+
+        public function getNextCacheUpdate() {
+            $nextUpdate = 0;
+            //If updateTimesIn24Hr has values, use these as the basis for $nextUpdate
+            if (self::cacheUsesSpecificTimes($this->cacheSettings)) {
+                $updateHours = $this->cacheSettings["updateTimesIn24HrUTC"];
+                
+                $nextHour = \Util\Time::getFirstHourPastNow($updateHours);
+                $offset = 0;
+                //$nextHour == -1 => time() is later than all given hours
+                //  So instead use the first hour for the next day
+                if ($nextHour == -1) {
+                    $nextHour = $updateHours[0];
+                    $offset = \Util\Time::hoursToSeconds(24);
+                }
+                $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
+                $nextUpdate = $d->getTimestamp() + $offset;
+            } else {
+                $nextUpdate = time() + \Util\Time::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
+            }
+
+            return \Util\Time::getDateTimeStr($nextUpdate);
+        }
+
+
 
         public function getSource() { return $this->getCacheColumn("source"); }
 
@@ -134,7 +139,9 @@ namespace AuditCongress {
         }
 
         public function setStatus($status) { $this->setCacheStatus($status); }
+
         public function setRunning($isRunning) { $this->setCacheStatus(null, $isRunning); }
+        
         public function setUpdated($status = null, $isRunning = null) {
             $lastUpdate = \Util\Time::getNowDateTimeStr();
             $nextUpdate = $this->getNextCacheUpdate();
