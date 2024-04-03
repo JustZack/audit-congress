@@ -22,17 +22,6 @@ namespace Util {
             return -1;
         }
 
-        public static function getDateTime($day, $month, $year, $hours, $minutes, $seconds) {
-
-        }
-
-        public static function getTimeForTomorrow($hours, $minutes, $seconds) {
-
-        }
-
-        public static function getTimeForToday($hours, $minutes, $seconds) {
-            
-        }
     }
 }
 
