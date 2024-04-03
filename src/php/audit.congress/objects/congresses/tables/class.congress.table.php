@@ -18,12 +18,8 @@ namespace AuditCongress {
 
         private static $cacheTracker = null;
         public function cacheIsValid() {
-            if ($this->cacheIsValid != null) return $this->cacheIsValid;
-
-            $status = self::$cacheTracker->getStatus();
-
-            $this->cacheIsValid = $status == "done";
-
+            if ($this->cacheIsValid == null)
+                $this->cacheIsValid = !self::$cacheTracker->isReadyForUpdate();
             return $this->cacheIsValid;
         }
 
@@ -43,7 +39,7 @@ namespace AuditCongress {
             
             $this->cacheIsValid = true;
 
-            self::$cacheTracker->setCacheStatus("done", false);
+            self::$cacheTracker->setUpdated("done", false);
         }
 
         public function insertCongresses($congresses) {

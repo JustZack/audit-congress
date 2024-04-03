@@ -20,7 +20,10 @@
                 "columns": {
                     "source": { "type": "VARCHAR(50)", "null": "NO", "primary": true},
                     "status": { "type": "VARCHAR(50)", "null": "YES" },
-                    "isRunning": { "type": "TINYINT(1)", "null": "NO" }
+                    "isRunning": { "type": "TINYINT(1)", "null": "NO" },
+
+                    "lastUpdate":  { "type": "DATETIME", "null": "YES" },
+                    "nextUpdate":  { "type": "DATETIME", "null": "YES" }
                 }
             },
 

@@ -5,7 +5,8 @@ namespace AuditCongress {
     class CacheTracker {
         public 
             $cacheName,
-            $cacheSettings;
+            $cacheSettings,
+            $cacheRow = null;
         private static $settings = null;
         private static $defaultSettings = null;
 
@@ -81,13 +82,18 @@ namespace AuditCongress {
         }
 
         public function getRow() {
-            return CacheTrackerQuery::getCacheStatus($this->cacheName);
+            if ($this->cacheRow == null) $this->refreshRow();
+            return $this->cacheRow;
+        }
+
+        private function refreshRow() {
+            $this->cacheRow = CacheTrackerQuery::getCacheStatus($this->cacheName);
         }
 
         private function getCacheColumn($column) {
             $row = $this->getRow();
             if ($row != null) return $row[$column];
-            else              return null;
+            else              return false;
         }
 
         public function getSource() { return $this->getCacheColumn("source"); }
@@ -97,12 +103,12 @@ namespace AuditCongress {
         public function isRunning() { return $this->getCacheColumn("isRunning"); }
 
         public function isSet() { return $this->getRow() != null; }
- 
-        public function setCacheStatus($status, $isRunning) {
-            $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
-            if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
-            $function($this->cacheName, $status, $isRunning);
-        }
+
+        public function isOutOfDate() { return strtotime($this->getCacheColumn("nextUpdate")) < time(); }
+
+        public function isReadyForUpdate() { return !$this->isRunning() && $this->isOutOfDate(); }
+
+
 
         public function runCachingScript($waitForComplete = true) {
             $out = array();
@@ -120,8 +126,20 @@ namespace AuditCongress {
             return $out;
         }
 
+        public function setCacheStatus($status = null, $isRunning = null, $lastUpdate = null, $nextUpdate = null) {
+            $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
+            if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
+            $function($this->cacheName, $status, $isRunning, $lastUpdate, $nextUpdate);
+            $this->refreshRow();
+        }
+
+        public function setStatus($status) { $this->setCacheStatus($status); }
         public function setRunning($isRunning) { $this->setCacheStatus(null, $isRunning); }
-        public function setStatus($status) { $this->setCacheStatus($status, null); }
+        public function setUpdated($status = null, $isRunning = null) {
+            $lastUpdate = \Util\Time::getNowDateTimeStr();
+            $nextUpdate = $this->getNextCacheUpdate();
+            $this->setCacheStatus($status, $isRunning, $lastUpdate, $nextUpdate);
+        }
     }
 }
 
