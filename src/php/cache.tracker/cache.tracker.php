@@ -19,7 +19,7 @@ namespace AuditCongress {
         }
         
 
-        
+
         public static function initCacheTracker($tableName, $settings = null) { 
             CacheTrackerQuery::$tableName = $tableName; 
             if ($settings != null) {
@@ -62,12 +62,9 @@ namespace AuditCongress {
 
         
         public function getRow() {
-            if ($this->cacheRow == null) $this->refreshRow();
+            if ($this->cacheRow == null) 
+                $this->cacheRow = CacheTrackerQuery::getCacheStatus($this->cacheName);
             return $this->cacheRow;
-        }
-
-        private function refreshRow() {
-            $this->cacheRow = CacheTrackerQuery::getCacheStatus($this->cacheName);
         }
 
         private function getCacheColumn($column) {
@@ -135,7 +132,7 @@ namespace AuditCongress {
             $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
             if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
             $function($this->cacheName, $status, $isRunning, $lastUpdate, $nextUpdate);
-            $this->refreshRow();
+            $this->cacheRow = null;
         }
 
         public function setStatus($status) { $this->setCacheStatus($status); }
