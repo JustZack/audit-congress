@@ -138,10 +138,16 @@ namespace AuditCongress {
         public function setStatus($status) { $this->setCacheStatus($status); }
 
         public function setRunning($isRunning, $status = null) { 
+            $nowStr = \Util\Time::getNowDateTimeStr();
             if ($isRunning) 
-                $this->setCacheStatus($status, $isRunning, \Util\Time::getNowDateTimeStr(), null); 
+                $this->setCacheStatus($status, $isRunning, $nowStr); 
             else 
-                $this->setCacheStatus($status, $isRunning, null, $this->getNextCacheUpdate()); 
+                $this->setCacheStatus($status, $isRunning, $nowStr, $this->getNextCacheUpdate());
+        }
+
+        public function setUpdated($status = null) {
+            $nowStr = \Util\Time::getNowDateTimeStr();
+            $this->setCacheStatus($status, null, $nowStr, $this->getNextCacheUpdate());
         }
     }
 }
