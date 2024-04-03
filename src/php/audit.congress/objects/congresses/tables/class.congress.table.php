@@ -24,7 +24,7 @@ namespace AuditCongress {
         }
 
         public function updateCache() {
-            self::$cacheTracker->setRunning(true);
+            self::$cacheTracker->setRunning(true, "updating");
             $sessionsInstance = Sessions::getInstance();
             
             $congresses = new \CongressGov\Congresses();
@@ -39,7 +39,7 @@ namespace AuditCongress {
             
             $this->cacheIsValid = true;
 
-            self::$cacheTracker->setUpdated("done", false);
+            self::$cacheTracker->setRunning(false, "done");
         }
 
         public function insertCongresses($congresses) {
