@@ -15,14 +15,6 @@ def fetchCurrentCongress():
 
 
 
-def appendMemberUpdateTimes(row):
-    now = time.time()
-    row.append(now)
-    row.append(now + (60*60*24*7))
-    return row
-
-
-
 def getMemberRow(member, isCurrent):
     mRow = []
     mId, mName, mBio = member["id"], member["name"], member["bio"]
@@ -47,7 +39,7 @@ def getMemberRow(member, isCurrent):
 
     mRow.append(isCurrent)
     
-    return appendMemberUpdateTimes(mRow)
+    return mRow
 
 def getTermRows(terms, bioguideId):
     mTerms = []
@@ -70,7 +62,7 @@ def getTermRows(terms, bioguideId):
         mTerm.append(util.getFieldIfExists(term, "office"))
         mTerm.append(util.getFieldIfExists(term, "phone"))
 
-        mTerms.append(appendMemberUpdateTimes(mTerm))
+        mTerms.append(mTerm)
     return mTerms
 
 def getElectionRows(elections, bioguideId):
@@ -80,7 +72,7 @@ def getElectionRows(elections, bioguideId):
         mElection.append(election)
         mElection.append(bioguideId)
 
-        mElections.append(appendMemberUpdateTimes(mElection))
+        mElections.append(mElection)
     return mElections
 
 
@@ -99,7 +91,7 @@ def getSocialRow(social):
     sRow.append(util.getFieldIfExists(sSocial, "instagram"))
     sRow.append(util.getFieldIfExists(sSocial, "instagram_id"))
 
-    return appendMemberUpdateTimes(sRow)
+    return sRow
 
 
 
@@ -121,7 +113,7 @@ def getOfficeRows(bioguideId, offices):
         mOffice.append(util.getFieldIfExists(office, "phone"))
         mOffice.append(util.getFieldIfExists(office, "fax"))
 
-        mOffices.append(appendMemberUpdateTimes(mOffice))
+        mOffices.append(mOffice)
     return mOffices
 
 

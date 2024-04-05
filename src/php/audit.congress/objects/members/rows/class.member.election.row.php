@@ -5,18 +5,14 @@ namespace AuditCongress {
     class MemberElectionRow extends \MySqlConnector\SqlRow {
         public
             $fecId,
-            $bioguideId,
-            $lastUpdate,
-            $nextUpdate;
+            $bioguideId;
 
         public function getColumns() {
-            return ["fecId","bioguideId",
-            "lastUpdate","nextUpdate"];
+            return ["fecId","bioguideId"];
         }
     
         public function getValues() {
-            return [$this->fecId,$this->bioguideId,
-            $this->lastUpdate,$this->nextUpdate];
+            return [$this->fecId,$this->bioguideId];
         }
     }
 }

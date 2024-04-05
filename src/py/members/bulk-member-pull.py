@@ -23,16 +23,14 @@ CURRENT_COMMITTEE_LEGISLATORS_URL = "{}committee-membership-current.json".format
 
 MEMBER_COLUMNS = ["bioguideId", "thomasId", "lisId", "govTrackId", "openSecretsId", "voteSmartId",
                   "cspanId", "mapLightId", "icpsrId", "wikidataId", "googleEntityId",
-                  "official_full", "first", "last", "gender", "birthday", "isCurrent",
-                  "lastUpdate", "nextUpdate"]
+                  "official_full", "first", "last", "gender", "birthday", "isCurrent"]
 TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "party", "class", "how",
-                "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone",
-                "lastUpdate", "nextUpdate"]
-ELECTION_COLUMNS = ["fecId", "bioguideId", "lastUpdate", "nextUpdate"]
+                "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone"]
+ELECTION_COLUMNS = ["fecId", "bioguideId"]
 SOCIAL_COLUMNS = ["bioguideId", "twitter", "twitterId", "facebook", "facebookId", "youtube", "youtubeId", 
-                  "instagram", "instagramId", "lastUpdate", "nextUpdate"]
+                  "instagram", "instagramId"]
 OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "city", "state", "zip", 
-                   "latitude", "longitude", "phone", "fax", "lastUpdate", "nextUpdate"]
+                   "latitude", "longitude", "phone", "fax"]
 
 COMMITTEE_COLUMNS = ["thomasId", "parentId", "type", "name", "wikipedia", "jurisdiction", "jurisdiction_source", 
                      "url", "rss_url", "minority_url", "minority_rss_url", "youtubeId", 
