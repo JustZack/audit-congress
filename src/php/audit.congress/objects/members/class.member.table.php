@@ -18,7 +18,7 @@ namespace AuditCongress {
 
         public function updateCache() {
             $this->cacheTracker->runCachingScript();
-            $this->cacheTracker->setRunning(false, "done");
+            $this->cacheTracker->setUpdated(false, "done");
         }
         
         public static abstract function getInstance();

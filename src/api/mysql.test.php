@@ -29,7 +29,7 @@ require_once "test/autoload.php";
 //MySqlConnector::testSqTermsByStateByYear("co", "2023");
 //MySqlConnector::testGetByState("CO", true);
 //MySqlConnector::testGetByState("AK", false);
-MySqlConnector::testGetByState("HI");
+//MySqlConnector::testGetByState("HI");
 
 
 //MySqlConnector::testGetSenators("CO", true);
