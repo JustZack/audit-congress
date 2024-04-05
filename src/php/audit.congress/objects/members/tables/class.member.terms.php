@@ -8,24 +8,6 @@ namespace AuditCongress {
             parent::__construct("MemberTerms");
         }
 
-        public function insertPersonTerms($person) {
-            //TODO: Split member term "start" and "end" into year/month/day columns for easier selecting
-            $bioguideId = $person->id->bioguide;
-            $terms = $person->getTerms();
-            foreach ($terms as $term) {
-                $term = self::apiTermToRow($term, $bioguideId);
-                $term = new MemberTermRow($term);
-                $this->queueInsert($term);
-            }
-        }
-
-        private static function apiTermToRow($term, $bioguideId) {
-            $rowArray = $term->toArray();
-            $rowArray["bioguideId"] = $bioguideId;
-            $rowArray = self::setUpdateTimes($rowArray);
-            return $rowArray;
-        }
-
         private static $memberTermsTable = null;
         public static function getInstance() {
             if (self::$memberTermsTable == null) 

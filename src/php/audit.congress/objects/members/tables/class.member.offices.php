@@ -2,38 +2,10 @@
 
 namespace AuditCongress {
 
-    use \UnitedStatesLegislators\CurrentDistrictOffices;
-
     class MemberOffices extends MemberTable {
 
         private function __construct() {
             parent::__construct("MemberOffices");
-        }
-
-        public function updateCache() {
-            //Clear out all data associated with socials
-            $this->clearRows();
-
-            $offices = new CurrentDistrictOffices();
-
-            foreach ($offices->currentOffices as $personWithOffice) {
-                $bioguideId = $personWithOffice->id->bioguide;
-                foreach ($personWithOffice->getOffices() as $office) {
-                    $office = self::apiOfficeToRow($office, $bioguideId);
-                    $row = new MemberOfficesRow($office);
-                    $this->queueInsert($row);
-                }
-            }
-            $this->commitInsert();
-            $this->cacheIsValid = true;
-        }
-
-        private static function apiOfficeToRow($office, $bioguideId) {
-            $rowArray = $office->toArray();
-            $rowArray["bioguideId"] = $bioguideId;
-            $rowArray["officeId"] = $rowArray["id"];
-            $rowArray = self::setUpdateTimes($rowArray);
-            return $rowArray;
         }
 
         private static $memberOfficesTable = null;

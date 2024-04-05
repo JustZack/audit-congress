@@ -2,72 +2,10 @@
 
 namespace AuditCongress {
 
-    use UnitedStatesLegislators\HistoricalMembers;
-    use UnitedStatesLegislators\CurrentMembers;
-
     class Members extends MemberTable {
-        private ?MemberTerms $termsInstance = null;
-        private ?MemberElections $electionsInstance = null;
 
         private function __construct() {
             parent::__construct("Members");
-            $this->termsInstance = MemberTerms::getInstance();
-            $this->electionsInstance = MemberElections::getInstance();
-        }
-
-        //Update the members cache
-        //Note that this updates ALL member tables
-        public function updateCache() {
-            //Force update cache for Offices and Socials
-            //These tables contain information from OTHER api routes
-            MemberOffices::getInstance()->updateCache();
-            MemberSocials::getInstance()->updateCache();
-            //Clear rows for elections, terms, and member bios
-            //These tables contain information from the members route only
-            $this->termsInstance->clearRows();
-            $this->electionsInstance->clearRows();
-            $this->clearRows();
-            //Get updated member data from API routes (member/terms/elections)
-            $current = new CurrentMembers();
-            $historical = new HistoricalMembers();
-            //Queue up inserting members, their terms, and elections
-            $this->insertMembers($current->currentMembers, true);
-            $this->insertMembers($historical->historicalMembers, false);
-            //Commit the insert for all tables
-            $this->termsInstance->commitInsert();
-            $this->electionsInstance->commitInsert();
-            $this->commitInsert();
-            //Aftering updating member tables, the cache is valid
-            $this->cacheIsValid = true;
-        }
-        //Insert current or historical member rows
-        private function insertMembers($members, $isCurrent) {
-            foreach ($members as $person) {                
-                $this->termsInstance->insertPersonTerms($person);
-                $this->electionsInstance->insertPersonElections($person);
-
-                $member = self::apiPersonToRow($person, $isCurrent);
-                $member = new MemberRow($member);
-                $this->queueInsert($member);
-            }
-        }
-
-        private static function apiPersonToRow($person, $isCurrent) {
-            $rowArray["bioguideId"] = $person->id->bioguide;
-            $rowArray["thomasId"] = $person->id->thomas;
-            $rowArray["lisId"] = $person->id->lis;
-            $rowArray["govTrackId"] = $person->id->govtrack;
-            $rowArray["openSecretsId"] = $person->id->opensecrets;
-            $rowArray["voteSmartId"] = $person->id->votesmart;
-            $rowArray["cspanId"] = $person->id->cspan;
-            $rowArray["mapLightId"] = $person->id->maplight;
-            $rowArray["icpsrId"] = $person->id->icpsr;
-            $rowArray["wikidataId"] = $person->id->wikidata;
-            $rowArray["googleEntityId"] = $person->id->google_entity_id;
-            $rowArray = array_merge($rowArray, $person->name->toArray(), $person->bio->toArray());
-            $rowArray["isCurrent"] = $isCurrent;
-            $rowArray = self::setUpdateTimes($rowArray);
-            return $rowArray;
         }
 
         private static $membersObject = null;
@@ -75,21 +13,6 @@ namespace AuditCongress {
             if (self::$membersObject == null) 
                 self::$membersObject = new Members();
             return self::$membersObject;
-        }
-
-        //Check every member relevent table for cache validity
-        //Update members cache if needed
-        public static function enforceCache() {
-            $members = Members::getInstance();
-            $terms = MemberElections::getInstance();
-            $elections = MemberTerms::getInstance();
-            $socials = MemberSocials::getInstance();
-            $offices = MemberOffices::getInstance();
-            $allCachesValid = $members->cacheIsValid() 
-                            && $terms->cacheIsValid() && $elections->cacheIsValid()
-                            && $socials->cacheIsValid() && $offices->cacheIsValid();
-
-            if (!$allCachesValid) $members->updateCache();
         }
 
         //Set the given members image if available (false if not)
