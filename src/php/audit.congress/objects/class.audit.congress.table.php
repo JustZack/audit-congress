@@ -41,19 +41,6 @@ namespace AuditCongress {
             }
         }
 
-        protected static function setUpdateTimes($rowArray) {
-            $rowArray["lastUpdate"] = time();
-            $rowArray["nextUpdate"] = time()+(60*60*24*7);
-            return $rowArray;
-        }
-
-        protected function nextUpdateIsLater($row) {
-            if ($row != null) {
-                $next = (int)$row["nextUpdate"];
-                return !($next == false || $next < time());
-            } else return false;
-        }
-
         public static abstract function getInstance();
 
         public abstract function cacheIsValid();

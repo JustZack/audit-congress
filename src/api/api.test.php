@@ -52,5 +52,5 @@ require_once "test/autoload.php";
 //CongressGov::getCongressesTest();
 
 //CacheTracker::testGetCacheNextUpdate("bulk-bill");
-CacheTracker::testRunCacheScript("bulk-member");
+//CacheTracker::testRunCacheScript("bulk-member");
 ?>

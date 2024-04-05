@@ -27,9 +27,9 @@ require_once "test/autoload.php";
 //MySqlConnector::testSqlMemberById("A000055");
 //MySqlConnector::testSqTermsByPartyByYear("dem", "2020");
 //MySqlConnector::testSqTermsByStateByYear("co", "2023");
-//MySqlConnector::testSqMembersByState("CO", true);
-//MySqlConnector::testSqMembersByState("AK", false);
-//MySqlConnector::testSqMembersByState("HI");
+//MySqlConnector::testGetByState("CO", true);
+//MySqlConnector::testGetByState("AK", false);
+//MySqlConnector::testGetByState("HI");
 
 
 //MySqlConnector::testGetSenators("CO", true);
