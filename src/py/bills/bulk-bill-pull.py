@@ -23,7 +23,10 @@ def fetchLastCongress():
 
     sql = "SELECT status FROM CacheStatus where source = 'bulk-bill'"
     result = db.runReturningSql(sql)
-    if (len(result) == 1): LAST_CONGRESS_PROCESSED = int(result[0][0])
+    if (len(result) == 1): 
+        res = result[0][0]
+        if str.isdigit(res): LAST_CONGRESS_PROCESSED = int(res)
+        else: LAST_CONGRESS_PROCESSED = 93
     elif (len(result) == 0):
         sql = "INSERT INTO CacheStatus (source, status) VALUES ('bulk-bill', 93)"
         result = db.runCommitingSql(sql)
@@ -178,5 +181,4 @@ def doBulkBillPull():
 def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull, SCRIPT_NAME)
 
 if __name__ == "__main__": 
-    main()
-    #util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)
+    util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)
