@@ -1,10 +1,12 @@
 <?php
 
 use \AuditCongress\Members;
+
 use \AuditCongress\Congresses;
 use \AuditCongress\Sessions;
 
 use \AuditCongress\Enviroment;
+
 
 require_once "api.cache.php";
 require_once "class.api.route.validator.php";
@@ -159,64 +161,31 @@ class API {
     /*
         MEMBER ROUTES
     */
-    //Handle the memeber route and options
-    public static function HandleMemberRoute() {
-        $bioId = API::getQueryArgIfSet("id");
-        $option = API::getQueryArgIfSet("option");
-
-        $object = null; $args = [$bioId, $option];
-
-        if (APIRouteValidator::shouldFetchMembersList($bioId)) $object = new \CongressGov\MemberList();
-        else if (APIRouteValidator::couldFetchMemberOrOption($bioId, $option)) {
-            $member = new \CongressGov\Member($bioId);
-            if (APIRouteValidator::shouldFetchMember($bioId)) $object = $member;
-            else $object = $member->getOption($option);
+    public static function getMemberData($route, $bioguideId) {
+        $class = "\AuditCongress\Member";
+        switch ($route) {
+            case "member": $class .= "s"; break;
+            case "terms": $class .= "Terms"; break;
+            case "socials": $class .= "Socials"; break;
+            case "offices": $class .= "Offices"; break;
+            case "elections": $class .= "Elections"; break;
         }
-
-        if ($object == null) API::NotFound("member/$member/$option");
-        else API::doAPIResponse("member", $object, $args);
+        $function = "$class::getByBioguideId";
+        return $function($bioguideId);
     }
-    //Handle the logic for getting all the member api data
-    private static function getFullMemberData($args) {
-        $start = time();
 
-        $member = new \CongressGov\Member(...$args);
-        $memberData = API::getAPIData($member);
-
-        $options = \CongressGov\Member::getOptionList();
-        //Get data for each option
-        foreach ($options as $option) {
-            $args[1] = $option;
-            $optionData = API::getAPIData($member->getOption($option));
-            
-            //both options have different data keys, this fixes that
-            $optionIndex = $option;
-            if ($option == "sponsored-legislation") $optionIndex = "sponsoredLegislation";
-            if ($option == "cosponsored-legislation") $optionIndex = "cosponsoredLegislation";
-            $memberData[$optionIndex] = $optionData[$optionIndex];
-        }   
-
-        $data["member"] = $memberData;
-        $data["request"]["dataType"] = "full";
-        $data["request"]["time"] = (time()-$start);
-        return $data;
-    }
-    //Handle asking for all member data in one response
-    public static function HandleFullMemberRoute() {
+    public static function HandleMemberDataById($route) {
         $member = API::getQueryArgIfSet("id");
-
-        $args = [$member, null];
-        if (APIRouteValidator::shouldFetchFullMember(...$args)) {
-            try {
-                $data = API::getFullMemberData($args);
-                API::Success($data);
-            } catch (Exception $e) {
-                API::Error($e->getMessage());
-            }
-        } else {
-            API::NotFound("fullMember/$member");
+        
+        try {
+            $data = API::getMemberData($route, $member);
+            $result = array($route => $data);
+            API::Success($result);
+        } catch (Exception $e) {
+            API::Error($e->getMessage());
         }
     }
+
 
     public static function HandleBioguideToThomasMapping() {
         try {

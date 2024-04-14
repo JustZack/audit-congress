@@ -14,8 +14,11 @@ if ($route !== null) {
         case "bill": API::HandleBillRoute(); break;
         case "fullBill": API::HandleFullBillRoute(); break;
         
-        case "member": API::HandleMemberRoute(); break;
-        case "fullMember": API::HandleFullMemberRoute(); break;
+        case "member": 
+        case "terms": 
+        case "socials":
+        case "offices":
+        case "elections": API::HandleMemberDataById($route); break;
         
         case "congress": API::HandleGetCongress(); break;
         case "session": API::HandleGetSession(); break;
