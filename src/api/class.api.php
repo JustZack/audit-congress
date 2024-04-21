@@ -161,7 +161,12 @@ class API {
     /*
         MEMBER ROUTES
     */
-    public static function getMemberData($route, $bioguideId) {
+    public static function getMemberData($route) {
+        $bioguideId = API::getQueryArgIfSet("id");
+        $nameSearch = API::getQueryArgIfSet("name");
+        
+        $current = API::getQueryArgIfSet("current");
+        if (isset($current)) $current = filter_var($current, FILTER_VALIDATE_BOOLEAN);
         $class = "\AuditCongress\Member";
         switch ($route) {
             case "member": $class .= "s"; break;
@@ -170,15 +175,18 @@ class API {
             case "offices": $class .= "Offices"; break;
             case "elections": $class .= "Elections"; break;
         }
-        $function = "$class::getByBioguideId";
-        return $function($bioguideId);
+
+        if (isset($bioguideId)) 
+            return ("$class::getByBioguideId")($bioguideId);
+        else if (isset($nameSearch) && $route == "member") 
+            return ("$class::getByAnyName")($nameSearch, $current);
+        
+        return null;
     }
 
     public static function HandleMemberDataById($route) {
-        $member = API::getQueryArgIfSet("id");
-        
         try {
-            $data = API::getMemberData($route, $member);
+            $data = API::getMemberData($route);
             $result = array($route => $data);
             API::Success($result);
         } catch (Exception $e) {

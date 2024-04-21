@@ -29,6 +29,33 @@ namespace AuditCongress {
             $members->setSearchValues([$firstName, $lastName, $isCurrent]);
             return $members->selectFromDB()->fetchAllAssoc();
         }
+        
+        /*Fetch members whose names contain the given first, middle, or last name
+        Must provide atleast one of the names.*/
+        public static function getByAnyName($name, $isCurrent = null) {
+            $nameParts = preg_split("/[\s\.\+-,]/", $name);
+            //$searchColumns = ["isCurrent"]; $searchValues = [$isCurrent];
+            $searchColumns = []; $searchValues = [];
+            
+            foreach ($nameParts as $part) {
+                array_push($searchColumns, "first", "last");
+                array_push($searchValues, $part, $part);
+            }
+
+            $members = new MembersQuery();
+            $members->setEqualityOperator("like");
+            $members->setBooleanCondition("OR");
+            $members->setSearchColumns($searchColumns);
+            $members->setSearchValues($searchValues);
+            $result = $members->selectFromDB()->fetchAllAssoc();
+            
+            if (isset($isCurrent) && ($isCurrent == true || $isCurrent == false)) {
+                $isCurrent = $isCurrent?"1":"0"; $toKeep = [];
+                foreach ($result as $mem) if ($mem["isCurrent"] == $isCurrent) array_push($toKeep, $mem);
+                $result = $toKeep;
+            }
+            return $result;
+        }
 
         //Fetch members with the given gender (M or F at this time)
         public static function getByGender($gender, $isCurrent = null) {

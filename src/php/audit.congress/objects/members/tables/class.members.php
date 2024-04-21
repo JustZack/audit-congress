@@ -73,6 +73,12 @@ namespace AuditCongress {
             return self::parseResult($members);
         }
 
+        public static function getByAnyName($name, $isCurrent = null) {
+            self::enforceCache();
+            $members = MembersQuery::getByAnyName($name, $isCurrent);
+            return self::parseResult($members);
+        }
+
         public static function getByGender($gender, $isCurrent = null) {
             self::enforceCache();
             $members = MembersQuery::getByGender($gender, $isCurrent);

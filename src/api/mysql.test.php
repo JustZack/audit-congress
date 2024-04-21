@@ -22,6 +22,7 @@ require_once "test/autoload.php";
 //MySqlConnector::testEnforceSchema();
 //MySqlConnector::testSqlMemberById("A5");
 //MySqlConnector::testSqlMemberByName("Zach", null, null);
+//MySqlConnector::testSqlMemberByAnyName("Lauren Boebert", true);
 //MySqlConnector::testSqlMemberOfficeById("A000055");
 //MySqlConnector::testSqlMemberSocialsById("A000055");
 //MySqlConnector::testSqlMemberById("A000055");
