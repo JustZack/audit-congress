@@ -49,7 +49,7 @@ namespace AuditCongress {
             $members->setSearchValues($searchValues);
             $result = $members->selectFromDB()->fetchAllAssoc();
             
-            if (isset($isCurrent) && ($isCurrent == true || $isCurrent == false)) {
+            if (is_bool($isCurrent)) {
                 $isCurrent = $isCurrent?"1":"0"; $toKeep = [];
                 foreach ($result as $mem) if ($mem["isCurrent"] == $isCurrent) array_push($toKeep, $mem);
                 $result = $toKeep;

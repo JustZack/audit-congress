@@ -41,9 +41,24 @@ class API {
     /*
         Helper functions
     */
+    public static function convertValue($valueString, $type) {
+        $filterType = null;
+        switch ($type) {
+            case "bool": $filterType = FILTER_VALIDATE_BOOLEAN; break;
+            case "int": $filterType = FILTER_VALIDATE_INT; break;
+            case "double":
+            case "decimal":
+            case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
+        }
+        return filter_var($valueString, $filterType); break;
+    }
     //Get a the given query arg fromm $_GET or null
-    public static function getQueryArgIfSet($arg) {
-        if (isset($_GET[$arg])) return $_GET[$arg];
+    public static function getQueryArgIfSet($arg, $type=null) {
+        if (isset($_GET[$arg])) {
+            $val = $_GET[$arg];
+            if(isset($type)) $val = API::convertValue($val, $type);
+            return $val;
+        }
         else return null;
     }
     //Get the API data, either via fetch or cache
@@ -164,9 +179,8 @@ class API {
     public static function getMemberData($route) {
         $bioguideId = API::getQueryArgIfSet("id");
         $nameSearch = API::getQueryArgIfSet("name");
-        
-        $current = API::getQueryArgIfSet("current");
-        if (isset($current)) $current = filter_var($current, FILTER_VALIDATE_BOOLEAN);
+        $current = API::getQueryArgIfSet("current", "bool");
+
         $class = "\AuditCongress\Member";
         switch ($route) {
             case "member": $class .= "s"; break;
