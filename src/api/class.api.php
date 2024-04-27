@@ -50,7 +50,7 @@ class API {
             case "decimal":
             case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
         }
-        return filter_var($valueString, $filterType); break;
+        return filter_var($valueString, $filterType);
     }
     //Get a the given query arg fromm $_GET or null
     public static function getQueryArgIfSet($arg, $type=null) {
