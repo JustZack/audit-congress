@@ -3,8 +3,10 @@
 namespace API {
     abstract class RouteGroup {
         public $baseRoute;
-        public function __construct($baseRoute) {
+        public $routeBaseClass;
+        public function __construct($baseRoute, $routeBaseClass) {
             $this->baseRoute = $baseRoute;
+            $this->routeBaseClass = $routeBaseClass;
         }
 
         public function isRoute($otherRoute) {
@@ -17,15 +19,16 @@ namespace API {
         public abstract static function getInstance();
 
         //Fetch all route names used by this group
-        public abstract static function fetchRouteClassNames();
+        public function fetchRouteClassNames() {
+            return \Util\Classes::thatExtend($this->routeBaseClass);
+        }
 
         public $runnableClassName = null;
         //Check if any of the routes known by this group can run with the given parameters
         public function canRunAny() {
-            $ns = __NAMESPACE__;
-            $classNames = static::fetchRouteClassNames();
+            $classNames = $this->fetchRouteClassNames();
             foreach ($classNames as $class) {
-                if (("$ns\\$class::canRun")()) {
+                if (("$class::canRun")()) {
                     $this->runnableClassName = $class;
                     return true;
                 }
@@ -36,8 +39,7 @@ namespace API {
         //Run whichever API route matches the given parameters
         public function fetchResult() {
             if ($this->runnableClassName == null && !$this->canRunAny()) return null;
-            $className = __NAMESPACE__."\\".$this->runnableClassName;
-            return ("$className::fetchResult")();
+            return ("$this->runnableClassName::fetchResult")();
         }
     }
 }

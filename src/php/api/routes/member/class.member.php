@@ -3,7 +3,7 @@
 namespace API {
     class Member extends RouteGroup {
         private function __construct() {
-            parent::__construct("member");
+            parent::__construct("member", "\API\MemberRoute");
         }
 
         private static $memberInstance = null;
@@ -11,12 +11,11 @@ namespace API {
             if (self::$memberInstance == null) self::$memberInstance = new \API\Member();
             return self::$memberInstance;
         }
-
-        public static function fetchRouteClassNames() {
-            return ["MemberByBioguideId", "MemberByAnyName"];
-        }
-
     }
+
+    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
+    abstract class MemberRoute extends Route { }
+
 }
 
 ?>

@@ -1,7 +1,7 @@
 <?php
 
 namespace API {
-    class MemberByAnyName extends Route {
+    class MemberByAnyName extends MemberRoute {
 
         public static function parameters() { return ["name"]; }
 

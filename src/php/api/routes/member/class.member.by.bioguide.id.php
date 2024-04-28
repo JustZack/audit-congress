@@ -1,7 +1,7 @@
 <?php
 
 namespace API {
-    class MemberByBioguideId extends Route {
+    class MemberByBioguideId extends MemberRoute {
 
         public static function parameters() { return ["id"]; }
         
