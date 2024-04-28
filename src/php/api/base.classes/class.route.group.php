@@ -26,14 +26,22 @@ namespace API {
         public $runnableClassName = null;
         //Check if any of the routes known by this group can run with the given parameters
         public function canRunAny() {
+            $currentRunnable = null;
+            $currentRunnableParameters = -1;
             $classNames = $this->fetchRouteClassNames();
+
             foreach ($classNames as $class) {
-                if (("$class::canRun")()) {
-                    $this->runnableClassName = $class;
-                    return true;
+                $nParams = count(("$class::parameters")());
+                if (("$class::canRun")() && $nParams > $currentRunnableParameters) {
+                    $currentRunnable = $class;
+                    $currentRunnableParameters = $nParams;
                 }
             }
-            return false;
+
+            if ($currentRunnable == null) return false;
+            else $this->runnableClassName = $currentRunnable;
+            return true;
+            
         }
 
         //Run whichever API route matches the given parameters

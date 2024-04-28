@@ -13,5 +13,7 @@ require_once API_FOLDER."\base.classes\class.route.php";
 require_once API_FOLDER."\\routes\member\class.member.php";
 require_once API_FOLDER."\\routes\member\class.member.by.bioguide.id.php";
 require_once API_FOLDER."\\routes\member\class.member.by.any.name.php";
+require_once API_FOLDER."\\routes\member\class.member.by.state.php";
+require_once API_FOLDER."\\routes\member\class.member.by.type.by.state.php";
 
 ?>
