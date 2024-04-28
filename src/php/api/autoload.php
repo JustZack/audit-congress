@@ -23,8 +23,10 @@ require_once API_FOLDER."\\routes\\socials\class.socials.by.bioguide.id.php";
 
 require_once API_FOLDER."\\routes\\offices\class.offices.php";
 require_once API_FOLDER."\\routes\\offices\class.offices.by.bioguide.id.php";
+require_once API_FOLDER."\\routes\\offices\class.offices.by.office.id.php";
 
 require_once API_FOLDER."\\routes\\elections\class.elections.php";
 require_once API_FOLDER."\\routes\\elections\class.elections.by.bioguide.id.php";
+require_once API_FOLDER."\\routes\\elections\class.elections.by.fec.id.php";
 
 ?>

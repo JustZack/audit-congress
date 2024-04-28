@@ -173,42 +173,6 @@ class API {
 
 
 
-    /*
-        MEMBER ROUTES
-    */
-    public static function getMemberData($route) {
-        $bioguideId = API::getQueryArgIfSet("id");
-        $nameSearch = API::getQueryArgIfSet("name");
-        $current = API::getQueryArgIfSet("current", "bool");
-
-        $class = "\AuditCongress\Member";
-        switch ($route) {
-            case "member": $class .= "s"; break;
-            case "terms": $class .= "Terms"; break;
-            case "socials": $class .= "Socials"; break;
-            case "offices": $class .= "Offices"; break;
-            case "elections": $class .= "Elections"; break;
-        }
-
-        if (isset($bioguideId)) 
-            return ("$class::getByBioguideId")($bioguideId);
-        else if (isset($nameSearch) && $route == "member") 
-            return ("$class::getByAnyName")($nameSearch, $current);
-        
-        return null;
-    }
-
-    public static function HandleMemberDataById($route) {
-        try {
-            $data = API::getMemberData($route);
-            $result = array($route => $data);
-            API::Success($result);
-        } catch (Exception $e) {
-            API::Error($e->getMessage());
-        }
-    }
-
-
     public static function HandleBioguideToThomasMapping() {
         try {
             $data = Members::getBioguideToThomasIdMapping();

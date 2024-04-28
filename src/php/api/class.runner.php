@@ -49,6 +49,7 @@ namespace API {
         public static function processRequest() {
             $route = Parameters::getIfSet("route");
             if ($route != null) {
+                //Get all classes that extend RouteGroups
                 $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
                 foreach ($routeGroups as $group) {
                     $instance = ("$group::getInstance")();
