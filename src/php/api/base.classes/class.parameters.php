@@ -25,14 +25,17 @@ namespace API {
                 default: return $valueString;
             }
             $value = filter_var($valueString, $filterType);
-            if ($type != "bool" && $value == false) return null;
-            else return $value;
+            return $value;
         }
 
         //Get the given named url parameter if set, and convert to the given type if set
         public static function getIfSet($parameter, $type=null) {
-            if (isset($_GET[$parameter])) return Parameters::convert($_GET[$parameter], $type);
-            else return null;
+            $value = null;
+            if (isset($_GET[$parameter])) {
+                $value = Parameters::convert($_GET[$parameter], $type);
+                if ($type != "bool" && $value == false) $value = null;
+            }
+            return $value;
         }
 
         //Get the given set of url parameters if set
