@@ -17,8 +17,6 @@ namespace MySqlConnector {
 
         
         public static function rowsToObjects($rows) {
-            if (count($rows) == 0) return null;
-
             $rowObjects = array();
             $objectType = static::class;
             foreach ($rows as $row) {

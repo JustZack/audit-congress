@@ -21,4 +21,7 @@ require_once API_FOLDER."\\routes\\terms\class.terms.by.bioguide.id.php";
 require_once API_FOLDER."\\routes\\socials\class.socials.php";
 require_once API_FOLDER."\\routes\\socials\class.socials.by.bioguide.id.php";
 
+require_once API_FOLDER."\\routes\\offices\class.offices.php";
+require_once API_FOLDER."\\routes\\offices\class.offices.by.bioguide.id.php";
+
 ?>

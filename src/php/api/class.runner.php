@@ -60,6 +60,11 @@ namespace API {
         public static function runSocials() {
             self::runRouteGroup(\API\Socials::getInstance());
         }
+
+        //Run the offices route
+        public static function runOffices() {
+            self::runRouteGroup(\API\Offices::getInstance());
+        }
     }
 }
 

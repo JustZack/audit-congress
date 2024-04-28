@@ -18,7 +18,7 @@ if ($route !== null) {
         case "member": \Api\Runner::runMember(); break;
         case "terms":  \Api\Runner::runTerms(); break;
         case "socials":\Api\Runner::runSocials(); break;
-        case "offices":
+        case "offices":\Api\Runner::runOffices(); break;
         case "elections": API::HandleMemberDataById($route); break;
         
         case "congress": API::HandleGetCongress(); break;
