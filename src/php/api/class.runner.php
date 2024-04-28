@@ -55,6 +55,11 @@ namespace API {
         public static function runTerms() {
             self::runRouteGroup(\API\Terms::getInstance());
         }
+        
+        //Run the socials route
+        public static function runSocials() {
+            self::runRouteGroup(\API\Socials::getInstance());
+        }
     }
 }
 
