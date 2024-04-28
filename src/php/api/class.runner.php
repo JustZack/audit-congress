@@ -50,6 +50,11 @@ namespace API {
         public static function runMember() {
             self::runRouteGroup(\API\Member::getInstance());
         }
+
+        //Run the terms route
+        public static function runTerms() {
+            self::runRouteGroup(\API\Terms::getInstance());
+        }
     }
 }
 

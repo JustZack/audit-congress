@@ -16,7 +16,7 @@ if ($route !== null) {
         case "fullBill": API::HandleFullBillRoute(); break;
         
         case "member": \Api\Runner::runMember(); break;
-        case "terms": 
+        case "terms":  \Api\Runner::runTerms(); break;
         case "socials":
         case "offices":
         case "elections": API::HandleMemberDataById($route); break;

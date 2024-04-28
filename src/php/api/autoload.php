@@ -15,4 +15,7 @@ require_once API_FOLDER."\\routes\member\class.member.by.bioguide.id.php";
 require_once API_FOLDER."\\routes\member\class.member.by.any.name.php";
 require_once API_FOLDER."\\routes\member\class.member.by.filter.php";
 
+require_once API_FOLDER."\\routes\\terms\class.terms.php";
+require_once API_FOLDER."\\routes\\terms\class.terms.by.bioguide.id.php";
+
 ?>
