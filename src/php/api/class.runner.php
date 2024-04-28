@@ -38,28 +38,36 @@ namespace API {
 
         private static function runRouteGroup(RouteGroup $routeGroup) {
             $result = null;
-            if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
-
             $route = $routeGroup->name();
-            $action = $routeGroup->runnableClassName;
-            if ($result === null) self::NotFound($route);
-            else self::Success($route, $action, $result);
+
+            try {
+                if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
+                $action = $routeGroup->runnableClassName;
+                
+                if ($result === null) self::NotFound($route);
+                else self::Success($route, $action, $result);
+            } catch (\API\Exception $exception) {
+                self::Error($route, $exception->getMessage());
+            }
+        }
+
+        private static function runRoute($route) {
+            //Get all classes that extend RouteGroups
+            $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
+            foreach ($routeGroups as $group) {
+                $instance = ("$group::getInstance")();
+                if ($instance->isRoute($route)) {
+                    self::runRouteGroup($instance);
+                    return;
+                }
+            }
+            self::NotFound($route);
         }
 
         public static function processRequest() {
             $route = Parameters::getIfSet("route");
-            if ($route != null) {
-                //Get all classes that extend RouteGroups
-                $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
-                foreach ($routeGroups as $group) {
-                    $instance = ("$group::getInstance")();
-                    if ($instance->isRoute($route)) {
-                        self::runRouteGroup($instance);
-                        return;
-                    }
-                }
-            }
-            self::NotFound($route);
+            if ($route != null) self::runRoute($route);
+            else                self::Error("", "No route provided.");
         }
     }
 }
