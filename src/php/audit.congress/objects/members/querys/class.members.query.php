@@ -65,23 +65,30 @@ namespace AuditCongress {
             return $members->selectFromDB()->fetchAllAssoc();
         }
 
-        private static function getCongressPeopleByState($state = null, $type = null, $isCurrent = null) {
+        //Fetch members by state with some parameters. 
+        //Note: This requires a join on the terms table, so its somewhat expensive to run.
+        private static function getCongressPeopleByState($state, $type = null, $gender = null, $isCurrent = null) {
             $members = new MemberTermsQuery();
             $members->setSelectColumns(["members.*"]);
-            $searchColumns = $searchValues = $searchOperators = [];
+            $searchColumns = $searchOperators = $searchValues = [];
 
             if (is_bool($isCurrent)) {
                 $todaysDate = date("Y-m-d");
-
                 if ($isCurrent === false) {
-                    $searchColumns = ["state", "type", "isCurrent", "end"];
-                    $searchValues = [$state, $type, $isCurrent, $todaysDate];
-                    $searchOperators = ["like", "like", "like", "<="];
+                    array_push($searchColumns, "state", "type", "isCurrent", "end");
+                    array_push($searchOperators, "like", "like", "like", "<=");
+                    array_push($searchValues, $state, $type, $isCurrent, $todaysDate);
                 } else {
-                    $searchColumns = ["state", "type", "isCurrent", "end", "start"];
-                    $searchValues = [$state, $type, $isCurrent, $todaysDate, $todaysDate];
-                    $searchOperators = ["like", "like", "like", ">=", "<="];
+                    array_push($searchColumns, "state", "type", "isCurrent", "end", "start");
+                    array_push($searchOperators, "like", "like", "like", ">=", "<=");
+                    array_push($searchValues, $state, $type, $isCurrent, $todaysDate, $todaysDate);
                 }
+            }
+
+            if ($gender != null) {
+                array_push($searchColumns, "gender");
+                array_push($searchOperators, "=");
+                array_push($searchValues, $gender);
             }
 
             $members->setSearchColumns($searchColumns);
@@ -96,17 +103,16 @@ namespace AuditCongress {
             return $members->selectFromDB()->fetchAllAssoc();
         }
 
-
-        public static function getByState($state, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, null, $isCurrent);
+        public static function getByState($state, $type = null, $gender = null, $isCurrent = null) {
+            return self::getCongressPeopleByState($state, $type, $gender, $isCurrent);
         }
 
-        public static function getSenators($state = null, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, "sen", $isCurrent);
+        public static function getSenators($state, $isCurrent = null) {
+            return self::getCongressPeopleByState($state, "sen", null, $isCurrent);
         }
 
-        public static function getRepresentatives($state = null, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, "rep", $isCurrent);
+        public static function getRepresentatives($state, $isCurrent = null) {
+            return self::getCongressPeopleByState($state, "rep", null, $isCurrent);
         }
 
         //Update a members image url with the provided url and attribution

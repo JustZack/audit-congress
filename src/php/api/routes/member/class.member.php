@@ -15,7 +15,6 @@ namespace API {
 
     //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
     abstract class MemberRoute extends Route { }
-
 }
 
 ?>

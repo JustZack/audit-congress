@@ -85,19 +85,19 @@ namespace AuditCongress {
             return self::parseResult($members);
         }
 
-        public static function getByState($state = null, $isCurrent = null) {
+        public static function getByState($state = null, $type = null, $gender = null, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByState($state, $isCurrent);
+            $members = MembersQuery::getByState($state, $type, $gender, $isCurrent);
             return self::parseResult($members);
         }
 
-        public static function getSenators($state = null, $isCurrent = null) {
+        public static function getSenators($state, $isCurrent = null) {
             self::enforceCache();
             $members = MembersQuery::getSenators($state, $isCurrent);
             return self::parseResult($members);
         }
 
-        public static function getRepresentatives($state = null, $isCurrent = null) {
+        public static function getRepresentatives($state, $isCurrent = null) {
             self::enforceCache();
             $members = MembersQuery::getRepresentatives($state, $isCurrent);
             return self::parseResult($members);

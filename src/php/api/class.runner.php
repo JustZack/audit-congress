@@ -11,9 +11,10 @@ namespace API {
         }
 
         //API Success
-        public static function Success($route, $result) {
+        public static function Success($route, $action, $result) {
             $data = ["request" => array()];
             $data["request"]["status"] = "Success";
+            $data["request"]["action"] = $action;
             $data[$route] = $result;
             self::Return($route, $data);
         }
@@ -36,14 +37,13 @@ namespace API {
         }
 
         private static function runRouteGroup(RouteGroup $routeGroup) {
-            //$route = $routeGroup->name();
-            $route = $routeGroup->runnableClassName;
             $result = null;
-
             if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
 
-            if ($result == null) self::NotFound($route);
-            else self::Success($route, $result);
+            $route = $routeGroup->name();
+            $action = $routeGroup->runnableClassName;
+            if ($result === null) self::NotFound($route);
+            else self::Success($route, $action, $result);
         }
 
         //Run the member route

@@ -18,6 +18,11 @@ namespace API {
         public static function fetchParameters() {
             return Parameters::getManyIfSet(static::parameters(), static::types());
         }
+
+        //General function to be sure a parameter is one of the given values (or null)
+        public static function validParameter($passed, $validValues) {
+            return $passed == null || ($passed != null && in_array($passed, $validValues));
+        }
     }
 }
 
