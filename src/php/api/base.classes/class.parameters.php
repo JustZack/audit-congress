@@ -1,36 +1,18 @@
 <?php
 
 namespace API {
-    class Parameters {
+    class Parameters extends ExceptionThrower {
 
-        private $parameterValues = array();
-        private function __construct() {
-            $this->parameterValues = self::getAll();
+        public static function has($parameter, $type=null) {
+            return Parameters::getIfSet($parameter, $type) != null;
         }
 
-        private static $parametersInstance = null;
-        public static function getInstance() {
-            if (self::$parametersInstance == null)
-                self::$parametersInstance = new Parameters();
-            return self::$parametersInstance;
+        public static function hasAll($parameters, $types=null) {
+            $paramSet = Parameters::getManyIfSet($parameters, $types);
+            foreach ($paramSet as $key=>$value) if ($value == null) return false;
+            return true;
         }
 
-        private static function getIfInArray($array, $needle, $asType=null) {
-            if (isset($array[$needle])) {
-                $val = $array[$needle];
-                if(isset($type)) $val = Parameters::convert($val, $type);
-                return $val;
-            }
-            else return null;
-        }
-
-        public function get($parameter, $type=null) {
-            return self::getIfInArray($this->parameterValues, $parameter, $type);
-        }
-
-        private static function throwException($function, $message) {
-            throw new \API\Exception("\Api\Parameters::$function $message");
-        }
         //Convert the given string value to the given type
         public static function convert($valueString, $type) {
             $filterType = null;
@@ -40,28 +22,39 @@ namespace API {
                 case "double":
                 case "decimal":
                 case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
+                default: return $valueString;
             }
             return filter_var($valueString, $filterType);
         }
 
         //Get the given named url parameter if set, and convert to the given type if set
         public static function getIfSet($parameter, $type=null) {
-            return self::getIfInArray($_GET, $parameter, $type);
+            if (isset($_GET[$parameter])) {
+                $val = $_GET[$parameter];
+                if(isset($type)) {
+                    $val = Parameters::convert($val, $type);
+                    if ($type != "bool" && $val == false) return null;
+                }
+                return $val;
+            }
+            else return null;
         }
 
         //Get the given set of url parameters if set
         public static function getManyIfSet($parameters, $types=null) {
             $nParams = count($parameters); $nTypes = $types==null?0:count($types);
             if ($nTypes > 0 && ($nParams != $nTypes)) 
-                Parameters::throwException("getAllIfSet", "Mismatch: Found $nParams but $nTypes.");
+                Parameters::throwException("getManyIfSet", "Mismatch: Found $nParams but $nTypes.");
             
             $paramValues = array();
             for ($i = 0;$i < count($parameters);$i++) {
                 $name = $parameters[$i];
-                $type = $nTypes > 0 ? null : $types[$i];
+                $type = $nTypes == 0 ? null : $types[$i];
                 $value = Parameters::getIfSet($name, $type);
                 $paramValues[$name] =  $value;
             }
+
+            return $paramValues;
         }
 
         public static function getAll() { return $_GET; }

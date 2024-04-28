@@ -6,19 +6,16 @@ namespace API {
             parent::__construct("member");
         }
 
-        private $memberInstance = null;
+        private static $memberInstance = null;
         public static function getInstance() {
             if (self::$memberInstance == null) self::$memberInstance = new \API\Member();
             return self::$memberInstance;
         }
 
-        public function canRunAny($parameters) {
-
+        public static function fetchRouteClassNames() {
+            return ["MemberByBioguideId", "MemberByAnyName"];
         }
 
-        public function fetchResult($parameters) {
-            
-        }
     }
 }
 
