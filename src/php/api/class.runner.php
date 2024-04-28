@@ -46,24 +46,19 @@ namespace API {
             else self::Success($route, $action, $result);
         }
 
-        //Run the member route
-        public static function runMember() {
-            self::runRouteGroup(\API\Member::getInstance());
-        }
-
-        //Run the terms route
-        public static function runTerms() {
-            self::runRouteGroup(\API\Terms::getInstance());
-        }
-        
-        //Run the socials route
-        public static function runSocials() {
-            self::runRouteGroup(\API\Socials::getInstance());
-        }
-
-        //Run the offices route
-        public static function runOffices() {
-            self::runRouteGroup(\API\Offices::getInstance());
+        public static function processRequest() {
+            $route = Parameters::getIfSet("route");
+            if ($route != null) {
+                $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
+                foreach ($routeGroups as $group) {
+                    $instance = ("$group::getInstance")();
+                    if ($instance->isRoute($route)) {
+                        self::runRouteGroup($instance);
+                        return;
+                    }
+                }
+            }
+            self::NotFound($route);
         }
     }
 }

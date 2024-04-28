@@ -9,17 +9,18 @@ require_once "../php/api/autoload.php";
 /*
     API Entry Point
 */
+
 $route = API::getQueryArgIfSet("route");
 if ($route !== null) {
     switch($route) {
         case "bill": API::HandleBillRoute(); break;
         case "fullBill": API::HandleFullBillRoute(); break;
         
-        case "member": \Api\Runner::runMember(); break;
-        case "terms":  \Api\Runner::runTerms(); break;
-        case "socials":\Api\Runner::runSocials(); break;
-        case "offices":\Api\Runner::runOffices(); break;
-        case "elections": API::HandleMemberDataById($route); break;
+        case "member":
+        case "terms":
+        case "socials":
+        case "offices":
+        case "elections": \API\Runner::processRequest(); break;
         
         case "congress": API::HandleGetCongress(); break;
         case "session": API::HandleGetSession(); break;
