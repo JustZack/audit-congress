@@ -36,7 +36,8 @@ namespace API {
         }
 
         private static function runRouteGroup(RouteGroup $routeGroup) {
-            $route = $routeGroup->name();
+            //$route = $routeGroup->name();
+            $route = $routeGroup->runnableClassName;
             $result = null;
 
             if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
