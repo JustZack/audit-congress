@@ -25,8 +25,11 @@ namespace AuditCongress {
                 $depiction = $congressMember->depiction;
             } catch (ApiException $e) { }
 
-            if (is_array($depiction)) 
-                list("imageUrl"=>$imageUrl, "attribution"=>$imageAttribution) = $depiction;
+            if (is_array($depiction)) {
+                $imageUrl = in_array("imageUrl", $depiction) ? $depiction["imageUrl"] : 'false';
+                $imageAttribution = in_array("attribution", $depiction) ? $depiction["attribution"] : 'false';
+            }
+
             return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
         }
         //Make sure the given array of members have image urls set
@@ -79,27 +82,33 @@ namespace AuditCongress {
             return self::parseResult($members);
         }
 
-        public static function getByGender($gender, $isCurrent = null) {
+        public static function getByFilter($state = null, $type = null, $party = null, $gender = null, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByGender($gender, $isCurrent);
+            $members = MembersQuery::getByFilter($state, $type, $party, $gender, $isCurrent);
             return self::parseResult($members);
         }
 
-        public static function getByState($state = null, $type = null, $gender = null, $isCurrent = null) {
+        public static function getByParty($state = null, $party = null, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getByState($state, $type, $gender, $isCurrent);
+            $members = self::getByFilter($state, null, $party, null, $isCurrent);
+            return self::parseResult($members);
+        }
+
+        public static function getByState($state = null, $type = null, $isCurrent = null) {
+            self::enforceCache();
+            $members = self::getByFilter($state, $type, null, null, $isCurrent);
             return self::parseResult($members);
         }
 
         public static function getSenators($state, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getSenators($state, $isCurrent);
+            $members = self::getByState($state, "sen", $isCurrent);
             return self::parseResult($members);
         }
 
         public static function getRepresentatives($state, $isCurrent = null) {
             self::enforceCache();
-            $members = MembersQuery::getRepresentatives($state, $isCurrent);
+            $members = self::getByState($state, "rep", $isCurrent);
             return self::parseResult($members);
         }
     }

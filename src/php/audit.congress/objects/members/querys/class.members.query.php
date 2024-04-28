@@ -57,62 +57,32 @@ namespace AuditCongress {
             return $result;
         }
 
-        //Fetch members with the given gender (M or F at this time)
-        public static function getByGender($gender, $isCurrent = null) {
-            $members = new MembersQuery();
-            $members->setSearchColumns(["gender", "isCurrent"]);
-            $members->setSearchValues([$gender, $isCurrent]);
-            return $members->selectFromDB()->fetchAllAssoc();
-        }
-
-        //Fetch members by state with some parameters. 
+        //Fetch members by state with some parameters, where each value needs to be satisifed in to find a result
         //Note: This requires a join on the terms table, so its somewhat expensive to run.
-        private static function getCongressPeopleByState($state, $type = null, $gender = null, $isCurrent = null) {
+        public static function getByFilter($state = null, $type = null, $party = null, $gender = null, $isCurrent = null) {
             $members = new MemberTermsQuery();
-            $members->setSelectColumns(["members.*"]);
-            $searchColumns = $searchOperators = $searchValues = [];
+            $members->setSelectColumns(["members.*", "memberterms.state", "memberterms.start", "memberterms.end", "memberterms.type", "memberterms.party"]);
 
+            if ($state != null) $members->addSearchValue("state", "like", $state);
+            if ($type != null) $members->addSearchValue("type", "like", $type);
+            if ($party != null) $members->addSearchValue("party", "like", $party);
+            if ($gender != null) $members->addSearchValue("gender", "like", $gender);
             if (is_bool($isCurrent)) {
                 $todaysDate = date("Y-m-d");
+                $members->addSearchValue("isCurrent", "like", $isCurrent);
                 if ($isCurrent === false) {
-                    array_push($searchColumns, "state", "type", "isCurrent", "end");
-                    array_push($searchOperators, "like", "like", "like", "<=");
-                    array_push($searchValues, $state, $type, $isCurrent, $todaysDate);
+                    $members->addSearchValue("end", "<=", $todaysDate);
                 } else {
-                    array_push($searchColumns, "state", "type", "isCurrent", "end", "start");
-                    array_push($searchOperators, "like", "like", "like", ">=", "<=");
-                    array_push($searchValues, $state, $type, $isCurrent, $todaysDate, $todaysDate);
+                    $members->addSearchValue("start", "<=", $todaysDate);
+                    $members->addSearchValue("end", ">=", $todaysDate);
                 }
             }
 
-            if ($gender != null) {
-                array_push($searchColumns, "gender");
-                array_push($searchOperators, "=");
-                array_push($searchValues, $gender);
-            }
-
-            $members->setSearchColumns($searchColumns);
-            $members->setSearchValues($searchValues);
-            $members->setEqualityOperators($searchOperators);
-
+            $members->setGroupBy(["memberterms.bioguideId", "memberterms.type"]);
+            $members->setOrderBy(["bioguideId", "start"], false);
             $members->setJoin("members", ["memberterms.bioguideId"], ["members.bioguideId"]);
 
-            $members->setGroupBy(["memberterms.bioguideId", "type"]);
-            $members->setOrderBy(["bioguideId", "start"], false);
-            
             return $members->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByState($state, $type = null, $gender = null, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, $type, $gender, $isCurrent);
-        }
-
-        public static function getSenators($state, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, "sen", null, $isCurrent);
-        }
-
-        public static function getRepresentatives($state, $isCurrent = null) {
-            return self::getCongressPeopleByState($state, "rep", null, $isCurrent);
         }
 
         //Update a members image url with the provided url and attribution

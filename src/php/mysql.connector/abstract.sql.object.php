@@ -6,8 +6,8 @@ namespace MySqlConnector {
         private 
             $booleanConditon = "AND", 
             $equalityOperator = false,
-            $conditionList = null, 
-            $operatorList = null;
+            $conditionList = array(), 
+            $operatorList = array();
 
         public function __construct($tableName, $equalityOperator = "=", $booleanOperator = "AND") {
             $this->table = new Table($tableName);
@@ -105,6 +105,18 @@ namespace MySqlConnector {
                 $condition = QueryBuilder::buildWhereCondition($sColumns, $sValues,
                                     $this->getEqualityOperators(), $this->getBooleanConditions());
             return $condition;
+        }
+
+
+        
+        //Add a search value to the where condition
+        //Requires: the $column name, $equalityOperator (=)
+        public function addSearchValue($column, $equalityOperator, $value) {
+            if (QueryBuilder::isAllowedOperator($equalityOperator)) {
+                array_push($this->searchColumns, $column);
+                array_push($this->operatorList, $equalityOperator);
+                array_push($this->searchValues, $value);
+            } else self::throwSqlObjectError("Tried using an unsupported operator '$equalityOperator'");
         }
     }
 }

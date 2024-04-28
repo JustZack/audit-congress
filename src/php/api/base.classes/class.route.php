@@ -10,8 +10,8 @@ namespace API {
         //All API Routes fetch some sort of result
         public abstract static function fetchResult();
         
-        //Fetch the parameters and their types
-        public abstract static function parameters();
+        //Fetch the required parameters for this route & the types
+        public static function parameters() { return []; }
         public static function types() { return null; }
 
         //Fetch the parameters used by this function
