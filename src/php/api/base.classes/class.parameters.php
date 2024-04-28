@@ -24,19 +24,14 @@ namespace API {
                 case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
                 default: return $valueString;
             }
-            return filter_var($valueString, $filterType);
+            $value = filter_var($valueString, $filterType);
+            if ($type != "bool" && $value == false) return null;
+            else return $value;
         }
 
         //Get the given named url parameter if set, and convert to the given type if set
         public static function getIfSet($parameter, $type=null) {
-            if (isset($_GET[$parameter])) {
-                $val = $_GET[$parameter];
-                if(isset($type)) {
-                    $val = Parameters::convert($val, $type);
-                    if ($type != "bool" && $val == false) return null;
-                }
-                return $val;
-            }
+            if (isset($_GET[$parameter])) return Parameters::convert($_GET[$parameter], $type);
             else return null;
         }
 
