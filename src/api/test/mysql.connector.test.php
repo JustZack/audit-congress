@@ -77,6 +77,11 @@ namespace APITest {
             var_dump($rows);
         }
 
+        static function testSqlMemberByAnyName($name = null, $isCurrent = null) {
+            $rows = \AuditCongress\Members::getByAnyName($name, $isCurrent);
+            var_dump($rows);
+        }
+
         static function testSqlMemberOfficeById($id) {
             $rows = \AuditCongress\MemberOffices::getByBioguideId($id);
             var_dump($rows);

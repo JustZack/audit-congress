@@ -1,0 +1,74 @@
+<?php
+
+namespace API {
+    class Runner {
+        //Actually print the response from the API
+        private static function Return($route, $data) {
+            $data["request"]["route"] = $route;
+            $data["request"]["parameters"] = Parameters::getAll();
+            header('Content-Type: application/json');
+            print_r(json_encode($data));
+        }
+
+        //API Success
+        public static function Success($route, $action, $result) {
+            $data = ["request" => array()];
+            $data["request"]["status"] = "Success";
+            $data["request"]["action"] = $action;
+            $data[$route] = $result;
+            self::Return($route, $data);
+        }
+
+        //API Error
+        public static function Error($route, $error) {
+            $data = ["request" => array()];
+            $data["request"]["status"] = "error";
+            $data["request"]["message"] = $error;
+            self::Return($route, $data);
+        }
+
+        //API Not found
+        public static function NotFound($route) {
+            $data = ["request" => array()];
+            $data["request"]["status"] = "not found";
+            if (strlen($route) > 0) $data["request"]["message"] = "Unknown route: $route";
+            else $data["request"]["message"] = "No route provided";
+            self::Return($route, $data);
+        }
+
+        private static function runRouteGroup(RouteGroup $routeGroup) {
+            $result = null;
+            $route = $routeGroup->name();
+
+            try {
+                if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
+               
+                if ($result === null) self::NotFound($route);
+                else self::Success($route, $routeGroup->runnableClassName, $result);
+            } catch (\API\Exception $exception) {
+                self::Error($route, $exception->getMessage());
+            }
+        }
+
+        private static function runRoute($route) {
+            //Get all classes that extend RouteGroups
+            $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
+            foreach ($routeGroups as $group) {
+                $instance = ("$group::getInstance")();
+                if ($instance->isRoute($route)) {
+                    self::runRouteGroup($instance);
+                    return;
+                }
+            }
+            self::NotFound($route);
+        }
+
+        public static function processRequest() {
+            $route = Parameters::getIfSet("route");
+            if ($route != null) self::runRoute($route);
+            else                self::Error("", "No route provided.");
+        }
+    }
+}
+
+?>

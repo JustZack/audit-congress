@@ -2,7 +2,7 @@
 
 namespace MySqlConnector {
     abstract class QueryOptions {
-        private
+        protected
             $selectColumns = array("*"),
             $searchColumns = array(), 
             $searchValues = array(),  
@@ -13,7 +13,6 @@ namespace MySqlConnector {
             $groupBy = null,
             $limit = null,
             $offset = null;
-
 
         //Get the columns used when selecting this object
         public function getSelectColumns() { return $this->selectColumns; }

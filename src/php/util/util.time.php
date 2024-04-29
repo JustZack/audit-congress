@@ -2,8 +2,6 @@
 
 namespace Util {
 
-    use DateTime;
-
     class Time {
         public static function hoursToSeconds($hours) { return $hours*60*60; }
         public static function secondsToHours($seconds) { return (int)($seconds/60/60)%24; }
