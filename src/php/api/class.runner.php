@@ -42,10 +42,9 @@ namespace API {
 
             try {
                 if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
-                $action = $routeGroup->runnableClassName;
-                
+               
                 if ($result === null) self::NotFound($route);
-                else self::Success($route, $action, $result);
+                else self::Success($route, $routeGroup->runnableClassName, $result);
             } catch (\API\Exception $exception) {
                 self::Error($route, $exception->getMessage());
             }

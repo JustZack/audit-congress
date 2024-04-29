@@ -41,7 +41,6 @@ namespace API {
             if ($currentRunnable == null) return false;
             else $this->runnableClassName = $currentRunnable;
             return true;
-            
         }
 
         //Run whichever API route matches the given parameters

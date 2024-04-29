@@ -35,18 +35,14 @@ namespace AuditCongress {
         public static function getByAnyName($name, $isCurrent = null) {
             $nameParts = preg_split("/[\s\.\+-,]/", $name);
             //$searchColumns = ["isCurrent"]; $searchValues = [$isCurrent];
-            $searchColumns = []; $searchValues = [];
             
+            $members = new MembersQuery();
             foreach ($nameParts as $part) {
-                array_push($searchColumns, "first", "last");
-                array_push($searchValues, $part, $part);
+                $members->addSearchValue("first", "like", $part);
+                $members->addSearchValue("last", "like", $part);
             }
 
-            $members = new MembersQuery();
-            $members->setEqualityOperator("like");
             $members->setBooleanCondition("OR");
-            $members->setSearchColumns($searchColumns);
-            $members->setSearchValues($searchValues);
             $result = $members->selectFromDB()->fetchAllAssoc();
             
             if (is_bool($isCurrent)) {
@@ -88,8 +84,7 @@ namespace AuditCongress {
         //Update a members image url with the provided url and attribution
         public static function updateMemberImage($bioguideId, $imageUrl, $imageAttribution) {
             $members = new MembersQuery();
-            $members->setSearchColumns(["bioguideId"]);
-            $members->setSearchValues([$bioguideId]);
+            $members->addSearchValue("bioguideId", "=", $bioguideId);
             $members->setColumns(["imageUrl", "imageAttribution"]);
             $members->setValues([$imageUrl, $imageAttribution]);
             return $members->updateInDb();
