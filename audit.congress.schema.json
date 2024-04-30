@@ -212,6 +212,10 @@
                     
                     "introduced": { "type": "VARCHAR(50)", "null": "NO" },
                     "updated": { "type": "VARCHAR(50)", "null": "NO" }
+                },
+                "indexes": {
+                    "congress_type": ["congress", "type"],
+                    "type": ["type"]
                 }
             },
             {

@@ -5,7 +5,8 @@ namespace MySqlConnector {
     class Table {
         private 
             $tableExists = null,
-            $tableColumns = null;
+            $tableColumns = null,
+            $tableIndexes = null;
         private ?Columns $columns = null;
         public $name;
         
@@ -41,6 +42,15 @@ namespace MySqlConnector {
                 $this->columns = new Columns($results);
             }
             return $this->columns;
+        }
+        //Show the indexes setup on this table
+        public function indexes() {
+            $sql = "SHOW INDEX FROM `$this->name`";
+            if ($this->tableIndexes == null) {
+                $results = Query::runQuery($sql);
+                $this->tableIndexes = new Indexes($results);
+            }
+            return $this->tableIndexes;
         }
         //Count the number of rows in this table
         public function count($whereCondition = null) {

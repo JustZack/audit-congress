@@ -27,6 +27,9 @@ namespace MySqlConnector {
                 $schemaTableNames[strtolower($name)] = true;
                 //Enforce the known schema onto this table
                 self::enforceTableSchema($name, $columns);
+
+                $indexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
+                self::enforceTableIndexes($name, $indexes);
             }
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
@@ -116,6 +119,34 @@ namespace MySqlConnector {
                 array_push($columnsInDescribeFormat, $column);
             }
             return new Columns($columnsInDescribeFormat);
+        }
+
+        public static function getSchemaIndexesAsObject($schemaIndexes) : Indexes {
+            $IndexesInDescribeFormat = array();
+            foreach ($schemaIndexes as $name=>$indexes) {
+                for ($i = 0;$i < count($indexes);$i++) {
+                    $index = array(1 => 1, 2 => $name, 4 => $indexes[$i], 
+                                   5 => "A", 6 => 0, 10 => "BTREE", 13 => "YES");
+                    array_push($IndexesInDescribeFormat, $index);
+                }
+            }
+            return new Indexes($IndexesInDescribeFormat);
+        }
+
+        private static function getExistingIndexes($name) {
+
+        }
+        
+        private static function enforceTableIndexes($name, $indexes) {
+            //Create an object for this table
+            $table = new Table($name);
+            $existingIndexes = $table->indexes();
+            $schemaIndexes = self::getSchemaIndexesAsObject($indexes);
+            if ($existingIndexes->count() > 0 || $schemaIndexes->count() > 0) {
+                var_dump($name);
+                var_dump($existingIndexes);
+                var_dump($schemaIndexes);
+            }
         }
     }
 }
