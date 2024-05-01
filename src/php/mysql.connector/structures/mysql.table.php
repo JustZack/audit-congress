@@ -160,7 +160,7 @@ namespace MySqlConnector {
         }
 
 
-
+        
         public function alterColumn($type, Column $column) {
             $sql = "ALTER TABLE `$this->name` ";
             switch ($type) {
@@ -181,23 +181,6 @@ namespace MySqlConnector {
             $this->tableColumns == null;
             return Query::runActionQuery($sql);
         }
-
-        //Where $type is one of: ADD, DROP, MODIFY
-        public function alter($type, $columnName, $columnDescription = null) {
-            $sql = "ALTER TABLE `$this->name`";
-            switch ($type) {
-                case AlterType::ADD:    $sql .= " ADD $columnName $columnDescription"; break;
-                case AlterType::DROP:   $sql .= " DROP COLUMN $columnName"; break;
-                case AlterType::MODIFY: $sql .= " MODIFY COLUMN $columnName $columnDescription"; break;
-                default: throw new SqlException("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
-            }
-            $this->tableColumns == null;
-            return Query::runActionQuery($sql);
-        }
-        //Alias's for the alter function
-        public function addColumn($columnName, $columnDescription) { return $this->alter(AlterType::ADD, $columnName, $columnDescription); }
-        public function dropColumn($columnName) { return $this->alter(AlterType::DROP, $columnName); }
-        public function modifyColumn($columnName, $columnDescription) { return $this->alter(AlterType::MODIFY, $columnName, $columnDescription); }
 
         public function alterIndex($type, Index $index) {
             $sql = "";
