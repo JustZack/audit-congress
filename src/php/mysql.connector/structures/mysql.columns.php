@@ -1,13 +1,13 @@
 <?php
 
 namespace MySqlConnector {
-    class Columns {
+    class Columns extends CompareableSet {
         
         private $columns = array();
         public function __construct($columnsArr) {
             foreach ($columnsArr as $column) {
                 $colObj = new Column($column);
-                $this->columns[$colObj->name] = $colObj;
+                $this->set($colObj->name, $colObj);
             }
         }
 
@@ -49,47 +49,6 @@ namespace MySqlConnector {
             if ($column != null) return $column->canBeNull == "NULL";
             else throw new SqlException("Tried checking if column $name can be null, but $name doesnt exist in this column set.");
         }
-
-        /*
-            Compare the columns in this object to the passed columns
-                Uses 'this' object as truth, to decide what is 'wrong' with the other
-            Returns an array where each element relates to every unique column in 'this' object and the other object
-            Each object looks like so:
-                "columnName" => ["type"=>"SQL Type Str",
-                                 "exists"=>boolean, //Is the column shared?
-                                 "matches"=>boolean, //Is the column type the same?
-                                 "extra"=>boolean //Does this column only exist in $otherColumns?
-                                ]
-        */
-        public function compareEach(Columns $otherColumns) {
-            $columnDifferences = array();
-
-            //First pass comparing each column in this object (expected columns) to those in the passed object
-            foreach ($this->columns as $name=>$thisColumn) {
-                //First try fetching this column from $otherColumns
-                $otherColumn = $otherColumns->getColumn($name);
-                //Check if it exists in $otherColumns
-                $exists = $otherColumn != null;
-                //Check if this column matches the $otherColumn
-                $matches = $thisColumn->matches($otherColumn);
-                //Define this column in the $columnDifferences
-                $columnDifferences[$name] = Columns::createColumnDifference($thisColumn->type(), $exists, $matches, false);
-            }
-
-            //Second pass to catch any columns in the other object that dont exist in this one
-            foreach ($otherColumns->columns as $name=>$otherColumn)
-                //Only if this column isnt set in $columnDifferences already
-                if (!isset($columnDifferences[$name]))
-                    //Define this as an extra column in the $columnDifferences
-                    $columnDifferences[$name] = Columns::createColumnDifference($otherColumn->type(), false, false, true);
-
-            return $columnDifferences;
-        }
-
-        private static function createColumnDifference($type, $exists, $matches, $extra) {
-            return array("type"=>$type, "exists"=>$exists, "matches"=>$matches, "extra"=>$extra);
-        }
-        
     }
 
     class Column extends CompareableObject {

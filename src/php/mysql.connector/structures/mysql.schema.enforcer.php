@@ -22,16 +22,16 @@ namespace MySqlConnector {
             //First pass to iterate over tables that should exist in the schema
             foreach ($this->schema["tables"] as $tableSchema) {
                 //Fetch the name, columns, and a Columns object for this table in the schema
-                list("name"=>$name, "columns"=>$columns) = $tableSchema;
+                list("name"=>$name, "columns"=>$schemaColumns) = $tableSchema;
                 //Add this table name as a known table
                 $schemaTableNames[strtolower($name)] = true;
                 //Create an object for this table
                 $table = new Table($name);
                 //Enforce the known schema onto this table
-                self::enforceTableSchema($name, $columns);
+                self::enforceTableSchema($table, $schemaColumns);
 
-                $indexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
-                self::enforceTableIndexes($table, $indexes);
+                $schemaIndexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
+                self::enforceTableIndexes($table, $schemaIndexes);
             }
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
@@ -43,20 +43,21 @@ namespace MySqlConnector {
         }
         public static function getDBOperationsList() { return self::$operations; }
 
+
+
         //For the given table $name, enforce the given $columns onto its schema
-        private static function enforceTableSchema($name, $columns) {
+        private static function enforceTableSchema($table, $schemaColumns) {
             //Get the schemas columns in the form of a \MySqlConnector\Columns object
-            $columnsExpected = self::getSchemaColumnsAsObject($columns);
-            $table = new Table($name);
+            $columnsExpected = self::getSchemaColumnsAsObject($schemaColumns);
 
             //If the table doesnt exist, create the table
             if (!$table->exists()) {
                 $columnCreateSqlArr = $columnsExpected->getSqlCreateStrings();
                 $table->create($columnCreateSqlArr);
-                self::addDBOperation("Create Table $name");
+                self::addDBOperation("Create Table $table->name");
             }
             //Otherwise enforce the schema for this table
-            else self::enforceColumnSchema($table, $columnsExpected, $table->columns());
+            else self::enforceColumnSchema($table, $columnsExpected);
         }
 
         //Given the $schemaKnownTables, drop all tables outside of this list
@@ -72,44 +73,8 @@ namespace MySqlConnector {
                 }
         }
 
-        //For the given $table, Check which columns need updated, modified, or dropped
-        private static function enforceColumnSchema($table, $columnsExpected, $columnsExisting) {
-            $columnsDiff = $columnsExpected->compareEach($columnsExisting);
-            foreach ($columnsDiff as $name=>$data) //Broken into handler to simplify
-                self::handleEnforceColumnSchema($table, $name, $data);
-        }
 
-        private static function dropColumn($table, $name, $type) {
-            $table->dropColumn($name, $type);  
-            self::addDBOperation("Drop $name=>$type"); 
-        }
-
-        private static function addColumn($table, $name, $type) {
-            $table->addColumn($name, $type);  
-            self::addDBOperation("Add $name=>$type"); 
-        }
-
-        private static function modifyColumn($table, $name, $type) {
-            $table->modifyColumn($name, $type);  
-            self::addDBOperation("Add $name=>$type"); 
-        }
-
-
-        private static function handleEnforceColumnSchema($table, $name, $data) {
-            //Break parts of the data into their own vars
-            $type = $data["type"];
-            $extra = $data["extra"];
-            $exists = $data["exists"];
-            $matches = $data["matches"];
-            
-            //Drop extra columns
-            if ($extra) self::dropColumn($table, $name, $type);
-            //Add missing columns
-            else if (!$exists) self::addColumn($table, $name, $type);
-            //Modify column mismatches
-            else if (!$matches) self::modifyColumn($table, $name, $type);
-        }
-
+        
         //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
         public static function getSchemaColumnsAsObject($schemaColumns) : Columns {
             $columnsInDescribeFormat = array();
@@ -122,6 +87,42 @@ namespace MySqlConnector {
             return new Columns($columnsInDescribeFormat);
         }
 
+        //For the given $table, Check which columns need updated, modified, or dropped
+        private static function enforceColumnSchema($table, $columnsExpected) {
+            $columnsExisting = $table->columns();
+            $columnsDiff = $columnsExpected->compare($columnsExisting);
+            foreach ($columnsDiff as $name=>$columnDiff) //Broken into handler to simplify
+                self::handleEnforceColumnSchema($table, $columnDiff);
+        }
+
+        private static function handleEnforceColumnSchema($table, $columnDiff) {
+            $column = $columnDiff->item();
+            $dbOperation = null;
+
+            //Drop extra column
+            if ($columnDiff->extra()) {
+                $dbOperation = "Drop Column %s=>%s from table %s";
+                $table->alterColumn(AlterType::DROP, $column);
+            }
+            //Add missing column
+            else if (!$columnDiff->exists()) {
+                $dbOperation = "Add Column %s=>%s to table %s";
+                $table->alterColumn(AlterType::ADD, $column);
+            }
+            //Modify column mismatch
+            else if (!$columnDiff->matches()) {
+                $dbOperation = "Modify Column %s=>%s on table %s";
+                $table->alterColumn(AlterType::MODIFY, $column);
+            }
+            //Add a DB operation if one happened
+            if ($dbOperation !== null) {
+                $dbOperation = sprintf($dbOperation, $column->name(), $column->type(), $table->name); 
+                self::addDBOperation($dbOperation);
+            }
+        }
+
+
+
         public static function getSchemaIndexesAsObject($schemaIndexes) : Indexes {
             $IndexesInDescribeFormat = array();
             foreach ($schemaIndexes as $name=>$indexes) {
@@ -133,7 +134,6 @@ namespace MySqlConnector {
             }
             return new Indexes($IndexesInDescribeFormat);
         }
-
         
         private static function enforceTableIndexes($table, $schemaIndexes) {
             //Fetch existing indexes
@@ -153,22 +153,25 @@ namespace MySqlConnector {
 
             //Drop extra index
             if ($indexDiff->extra()) {
-                $dbOperation = sprintf("Drop Index %s=>%s from table %s", $index->name(), $index->columns(), $table->name); 
+                $dbOperation = "Drop Index %s=>%s from table %s";
                 $table->alterIndex(AlterType::DROP, $index);
             }
             //Add missing index
             else if (!$indexDiff->exists()) {
-                $dbOperation = sprintf("Add Index %s=>%s to table %s", $index->name(), $index->columns(), $table->name); 
+                $dbOperation = "Add Index %s=>%s to table %s";
                 $table->alterIndex(AlterType::ADD, $index);
             }
             //Modify index mismatch
             else if (!$indexDiff->matches()) {
-                $dbOperation = sprintf("Modify Index %s=>%s on table %s", $index->name(), $index->columns(), $table->name); 
+                $dbOperation = "Modify Index %s=>%s on table %s";
                 $table->alterIndex(AlterType::DROP, $index);
                 $table->alterIndex(AlterType::ADD, $index);
             }
             //Add a DB operation if one happened
-            if ($dbOperation !== null) self::addDBOperation($dbOperation);
+            if ($dbOperation !== null) {
+                $dbOperation = sprintf($dbOperation, $index->name(), $index->columns(), $table->name); 
+                self::addDBOperation($dbOperation);
+            }
         }
     }
 }

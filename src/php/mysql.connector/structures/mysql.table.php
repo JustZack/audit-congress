@@ -161,7 +161,7 @@ namespace MySqlConnector {
 
 
 
-        public function alterColumn(AlterType $type, Column $column) {
+        public function alterColumn($type, Column $column) {
             $sql = "ALTER TABLE `$this->name` ";
             switch ($type) {
                 case AlterType::ADD:    
