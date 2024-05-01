@@ -17,6 +17,12 @@ namespace MySqlConnector {
                 echo $message."\n";
         }
 
+        private static function addDBOperation($operation) { 
+            self::debugPrint($operation);
+            array_push(self::$operations, $operation); 
+        }
+        public static function getDBOperationsList() { return self::$operations; }
+
         public function enforceSchema() {
             $schemaTableNames = array();
             //First pass to iterate over tables that should exist in the schema
@@ -36,12 +42,6 @@ namespace MySqlConnector {
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
         }
-
-        private static function addDBOperation($operation) { 
-            self::debugPrint($operation);
-            array_push(self::$operations, $operation); 
-        }
-        public static function getDBOperationsList() { return self::$operations; }
 
 
 
@@ -74,7 +74,7 @@ namespace MySqlConnector {
         }
 
 
-        
+
         //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
         public static function getSchemaColumnsAsObject($schemaColumns) : Columns {
             $columnsInDescribeFormat = array();
@@ -89,8 +89,11 @@ namespace MySqlConnector {
 
         //For the given $table, Check which columns need updated, modified, or dropped
         private static function enforceColumnSchema($table, $columnsExpected) {
+            //Fetch existing columns
             $columnsExisting = $table->columns();
+            //Compute the difference between expected and existing
             $columnsDiff = $columnsExpected->compare($columnsExisting);
+            //Decide what to do with each difference
             foreach ($columnsDiff as $name=>$columnDiff) //Broken into handler to simplify
                 self::handleEnforceColumnSchema($table, $columnDiff);
         }
@@ -164,8 +167,7 @@ namespace MySqlConnector {
             //Modify index mismatch
             else if (!$indexDiff->matches()) {
                 $dbOperation = "Modify Index %s=>%s on table %s";
-                $table->alterIndex(AlterType::DROP, $index);
-                $table->alterIndex(AlterType::ADD, $index);
+                $table->alterIndex(AlterType::MODIFY, $index);
             }
             //Add a DB operation if one happened
             if ($dbOperation !== null) {

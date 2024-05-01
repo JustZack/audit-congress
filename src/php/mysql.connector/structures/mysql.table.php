@@ -160,7 +160,7 @@ namespace MySqlConnector {
         }
 
 
-        
+
         public function alterColumn($type, Column $column) {
             $sql = "ALTER TABLE `$this->name` ";
             switch ($type) {
@@ -193,6 +193,10 @@ namespace MySqlConnector {
                     $sql = "DROP INDEX %s ON `$this->name`"; 
                     $sql = sprintf($sql, $index->name());
                     break;
+                case AlterType::MODIFY:
+                    $this->alterIndex(AlterType::DROP, $index);
+                    $this->alterIndex(AlterType::ADD, $index);
+                    return;
                 default: throw new SqlException("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
             }
             $this->tableIndexes == null;

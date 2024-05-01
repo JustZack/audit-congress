@@ -11,10 +11,6 @@ namespace MySqlConnector {
             }
         }
 
-        //Return the names for each column
-        public function names() {
-            return array_keys($this->columns);
-        }
         //Return the name=>type for each column
         public function namesAndTypes() {
             $namesAndTypes = array();
@@ -29,25 +25,6 @@ namespace MySqlConnector {
                 if ($thisColumn->isPrimary) array_push($createStrings, $thisColumn->getPrimaryKeyString());
             }
             return $createStrings;
-        }
-
-
-        //Return all the columns as an array
-        public function getColumns() {
-            $array_columns = array();
-            foreach ($this->columns as $name=>$column) array_push($array_columns, $column); 
-            return $array_columns;
-        }
-        //Return the column given by $name
-        public function getColumn($name) { 
-            if (isset($this->columns[$name])) return $this->columns[$name]; 
-            else return null;
-        }
-        //Check if the given column is null
-        public function columnCanBeNull($name) {
-            $column = $this->getColumn($name);
-            if ($column != null) return $column->canBeNull == "NULL";
-            else throw new SqlException("Tried checking if column $name can be null, but $name doesnt exist in this column set.");
         }
     }
 
