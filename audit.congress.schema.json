@@ -214,8 +214,8 @@
                     "updated": { "type": "VARCHAR(50)", "null": "NO" }
                 },
                 "indexes": {
-                    "congress_type": ["congress", "type"],
-                    "type": ["type"]
+                    "congress_type_index": ["congress", "type"],
+                    "type_index": ["type"]
                 }
             },
             {
@@ -230,6 +230,10 @@
                     "subjectIndex": { "type": "INT", "null": "NO" },
 
                     "subject": { "type": "VARCHAR(250)", "null": "NO" }
+                },
+                "indexes": {
+                    "congress_type_index": ["congress", "type"],
+                    "type_index": ["type"]
                 }
             },
             {

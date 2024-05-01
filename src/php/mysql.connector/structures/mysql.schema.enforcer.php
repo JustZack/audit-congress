@@ -133,9 +133,6 @@ namespace MySqlConnector {
             return new Indexes($IndexesInDescribeFormat);
         }
 
-        private static function getExistingIndexes($name) {
-
-        }
         
         private static function enforceTableIndexes($name, $indexes) {
             //Create an object for this table
@@ -144,8 +141,7 @@ namespace MySqlConnector {
             $schemaIndexes = self::getSchemaIndexesAsObject($indexes);
             if ($existingIndexes->count() > 0 || $schemaIndexes->count() > 0) {
                 var_dump($name);
-                var_dump($existingIndexes);
-                var_dump($schemaIndexes);
+                var_dump($schemaIndexes->compare($existingIndexes));
             }
         }
     }

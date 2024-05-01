@@ -18,7 +18,7 @@ namespace MySqlConnector {
         //Return the name=>type for each column
         public function namesAndTypes() {
             $namesAndTypes = array();
-            foreach ($this->columns as $name=>$column) $namesAndTypes[$name] = $column->getTypeString();
+            foreach ($this->columns as $name=>$column) $namesAndTypes[$name] = $column->type();
             return $namesAndTypes;
         }
         //Return an array of strings used to create these columns
@@ -71,9 +71,9 @@ namespace MySqlConnector {
                 //Check if it exists in $otherColumns
                 $exists = $otherColumn != null;
                 //Check if this column matches the $otherColumn
-                $matches = $thisColumn->typeMatches($otherColumn);
+                $matches = $thisColumn->matches($otherColumn);
                 //Define this column in the $columnDifferences
-                $columnDifferences[$name] = Columns::createColumnDifference($thisColumn->getTypeString(), $exists, $matches, false);
+                $columnDifferences[$name] = Columns::createColumnDifference($thisColumn->type(), $exists, $matches, false);
             }
 
             //Second pass to catch any columns in the other object that dont exist in this one
@@ -81,7 +81,7 @@ namespace MySqlConnector {
                 //Only if this column isnt set in $columnDifferences already
                 if (!isset($columnDifferences[$name]))
                     //Define this as an extra column in the $columnDifferences
-                    $columnDifferences[$name] = Columns::createColumnDifference($otherColumn->getTypeString(), false, false, true);
+                    $columnDifferences[$name] = Columns::createColumnDifference($otherColumn->type(), false, false, true);
 
             return $columnDifferences;
         }
@@ -92,7 +92,7 @@ namespace MySqlConnector {
         
     }
 
-    class Column {
+    class Column extends CompareableObject {
         public 
             $name,
             $type,
@@ -110,13 +110,8 @@ namespace MySqlConnector {
             $this->extra = trim($obj[5]);
         }
 
-        //Return the type for this column, like "VARCHAR(50) NOT NULL"
-        public function getTypeString() {
-            return "$this->type $this->canBeNull $this->extra";
-        }
-
         public function getCreateString() {
-            $type = $this->getTypeString();
+            $type = $this->type();
             return "`$this->name` $type";
         }
 
@@ -126,12 +121,17 @@ namespace MySqlConnector {
         }
 
         //Check if this column type matches the given columns type
-        public function typeMatches($other) {
+        public function matches($other) {
             if ($other == null) return false;
 
-            $thisType = strtolower($this->getTypeString());
-            $otherType = strtolower($other->getTypeString());
+            $thisType = $this->type();
+            $otherType = $other->type();
             return strpos($thisType, $otherType) > -1 || strpos($otherType, $thisType) > -1;
+        }
+
+        //Return the type for this column, like "VARCHAR(50) NOT NULL"
+        public function type() {
+            return strtolower("$this->type $this->canBeNull $this->extra");
         }
     } 
 }
