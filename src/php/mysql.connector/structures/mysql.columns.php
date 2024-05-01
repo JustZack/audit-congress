@@ -129,6 +129,8 @@ namespace MySqlConnector {
             return strpos($thisType, $otherType) > -1 || strpos($otherType, $thisType) > -1;
         }
 
+        public function name() { return $this->name; }
+
         //Return the type for this column, like "VARCHAR(50) NOT NULL"
         public function type() {
             return strtolower("$this->type $this->canBeNull $this->extra");

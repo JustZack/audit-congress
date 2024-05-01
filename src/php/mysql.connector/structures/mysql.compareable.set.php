@@ -72,7 +72,7 @@ namespace MySqlConnector {
             return new SetDifference($object, false, false, true);
         }
 
-        public function item() : CompareableObject { return $this->object; }
+        public function item() { return $this->object; }
         public function exists() { return $this->exists; }
         public function matches() { return $this->matches; }
         public function extra() { return $this->extra; }

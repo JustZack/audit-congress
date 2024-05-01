@@ -46,8 +46,10 @@ namespace MySqlConnector {
             else return $this->columns() == $other->columns();
         }
 
+        public function name() { return $this->name; }
+
         public function columns() {
-            return $this->columns;
+            return sprintf("(%s)", implode(",", $this->columns));
         }
     }
 }

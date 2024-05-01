@@ -160,23 +160,68 @@ namespace MySqlConnector {
         }
 
 
+
+        public function alterColumn(AlterType $type, Column $column) {
+            $sql = "ALTER TABLE `$this->name` ";
+            switch ($type) {
+                case AlterType::ADD:    
+                    $sql .= "ADD %s %s"; 
+                    $sql = sprintf($sql, $column->name(), $column->type());
+                    break;
+                case AlterType::DROP:
+                    $sql .= "DROP COLUMN %s"; 
+                    $sql = sprintf($sql, $column->name());
+                    break;
+                case AlterType::MODIFY:
+                    $sql .= "MODIFY COLUMN %s %s"; 
+                    $sql = sprintf($sql, $column->name(), $column->type());
+                    break;
+                default: throw new SqlException("Unknown or unsupported column alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
+            }
+            $this->tableColumns == null;
+            return Query::runActionQuery($sql);
+        }
+
         //Where $type is one of: ADD, DROP, MODIFY
         public function alter($type, $columnName, $columnDescription = null) {
             $sql = "ALTER TABLE `$this->name`";
             switch ($type) {
-                case "ADD":    $sql .= " ADD $columnName $columnDescription"; break;
-                case "DROP":   $sql .= " DROP COLUMN $columnName"; break;
-                case "MODIFY": $sql .= " MODIFY COLUMN $columnName $columnDescription"; break;
+                case AlterType::ADD:    $sql .= " ADD $columnName $columnDescription"; break;
+                case AlterType::DROP:   $sql .= " DROP COLUMN $columnName"; break;
+                case AlterType::MODIFY: $sql .= " MODIFY COLUMN $columnName $columnDescription"; break;
                 default: throw new SqlException("Unknown alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
             }
             $this->tableColumns == null;
             return Query::runActionQuery($sql);
         }
         //Alias's for the alter function
-        public function addColumn($columnName, $columnDescription) { return $this->alter("ADD", $columnName, $columnDescription); }
-        public function dropColumn($columnName) { return $this->alter("DROP", $columnName); }
-        public function modifyColumn($columnName, $columnDescription) { return $this->alter("MODIFY", $columnName, $columnDescription); }
-    } 
+        public function addColumn($columnName, $columnDescription) { return $this->alter(AlterType::ADD, $columnName, $columnDescription); }
+        public function dropColumn($columnName) { return $this->alter(AlterType::DROP, $columnName); }
+        public function modifyColumn($columnName, $columnDescription) { return $this->alter(AlterType::MODIFY, $columnName, $columnDescription); }
+
+        public function alterIndex($type, Index $index) {
+            $sql = "";
+            switch ($type) {
+                case AlterType::ADD:
+                    $sql = "ALTER TABLE `$this->name` ADD INDEX %s %s";
+                    $sql = sprintf($sql, $index->name(), $index->columns());
+                    break;
+                case AlterType::DROP:
+                    $sql = "DROP INDEX %s ON `$this->name`"; 
+                    $sql = sprintf($sql, $index->name());
+                    break;
+                default: throw new SqlException("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
+            }
+            $this->tableIndexes == null;
+            return Query::runActionQuery($sql);
+        }
+    }
+
+    abstract class AlterType {
+        const ADD = "ADD";
+        const DROP = "DROP";
+        const MODIFY = "MODIFY";
+    }
 }
 
 ?>

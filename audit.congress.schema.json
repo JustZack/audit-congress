@@ -53,6 +53,10 @@
                     "imageUrl": { "type": "VARCHAR(250)", "null": "YES" },
                     "imageAttribution": { "type": "VARCHAR(500)", "null": "YES" },
                     "isCurrent": { "type": "TINYINT(1)", "null": "NO" }
+                },
+                "indexes": {
+                    "gender_index": ["gender"],
+                    "isCurrent_index": ["isCurrent"]
                 }
             },
             {
@@ -251,6 +255,10 @@
                     "titleAs": { "type": "VARCHAR(250)", "null": "YES" },
                     "titleType": { "type": "VARCHAR(250)", "null": "YES" },
                     "isForPortion": { "type": "VARCHAR(250)", "null": "YES" }
+                },
+                "indexes": {
+                    "congress_type_index": ["congress", "type"],
+                    "type_index": ["type"]
                 }
             },            
             {
@@ -267,6 +275,11 @@
                     "withdrawnAt": { "type": "DATE", "null": "NO" },
 
                     "isOriginal": { "type": "TINYINT(1)", "null": "NO" }
+                },
+                "indexes": {
+                    "congress_type_index": ["congress", "type"],
+                    "type_index": ["type"],
+                    "bioguideid_index": ["bioguideId"]
                 }
             },
             {
@@ -285,6 +298,10 @@
                     "how": { "type": "VARCHAR(250)", "null": "YES" },
 
                     "acted": { "type": "DATE", "null": "NO" }
+                },
+                "indexes": {
+                    "congress_type_index": ["congress", "type"],
+                    "type_index": ["type"]
                 }
             },
             {
