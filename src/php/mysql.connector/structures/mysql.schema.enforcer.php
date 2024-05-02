@@ -21,6 +21,7 @@ namespace MySqlConnector {
             self::debugPrint($operation);
             array_push(self::$operations, $operation); 
         }
+
         public static function getDBOperationsList() { return self::$operations; }
 
         public function enforceSchema() {

@@ -3,21 +3,21 @@
 namespace MySqlConnector {
     class Indexes extends CompareableSet {
         public function __construct($indexesArr) {
-            foreach ($indexesArr as $indexRow) {
-                $indexObj = new Index($indexRow);
-                //If the index described by the given row already exists
-                if ($this->has($indexObj->name)) //Append it to the existing one (this is a multirow index)
-                    $this->get($indexObj->name)->addColumn($indexObj->columns[0]);
-                else if (!$indexObj->isPrimary()) //Otherwise only add non primary key indexes
-                    $this->set($indexObj->name, $indexObj);
-            }
+            foreach ($indexesArr as $indexRow) $this->handleAddIndex(new Index($indexRow));
+        }
+
+        public function handleAddIndex(Index $index) {
+            //If the index described by the given row already exists
+            if ($this->has($index->name)) //Append it to the existing one (this is a multirow index)
+                $this->get($index->name)->addColumn($index->columns[0]);
+            else if (!$index->isPrimary()) //Otherwise only add non primary key indexes
+                $this->add($index);
         }
     }
 
     class Index extends CompareableObject {
         public
             $nonUnique,
-            $name,
             $columns = array(),
             $collation,
             $cardinality,
@@ -45,8 +45,6 @@ namespace MySqlConnector {
             if ($other == null) return false;
             else return $this->columns() == $other->columns();
         }
-
-        public function name() { return $this->name; }
 
         public function columns() {
             return sprintf("(%s)", implode(",", $this->columns));

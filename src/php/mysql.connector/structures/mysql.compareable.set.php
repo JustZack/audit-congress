@@ -8,7 +8,7 @@ namespace MySqlConnector {
 
         public function get($index) { return $this->has($index) ? $this->set[$index] : null; }
 
-        public function set($key, $value) { $this->set[$key] = $value; }
+        public function add(CompareableObject $object) { $this->set[$object->name()] = $object; }
 
         public function keys() { return array_keys($this->set); }
         
@@ -25,13 +25,8 @@ namespace MySqlConnector {
                 $other = $otherSet->get($name);
                 //Check if it exists other $otherColumns
                 $exists = $other != null;
-                //Default to no match
-                $matches = false;
-                //But if it exists, see if it does match
-                if ($exists) {
-                    //Check if this column matches the $otherColumn
-                    $matches = $thisOne->matches($other);
-                }
+                //If this exists in the other set, see if it matches
+                $matches = $exists ? $thisOne->matches($other) : false;
                 //Define this column in the $columnDifferences
                 $diff[$name] = SetDifference::getInThis($thisOne, $exists, $matches);
             }
@@ -40,7 +35,7 @@ namespace MySqlConnector {
             foreach ($otherSet->set as $name=>$otherOne)
                 //Only if this column isnt set in $columnDifferences already
                 if (!isset($diff[$name]))
-                    //Define this as an extra column in the $columnDifferences
+                    //Define this as an extra column in the $diff
                     $diff[$name] = SetDifference::getInOther($otherOne);
 
             return $diff;
@@ -48,6 +43,8 @@ namespace MySqlConnector {
     }
 
     abstract class CompareableObject {
+        public $name;
+        public function name() { return $this->name; }
         public abstract function matches($other);
     }
 

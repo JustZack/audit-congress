@@ -5,10 +5,7 @@ namespace MySqlConnector {
         
         private $columns = array();
         public function __construct($columnsArr) {
-            foreach ($columnsArr as $column) {
-                $colObj = new Column($column);
-                $this->set($colObj->name, $colObj);
-            }
+            foreach ($columnsArr as $column) $this->add(new Column($column));
         }
 
         //Return the name=>type for each column
@@ -30,7 +27,6 @@ namespace MySqlConnector {
 
     class Column extends CompareableObject {
         public 
-            $name,
             $type,
             $isPrimary,
             $canBeNull,
@@ -64,8 +60,6 @@ namespace MySqlConnector {
             $otherType = $other->type();
             return strpos($thisType, $otherType) > -1 || strpos($otherType, $thisType) > -1;
         }
-
-        public function name() { return $this->name; }
 
         //Return the type for this column, like "VARCHAR(50) NOT NULL"
         public function type() {
