@@ -9,36 +9,37 @@ namespace MySqlConnector {
 
         public function __construct($schema) {
             $this->schema = $schema;
-
         }
-
+        //Print only if $debug_log is true
         private static function debugPrint($message) {
             if (self::$debug_log && strlen($message) > 0) 
                 echo $message."\n";
         }
-
+        //Append an operation to the DB
         private static function addDBOperation($operation) { 
             self::debugPrint($operation);
             array_push(self::$operations, $operation); 
         }
-
+        //Return all operations this object has done to the DB
         public static function getDBOperationsList() { return self::$operations; }
 
+
+
+        //Do all the enforcement on the database described the the connection
         public function enforceSchema() {
             $schemaTableNames = array();
             //First pass to iterate over tables that should exist in the schema
             foreach ($this->schema["tables"] as $tableSchema) {
                 //Fetch the name, columns, and a Columns object for this table in the schema
                 list("name"=>$name, "columns"=>$schemaColumns) = $tableSchema;
+                //Indexes are not required, but fetch if they do exist
+                $schemaIndexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
                 //Add this table name as a known table
                 $schemaTableNames[strtolower($name)] = true;
                 //Create an object for this table
                 $table = new Table($name);
                 //Enforce the known schema onto this table
-                self::enforceTableSchema($table, $schemaColumns);
-
-                $schemaIndexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
-                self::enforceTableIndexes($table, $schemaIndexes);
+                self::enforceTableSchema($table, $schemaColumns, $schemaIndexes);
             }
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
@@ -47,9 +48,11 @@ namespace MySqlConnector {
 
 
         //For the given table $name, enforce the given $columns onto its schema
-        private static function enforceTableSchema($table, $schemaColumns) {
+        private static function enforceTableSchema($table, $schemaColumns, $schemaIndexes) {
             //Get the schemas columns in the form of a \MySqlConnector\Columns object
             $columnsExpected = self::getSchemaColumnsAsObject($schemaColumns);
+            //Get the schemas indexes in the form of a \MySqlConnector\Indexes object
+            $indexesExpected = self::getSchemaIndexesAsObject($schemaIndexes);
 
             //If the table doesnt exist, create the table
             if (!$table->exists()) {
@@ -58,9 +61,11 @@ namespace MySqlConnector {
                 self::addDBOperation("Create Table $table->name");
             }
             //Otherwise enforce the schema for this table
-            else self::enforceColumnSchema($table, $columnsExpected);
-        }
+            else self::enforceTableStructure(AlterStructure::COLUMN, $table, $columnsExpected);
 
+            //Always enforce indexes
+            self::enforceTableStructure(AlterStructure::INDEX, $table, $indexesExpected);
+        }
         //Given the $schemaKnownTables, drop all tables outside of this list
         private static function dropUnknownTables($schemaKnownTables) {
             //Get all tables in the database (according to the current connection)
@@ -87,46 +92,7 @@ namespace MySqlConnector {
             }
             return new Columns($columnsInDescribeFormat);
         }
-
-        //For the given $table, Check which columns need updated, modified, or dropped
-        private static function enforceColumnSchema($table, $columnsExpected) {
-            //Fetch existing columns
-            $columnsExisting = $table->columns();
-            //Compute the difference between expected and existing
-            $columnsDiff = $columnsExpected->compare($columnsExisting);
-            //Decide what to do with each difference
-            foreach ($columnsDiff as $name=>$columnDiff) //Broken into handler to simplify
-                self::handleEnforceColumnSchema($table, $columnDiff);
-        }
-
-        private static function handleEnforceColumnSchema($table, $columnDiff) {
-            $column = $columnDiff->item();
-            $dbOperation = null;
-
-            //Drop extra column
-            if ($columnDiff->extra()) {
-                $dbOperation = "Drop Column %s=>%s from table %s";
-                $table->alterColumn(AlterType::DROP, $column);
-            }
-            //Add missing column
-            else if (!$columnDiff->exists()) {
-                $dbOperation = "Add Column %s=>%s to table %s";
-                $table->alterColumn(AlterType::ADD, $column);
-            }
-            //Modify column mismatch
-            else if (!$columnDiff->matches()) {
-                $dbOperation = "Modify Column %s=>%s on table %s";
-                $table->alterColumn(AlterType::MODIFY, $column);
-            }
-            //Add a DB operation if one happened
-            if ($dbOperation !== null) {
-                $dbOperation = sprintf($dbOperation, $column->name(), $column->type(), $table->name); 
-                self::addDBOperation($dbOperation);
-            }
-        }
-
-
-
+        //Get the given $schemaIndexes as an Indexes object, which is then used to enforce schema
         public static function getSchemaIndexesAsObject($schemaIndexes) : Indexes {
             $IndexesInDescribeFormat = array();
             foreach ($schemaIndexes as $name=>$indexes) {
@@ -139,40 +105,48 @@ namespace MySqlConnector {
             return new Indexes($IndexesInDescribeFormat);
         }
         
-        private static function enforceTableIndexes($table, $schemaIndexes) {
-            //Fetch existing indexes
-            $indexesExisting = $table->indexes();
-            //Fetch expected indexes
-            $indexesExpected = self::getSchemaIndexesAsObject($schemaIndexes);
-            //Compute the difference between them
-            $indexesDiff = $indexesExpected->compare($indexesExisting);
-            //Decide what to do with each difference
-            foreach ($indexesDiff as $name=>$indexDiff) //Broken into handler to simplify
-                self::handleEnforceIndexSchema($table, $indexDiff);
-        }
 
-        private static function handleEnforceIndexSchema($table, $indexDiff) {
-            $index = $indexDiff->item();
+
+        //Generically enforce table structures based on the $structure (COLUMNS, INDEX) provided
+        private static function enforceTableStructure($structure, $table, $expected) {
+            //Fetch existing indexes
+            $existing = null;
+            if ($structure == AlterStructure::COLUMN) $existing = $table->columns();
+            else if ($structure == AlterStructure::INDEX) $existing = $table->indexes();
+            //Compute the difference between them
+            $diff = $expected->compare($existing);
+            //Decide what to do with each difference
+            foreach ($diff as $name=>$objDiff) //Broken into handler to simplify
+                self::handleEnforceSchemaStructure($structure, $table, $objDiff);
+        }
+        //Generically handle what to do with each difference found between the existing and expected structure
+        private static function handleEnforceSchemaStructure($structure, $table, $objectDiff) {
+            $obj = $objectDiff->item();
             $dbOperation = null;
 
-            //Drop extra index
-            if ($indexDiff->extra()) {
-                $dbOperation = "Drop Index %s=>%s from table %s";
-                $table->alterIndex(AlterType::DROP, $index);
+            //Drop extra
+            if ($objectDiff->extra()) {
+                $dbOperation = "Drop $structure %s=>%s from table %s";
+                $table->alter($structure, AlterType::DROP, $obj);
             }
-            //Add missing index
-            else if (!$indexDiff->exists()) {
-                $dbOperation = "Add Index %s=>%s to table %s";
-                $table->alterIndex(AlterType::ADD, $index);
+            //Add missing
+            else if (!$objectDiff->exists()) {
+                $dbOperation = "Add $structure %s=>%s to table %s";
+                $table->alter($structure, AlterType::ADD, $obj);
             }
-            //Modify index mismatch
-            else if (!$indexDiff->matches()) {
-                $dbOperation = "Modify Index %s=>%s on table %s";
-                $table->alterIndex(AlterType::MODIFY, $index);
+            //Modify mismatch
+            else if (!$objectDiff->matches()) {
+                $dbOperation = "Modify $structure %s=>%s on table %s";
+                $table->alter($structure, AlterType::MODIFY, $obj);
             }
             //Add a DB operation if one happened
             if ($dbOperation !== null) {
-                $dbOperation = sprintf($dbOperation, $index->name(), $index->columns(), $table->name); 
+                //Determine what the other side of the => should have
+                $otherPart = "";
+                if ($obj instanceof Column) $otherPart = $obj->type();
+                else if ($obj instanceof Index) $otherPart = $obj->columns();
+                //Actually add the db operation
+                $dbOperation = sprintf($dbOperation, $obj->name(), $otherPart, $table->name); 
                 self::addDBOperation($dbOperation);
             }
         }

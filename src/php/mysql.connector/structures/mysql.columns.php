@@ -3,7 +3,6 @@
 namespace MySqlConnector {
     class Columns extends CompareableSet {
         
-        private $columns = array();
         public function __construct($columnsArr) {
             foreach ($columnsArr as $column) $this->add(new Column($column));
         }
@@ -11,13 +10,13 @@ namespace MySqlConnector {
         //Return the name=>type for each column
         public function namesAndTypes() {
             $namesAndTypes = array();
-            foreach ($this->columns as $name=>$column) $namesAndTypes[$name] = $column->type();
+            foreach ($this->set as $name=>$column) $namesAndTypes[$name] = $column->type();
             return $namesAndTypes;
         }
         //Return an array of strings used to create these columns
         public function getSqlCreateStrings() {
             $createStrings = array();
-            foreach ($this->columns as $name=>$thisColumn) {
+            foreach ($this->set  as $name=>$thisColumn) {
                 array_push($createStrings, $thisColumn->getCreateString());
                 if ($thisColumn->isPrimary) array_push($createStrings, $thisColumn->getPrimaryKeyString());
             }

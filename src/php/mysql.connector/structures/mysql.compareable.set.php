@@ -17,8 +17,14 @@ namespace MySqlConnector {
         public function count() { return count($this->set); }
 
         public function compare(CompareableSet $otherSet) {
-            $diff = array();
+            //First get all objects these two sets share
+            $diff = $this->getSharedObjects($otherSet);
+            //Then add the objects in the $otherSet, but not in this set
+            return $this->addUnknownObjects($otherSet, $diff);
+        }
 
+        private function getSharedObjects(CompareableSet $otherSet) {
+            $diff = array();
             //First pass comparing each column in this object (expected columns) to those in the passed object
             foreach ($this->set as $name=>$thisOne) {
                 //First try fetching this column from $otherColumns
@@ -30,14 +36,16 @@ namespace MySqlConnector {
                 //Define this column in the $columnDifferences
                 $diff[$name] = SetDifference::getInThis($thisOne, $exists, $matches);
             }
+            return $diff;
+        }
 
+        private function addUnknownObjects(CompareableSet $otherSet, $diff) {
             //Second pass to catch any columns in the other object that dont exist in this one
             foreach ($otherSet->set as $name=>$otherOne)
                 //Only if this column isnt set in $columnDifferences already
                 if (!isset($diff[$name]))
                     //Define this as an extra column in the $diff
                     $diff[$name] = SetDifference::getInOther($otherOne);
-
             return $diff;
         }
     }

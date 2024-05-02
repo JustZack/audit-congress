@@ -159,8 +159,6 @@ namespace MySqlConnector {
             return Query::runActionQuery($sql);
         }
 
-
-
         public function alterColumn($type, Column $column) {
             $sql = "ALTER TABLE `$this->name` ";
             switch ($type) {
@@ -202,12 +200,26 @@ namespace MySqlConnector {
             $this->tableIndexes == null;
             return Query::runActionQuery($sql);
         }
+
+        public function alter($structure, $type, $withObject) {
+            switch ($structure) {
+                case AlterStructure::COLUMN: $this->alterColumn($type, $withObject); break;
+                case AlterStructure::INDEX: $this->alterIndex($type, $withObject); break;
+                default: throw new SqlException("Unknown or unsupported alter structure '$structure' for table $this->name. Use COLUMN or INDEX.");
+            }
+        }
+
     }
 
     abstract class AlterType {
         const ADD = "ADD";
         const DROP = "DROP";
         const MODIFY = "MODIFY";
+    }
+
+    abstract class AlterStructure {
+        const INDEX = "INDEX";
+        const COLUMN = "COLUMN";
     }
 }
 
