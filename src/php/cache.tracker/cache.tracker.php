@@ -1,8 +1,8 @@
 <?php
 
-namespace AuditCongress {
+namespace Cache {
 
-    class CacheTracker {
+    class Tracker {
         public 
             $cacheName,
             $cacheSettings,

@@ -1,6 +1,6 @@
 <?php
 
-namespace AuditCongress {
+namespace Cache {
     class CacheTrackerQuery extends \MySqlConnector\SqlObject {
         public static $tableName = null;
         public function __construct() {
