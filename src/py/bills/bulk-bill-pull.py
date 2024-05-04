@@ -124,10 +124,11 @@ def parseAndInsertBills(zipFile):
     zjthreads.joinThreads([deleteThread])
     
     tableRows = bparse.splitBillsIntoTableRows(bills)
-    util.saveAsCSV("{}-{}.csv".format("bills", congress), tableRows["bills"], bparse.BILL_COLUMNS)
-    util.saveAsCSV("{}-{}.csv".format("subjects", congress), tableRows["subjects"], bparse.SUBJECT_COLUMNS)
-    util.saveAsCSV("{}-{}.csv".format("titles", congress), tableRows["titles"], bparse.TITLE_COLUMNS)
-    util.saveAsCSV("{}-{}.csv".format("cosponsors", congress), tableRows["cosponsors"], bparse.COSPONSOR_COLUMNS)
+    path = db.buildSecureFilePath("{}-{}.csv")
+    util.saveAsCSV(path.format("bills", congress), tableRows["bills"], bparse.BILL_COLUMNS)
+    util.saveAsCSV(path.format("subjects", congress), tableRows["subjects"], bparse.SUBJECT_COLUMNS)
+    util.saveAsCSV(path.format("titles", congress), tableRows["titles"], bparse.TITLE_COLUMNS)
+    util.saveAsCSV(path.format("cosponsors", congress), tableRows["cosponsors"], bparse.COSPONSOR_COLUMNS)
     #insertBills(bills)
     updateStartingCongress(congress)
 
