@@ -1,4 +1,4 @@
-import os, math, json
+import os, math, json, csv
 from datetime import datetime
 
 import requests as rq
@@ -29,6 +29,34 @@ def saveFileAny(writeType, path, data):
     
 def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
+def saveAsCSV(path, data, headers=None):
+    if len(data) == 0: return
+
+    with open(path, "w", newline='', encoding='utf-8') as file:
+        writer = None
+        if type(data) is dict:
+            fields = headers if headers is not None else data[0].keys()
+            writer = csv.DictWriter(file, fields)
+            writer.writeheader()
+        elif type(data) is list:
+            if headers is None:  raise Exception("util.saveAsCSV(path, data, headers): headers was None, when data is list headrs must be set.");
+            fields = headers
+            writer = csv.writer(file)
+            writer.writerow(fields)
+        #Write rows based on how the writer was initialized
+        for row in data: writer.writerow(row)
+        
+
+def readCSV(path): 
+    contents = []
+    with open(path, newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader: contents.append(row)
+    return contents
+
+
+
+
 
 def deleteFiles(fileList): [os.remove(f) for f in fileList]
 
@@ -77,8 +105,9 @@ def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments
         if onExceptFunction is not None: onExceptFunction(*onExceptArguments)
 
 def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
+    mainFunction()
     try:                      
-        mainFunction()
+        None
     except KeyboardInterrupt: 
         logExceptionThen("Manually ended script via ctrl+c", onExceptFunction, *onExceptArguments)
     except Exception as e:    

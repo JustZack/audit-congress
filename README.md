@@ -17,6 +17,7 @@ Note SQL Server properties changed for performance:
 max_connections = 500
 max_allowed_packet=500M
 innodb_buffer_pool_size=4096M
+secure_file_priv="C:/Absolute/Path/To/Uploads"
 
 [mysqldump]
 max_allowed_packet=500M

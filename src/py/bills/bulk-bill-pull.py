@@ -96,6 +96,7 @@ def getAllInsertThreads(bills):
     for chunk in range(len(chunckedBills)): threads.extend(bparse.getInsertThreads(chunckedBills[chunk]))
     return threads
 
+
 singleThreadInsert = False
 def insertBills(bills):
     startInsert = datetime.now()
@@ -121,8 +122,13 @@ def parseAndInsertBills(zipFile):
     bills = bparse.parseBills(zipFile)
     logger.logInfo("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
     zjthreads.joinThreads([deleteThread])
-
-    insertBills(bills)
+    
+    tableRows = bparse.splitBillsIntoTableRows(bills)
+    util.saveAsCSV("{}-{}.csv".format("bills", congress), tableRows["bills"], bparse.BILL_COLUMNS)
+    util.saveAsCSV("{}-{}.csv".format("subjects", congress), tableRows["subjects"], bparse.SUBJECT_COLUMNS)
+    util.saveAsCSV("{}-{}.csv".format("titles", congress), tableRows["titles"], bparse.TITLE_COLUMNS)
+    util.saveAsCSV("{}-{}.csv".format("cosponsors", congress), tableRows["cosponsors"], bparse.COSPONSOR_COLUMNS)
+    #insertBills(bills)
     updateStartingCongress(congress)
 
 fullMultiThreading, threadPooling, poolSize = False, False, 2

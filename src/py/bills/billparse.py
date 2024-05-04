@@ -10,7 +10,7 @@ MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "introduced", "updated"]
 SUBJECT_COLUMNS = ["id", "type", "number", "congress", "subjectIndex", "subject"]
-TTTLE_COLUMNS = ["id", "type", "number", "congress", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+TITLE_COLUMNS = ["id", "type", "number", "congress", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
 COSPONSOR_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 
 def fetchMemberMapping():
@@ -254,7 +254,23 @@ def getCoSponsorRows(cosponsors, t, n, c):
         i += 1
     return cospons
 
+def splitBillsIntoTableRows(bills):
+    billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]
 
+    for parsedBill in bills:
+        bill = parsedBill["bill"]
+        tnc = (bill["type"].lower(),bill["number"],bill["congress"])
+        bioguide = bill["bioguideId"]
+        bId = getBillObjectId(*tnc)
+        
+        billData.append((bId, *tnc, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
+        subjectData.extend(getSubjectRows(parsedBill["subjects"], *tnc))
+        titleData.extend(getTitleRows(parsedBill["titles"], *tnc))
+        cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tnc))
+    return {"bills": billData,
+            "subjects": subjectData,
+            "titles": titleData,
+            "cosponsors": cosponData}
 
 def getInsertThreads(bills):
     billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]
@@ -272,7 +288,7 @@ def getInsertThreads(bills):
 
     threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billData))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, subjectData))
-    threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TTTLE_COLUMNS, titleData))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, titleData))
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, cosponData))
     return threads
 
