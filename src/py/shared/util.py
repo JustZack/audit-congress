@@ -35,14 +35,14 @@ def saveAsCSV(path, data, headers=None):
     with open(path, "w", newline='', encoding='utf-8') as file:
         writer = None
         if type(data) is dict:
+            #Use headers if defined, else use the dict keys as header
             fields = headers if headers is not None else data[0].keys()
             writer = csv.DictWriter(file, fields)
             writer.writeheader()
         elif type(data) is list:
-            if headers is None:  raise Exception("util.saveAsCSV(path, data, headers): headers was None, when data is list headrs must be set.");
-            fields = headers
             writer = csv.writer(file)
-            writer.writerow(fields)
+            #Only write headers if they were supplied
+            if headers is not None and type(headers) is list: writer.writerow(headers)
         #Write rows based on how the writer was initialized
         for row in data: writer.writerow(row)
         
