@@ -267,10 +267,10 @@ def splitBillsIntoTableRows(bills):
         subjectData.extend(getSubjectRows(parsedBill["subjects"], *tcn))
         titleData.extend(getTitleRows(parsedBill["titles"], *tcn))
         cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tcn))
-    return {"bills": billData,
-            "subjects": subjectData,
-            "titles": titleData,
-            "cosponsors": cosponData}
+    return {"Bills": billData,
+            "BillSubjects": subjectData,
+            "BillTitles": titleData,
+            "BillCoSponsors": cosponData}
 
 def getInsertThreads(bills):
     billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]

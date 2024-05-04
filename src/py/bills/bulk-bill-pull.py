@@ -125,10 +125,10 @@ def parseAndInsertBills(zipFile):
     
     tableRows = bparse.splitBillsIntoTableRows(bills)
     path = db.buildSecureFilePath("{}-{}.csv")
-    util.saveAsCSV(path.format("bills", congress), tableRows["bills"], bparse.BILL_COLUMNS)
-    util.saveAsCSV(path.format("subjects", congress), tableRows["subjects"], bparse.SUBJECT_COLUMNS)
-    util.saveAsCSV(path.format("titles", congress), tableRows["titles"], bparse.TITLE_COLUMNS)
-    util.saveAsCSV(path.format("cosponsors", congress), tableRows["cosponsors"], bparse.COSPONSOR_COLUMNS)
+    for name in tableRows.keys():
+        fileName = path.format(name, congress)
+        util.saveAsCSV(fileName, tableRows[name])
+    
     #insertBills(bills)
     updateStartingCongress(congress)
 
