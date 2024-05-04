@@ -97,6 +97,15 @@ def countRows(tableName, whereCol=None, whereVal=None):
     count = runReturningSql(sql)[0][0]
     return count
 
+def getSecureFolderPath():
+    path = runReturningSql("SELECT @@secure_file_priv")[0][0]
+    if (path == "NULL"): raise Exception("secure_file_priv is unset for the database. Set it in my.ini")
+    else: return path
+
+def buildSecureFilePath(filename):
+    folder = getSecureFolderPath()
+    return "{}\{}".format(folder, filename)
+
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
 
 def throwIfShemaInvalid():
