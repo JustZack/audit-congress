@@ -3,6 +3,7 @@
 namespace Cache {
     class Tracker extends TrackerConfig {
         private $cacheRow = null;
+        private $timeoutSeconds = 5;
         public function isset() { return $this->getRow() != null; }
         protected function invalidate() { $this->cacheRow = null; }
         public function refresh() {
@@ -53,8 +54,16 @@ namespace Cache {
             return \Util\Time::getDateTimeStr($nextUpdate);
         }
         
-        //Wait up to $timeoutSeconds for the tracker row to report this cache isnt running
-        public function waitForUpdate($timeoutSeconds = 10) {
+        public function setTimeout($newTimeoutSeconds) {
+            $this->timeoutSeconds = $newTimeoutSeconds;
+        }
+        public function getTimeout() { return $this->timeoutSeconds; }
+
+        /*
+            Wait up to $timeoutSeconds for the tracker row to report this cache isnt running
+            @throws \Cache\WaitingException
+        */
+        public function waitForUpdate() {
             //Only run if a script is associated with the config
             $secondsSlept = 0;
             do {
@@ -66,9 +75,9 @@ namespace Cache {
                 } 
                 //Otherwise return true to signify completion
                 else return True;
-            } while ($secondsSlept < $timeoutSeconds || $timeoutSeconds == 0);
+            } while ($secondsSlept < $this->timeoutSeconds || $this->timeoutSeconds == 0);
             //If we made it out the sleep loop, the cache never finished running.
-            return False;
+            throw new \Cache\WaitingException($this);
         }
         /*
             Run the update script associated with this tracker. Takes care of updating running status.
