@@ -8,10 +8,10 @@ BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
-BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "type", "number", "congress", "subjectIndex", "subject"]
-TTTLE_COLUMNS = ["id", "type", "number", "congress", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
-COSPONSOR_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
+SUBJECT_COLUMNS = ["id", "type", "congress", "number", "subjectIndex", "subject"]
+TITLE_COLUMNS = ["id", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -254,26 +254,28 @@ def getCoSponsorRows(cosponsors, t, n, c):
         i += 1
     return cospons
 
-
-
-def getInsertThreads(bills):
-    billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]
+def splitBillsIntoTableRows(bills):
+    billData,subjectData,titleData,cosponData = [],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
-        tnc = (bill["type"].lower(),bill["number"],bill["congress"])
+        tcn = (bill["type"].lower(),bill["congress"],bill["number"])
         bioguide = bill["bioguideId"]
-        bId = getBillObjectId(*tnc)
+        bId = getBillObjectId(*tcn)
         
-        billData.append((bId, *tnc, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
-        subjectData.extend(getSubjectRows(parsedBill["subjects"], *tnc))
-        titleData.extend(getTitleRows(parsedBill["titles"], *tnc))
-        cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tnc))
+        billData.append((bId, *tcn, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
+        subjectData.extend(getSubjectRows(parsedBill["subjects"], *tcn))
+        titleData.extend(getTitleRows(parsedBill["titles"], *tcn))
+        cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tcn))
+    return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, "BillCoSponsors": cosponData}
 
-    threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billData))
-    threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, subjectData))
-    threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TTTLE_COLUMNS, titleData))
-    threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, cosponData))
+def getInsertThreads(bills):
+    billToTables = splitBillsIntoTableRows(bills)
+    threads = []
+    threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billToTables["Bills"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, billToTables["BillSubjects"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, billToTables["BillCoSponsors"]))
     return threads
 
 def readBillFileFromZip(zipFile, name,path):

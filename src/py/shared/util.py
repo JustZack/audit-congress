@@ -1,4 +1,4 @@
-import os, math, json
+import os, math, json, csv
 from datetime import datetime
 
 import requests as rq
@@ -29,6 +29,45 @@ def saveFileAny(writeType, path, data):
     
 def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
+def saveAsCSV(path, data, headers=None):
+    if len(data) == 0: return
+    ensureFoldersExist(path)
+    with open(path, "w", newline='\n', encoding='utf-8') as file:
+        writer = None
+        if type(data) is dict: writer = writeCSVAsDict(file, data, headers)
+        elif type(data) is list: writer = writeCSVAsList(file, data, headers)
+
+        if writer == None: raise Exception("saveAsCSV: Expected data of type dict or list, found: {}".format(type(data)))
+        writeCSVRows(writer, data)
+
+def writeCSVAsDict(file, data, headers):
+    #Use headers if defined, else use the dict keys as header
+    fields = headers if headers is not None else data[0].keys()
+    writer = csv.DictWriter(file, fields)
+    writer.writeheader()
+    return writer
+
+def writeCSVAsList(file, data, headers):
+    writer = csv.writer(file, delimiter=",",)
+    #Only write headers if they were supplied
+    if headers is not None and type(headers) is list: 
+        writer.writerow(headers)
+    return writer
+
+def writeCSVRows(writer, data):
+    #Write rows based on how the writer was initialized
+    for row in data: writer.writerow(row)
+
+def readCSV(path): 
+    contents = []
+    with open(path, newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader: contents.append(row)
+    return contents
+
+
+
+
 
 def deleteFiles(fileList): [os.remove(f) for f in fileList]
 
@@ -71,6 +110,8 @@ def pathIsFile(path):
     lastSlash = path.rfind("/") + 1
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
+
+def relativeToAbsPath(path): return os.path.abspath(path)
 
 def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments):
         logger.logError(exceptionMessage)

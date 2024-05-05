@@ -16,7 +16,9 @@ THREADED_DELETE = False
 COUNT_SQL = "SELECT COUNT(*) FROM {}"
 COUNT_WHERE_SQL = "SELECT COUNT(*) FROM {} WHERE {} = {}"
 
-INSERT_SQL = "INSERT INTO {} ({}) VALUES ({})"\
+INSERT_SQL = "INSERT INTO {} ({}) VALUES ({})"
+
+LOAD_DATA_INFILE_SQL = "LOAD DATA INFILE '{}' INTO TABLE {} FIELDS OPTIONALLY ENCLOSED BY '\"' TERMINATED BY ',' LINES TERMINATED BY '\\r\\n'"
 
 # Opens a connection with a MySQL host
 def mysql_connect():
@@ -96,6 +98,12 @@ def countRows(tableName, whereCol=None, whereVal=None):
 
     count = runReturningSql(sql)[0][0]
     return count
+
+def loadDataInFile(tableName, filePath, hasHeaders=False):
+    sql = LOAD_DATA_INFILE_SQL
+    if hasHeaders: sql += " IGNORE 1 ROWS"
+    filePath = filePath.replace("/", "//").replace("\\", "\\\\")
+    return runCommitingSql(sql.format(filePath, tableName))
 
 def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
 

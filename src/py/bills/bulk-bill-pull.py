@@ -14,7 +14,8 @@ SCRIPT_NAME = "bulk-bill"
 PROPUBLICA_BULK_BILLS_URL = "https://www.propublica.org/datastore/dataset/congressional-data-bulk-legislation-bills"
 BILL_LINKS_SELECTOR = "table li a, div.info-panel div.actions a"
 
-BILLS_DIR = "cache/"
+ZIP_CACHE_DIR = "zip/"
+CSV_CACHE_DIR = "csv/"
 
 LAST_CONGRESS_PROCESSED = None
 
@@ -52,7 +53,7 @@ def determineCongressNumberfromPath(url):
 
 def downloadBillZip(url):
     congress = determineCongressNumberfromPath(url)
-    path = BILLS_DIR+str(congress)+".zip"
+    path = ZIP_CACHE_DIR+str(congress)+".zip"
     util.downloadZipFile(url, path)
     logger.logInfo("Saved bulk bill data for congress", congress, "to", path)
 
@@ -70,13 +71,13 @@ def downloadNeededBillZips():
     return len(urls)
 
 def getCachedZipFilePaths():
-    zips = sorted(os.listdir(BILLS_DIR), key=lambda z: int(z[:-4]))
-    zips = [BILLS_DIR+z for z in zips if z.find(".zip") >= 0 and int(z[:-4]) >= LAST_CONGRESS_PROCESSED]
+    zips = sorted(os.listdir(ZIP_CACHE_DIR), key=lambda z: int(z[:-4]))
+    zips = [ZIP_CACHE_DIR+z for z in zips if z.find(".zip") >= 0 and int(z[:-4]) >= LAST_CONGRESS_PROCESSED]
     return zips
 
 def deleteOutOfDateZips():
     zips = getCachedZipFilePaths()
-    zipsToDelete = [z for z in zips if int(z[len(BILLS_DIR):-4]) >= LAST_CONGRESS_PROCESSED]
+    zipsToDelete = [z for z in zips if int(z[len(ZIP_CACHE_DIR):-4]) >= LAST_CONGRESS_PROCESSED]
     util.deleteFiles(zipsToDelete)
 
 
@@ -96,8 +97,9 @@ def getAllInsertThreads(bills):
     for chunk in range(len(chunckedBills)): threads.extend(bparse.getInsertThreads(chunckedBills[chunk]))
     return threads
 
+
 singleThreadInsert = False
-def insertBills(bills):
+def insertBillsWithInsert(bills):
     startInsert = datetime.now()
     threads = getAllInsertThreads(bills)
 
@@ -110,6 +112,18 @@ def insertBills(bills):
            
     logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files")
 
+def insertBillsWithBulkLoad(bills, congress):
+    startInsert = datetime.now()
+    tableRows = bparse.splitBillsIntoTableRows(bills)
+    path = util.relativeToAbsPath(CSV_CACHE_DIR+"{}-{}.csv")
+    for name in tableRows.keys():
+        data = tableRows[name]
+        filePath = path.format(name, congress)
+        logger.logInfo("Bulk inserting", len(data),"into",name,"for congress",congress)
+        util.saveAsCSV(filePath, tableRows[name])
+        db.loadDataInFile(name, filePath)
+    logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files for congress", congress)
+
 def parseAndInsertBills(zipFile):
     congress = determineCongressNumberfromPath(zipFile)
     bills, totalRead = [], 0
@@ -121,8 +135,9 @@ def parseAndInsertBills(zipFile):
     bills = bparse.parseBills(zipFile)
     logger.logInfo("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
     zjthreads.joinThreads([deleteThread])
-
-    insertBills(bills)
+    
+    insertBillsWithBulkLoad(bills, congress)
+    #insertBillsWithInsert(bills)
     updateStartingCongress(congress)
 
 fullMultiThreading, threadPooling, poolSize = False, False, 2
@@ -149,6 +164,18 @@ def doSetup():
     if bparse.fetchMemberMapping(): logger.logInfo("Found {} thomas_id -> bioguide_id mappings via the API".format(len(bparse.MEMBERS_MAPPING)))
     else: raise Exception("Could not fetch thomas_id -> bioguide_id mapping from API")
 
+
+
+refreshZips = True
+def getUpdatedZips():
+    #If the cache exists, ensure old data is deleted (based on CacheStatus table)
+    if os.path.exists(ZIP_CACHE_DIR): deleteOutOfDateZips()
+
+    #Then rebuild the needed cache items
+    startDownload = datetime.now()
+    count = downloadNeededBillZips()
+    logger.logInfo("Took", util.seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
+
 #~2800s to run with 16MB cache (With Truncate)
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
@@ -156,13 +183,9 @@ def doBulkBillPull():
     #State where the process is starting, based off the database
     logger.logInfo("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
-    #If the cache exists, ensure old data is deleted (based on CacheStatus table)
-    if os.path.exists(BILLS_DIR): deleteOutOfDateZips()
-
-    #Then rebuild the needed cache items
-    startDownload = datetime.now()
-    count = downloadNeededBillZips()
-    logger.logInfo("Took", util.seconds_since(startDownload),"seconds to download",count,"zip file{}".format("s" if count != 1 else ""))
+    #Ensure the bulk zip files are up to date (based on the last zip file fetched)
+    #Note that any zip files not coming before the current congress are considered old (as determined by api.congress.gov)
+    if refreshZips: getUpdatedZips()
 
     #Track how long it takes to parse and insert the bills
     startInsert = datetime.now()
