@@ -21,10 +21,12 @@ loose-local-infile=1
 
 [mysqld]
 max_connections = 500
-max_allowed_packet=500M
+max_allowed_packet=512M
 innodb_buffer_pool_size=4096M
 secure_file_priv="" **This must be left blank**
 local_infile=1
+bulk_insert_buffer_size=512M
+
 
 [mysqldump]
 max_allowed_packet=500M

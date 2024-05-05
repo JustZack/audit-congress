@@ -99,7 +99,7 @@ def getAllInsertThreads(bills):
 
 
 singleThreadInsert = False
-def insertBills_OLD_WITH_INSERT(bills):
+def insertBillsWithInsert(bills):
     startInsert = datetime.now()
     threads = getAllInsertThreads(bills)
 
@@ -112,7 +112,7 @@ def insertBills_OLD_WITH_INSERT(bills):
            
     logger.logInfo("Took",util.seconds_since(startInsert),"seconds to insert", len(bills), "bill files")
 
-def insertBills(bills, congress):
+def insertBillsWithBulkLoad(bills, congress):
     startInsert = datetime.now()
     tableRows = bparse.splitBillsIntoTableRows(bills)
     path = util.relativeToAbsPath(CSV_CACHE_DIR+"{}-{}.csv")
@@ -136,7 +136,8 @@ def parseAndInsertBills(zipFile):
     logger.logInfo("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
     zjthreads.joinThreads([deleteThread])
     
-    insertBills(bills, congress)
+    insertBillsWithBulkLoad(bills, congress)
+    #insertBillsWithInsert(bills)
     updateStartingCongress(congress)
 
 fullMultiThreading, threadPooling, poolSize = False, False, 2

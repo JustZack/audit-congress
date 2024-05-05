@@ -255,7 +255,7 @@ def getCoSponsorRows(cosponsors, t, n, c):
     return cospons
 
 def splitBillsIntoTableRows(bills):
-    billData,subjectData,titleData,cosponData,threads = [],[],[],[],[]
+    billData,subjectData,titleData,cosponData = [],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -271,7 +271,7 @@ def splitBillsIntoTableRows(bills):
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
-
+    threads = []
     threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billToTables["Bills"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, billToTables["BillSubjects"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
