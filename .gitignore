@@ -1,6 +1,8 @@
 node_modules/
 dist/
 cache/
+zip/
+csv/
 __pycache__/
 package-lock.json
 api.congress.1.key

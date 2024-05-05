@@ -11,12 +11,22 @@ Ideal user experience:
 
 If I ever complete this project, a public link will be hosted here. For now this is just for my own fun and portfolio. 
 
+Note DB user needs the following privledges:
+GRANT FILE, SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX ON \*.\* to username@localhost
+
 Note SQL Server properties changed for performance:
 
-[mysqld]
-max_connections = 500
-max_allowed_packet=500M
-innodb_buffer_pool_size=4096M
+`[client]`
+`loose-local-infile=1`
 
-[mysqldump]
-max_allowed_packet=500M
+`[mysqld]`
+`max_connections = 500`
+`max_allowed_packet=512M`
+`innodb_buffer_pool_size=4096M`
+`secure_file_priv=""` **This must be left blank**
+`local_infile=1`
+`bulk_insert_buffer_size=512M`
+
+
+`[mysqldump]`
+`max_allowed_packet=500M`
