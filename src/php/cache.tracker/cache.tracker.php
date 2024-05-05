@@ -12,7 +12,9 @@ namespace Cache {
             if ($this->cacheRow == null) $this->refresh();
             return $this->cacheRow;
         }
-        protected function getValue($column) {
+        protected function getValue($column, $refresh = false) {
+            if ($refresh) $this->refresh();
+
             $row = $this->getRow();
             if ($row != null) return $row[$column];
             else              return false;
@@ -23,7 +25,7 @@ namespace Cache {
 
         public function getStatus() { return $this->getValue("status"); }
 
-        public function isUpdating() { return $this->getValue("isRunning"); }
+        public function isUpdating($refresh = false) { return $this->getValue("isRunning", $refresh); }
 
         public function isOutOfDate() { return strtotime($this->getValue("nextUpdate")) < time(); }
 
@@ -52,14 +54,12 @@ namespace Cache {
         }
         
         //Wait up to $timeoutSeconds for the tracker row to report this cache isnt running
-        public function waitForUpdate($timeoutSeconds = 16) {
+        public function waitForUpdate($timeoutSeconds = 15) {
             //Only run if a script is associated with the config
             $secondsSlept = 0;
             do {
-                //Refresh the cache row each iteration
-                $this->refresh();
                 //If the tracker is running based on the db column
-                if ($this->isUpdating()) {
+                if ($this->isUpdating(true)) {
                     //update time spent and sleep
                     $secondsSlept++;
                     sleep(1);
@@ -78,7 +78,7 @@ namespace Cache {
         */
         public function runUpdateScript($waitForComplete = true) {
             $out = array();
-            if (self::usesScript() && !self::isUpdating()) {
+            if (self::usesScript() && !self::isUpdating(true)) {
                 $runner = $this->scriptRunner();
                 $path = \Util\File::getAbsolutePath($this->scriptPath());
                 $dir = \Util\File::getFolderPath($path);

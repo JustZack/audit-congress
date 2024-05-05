@@ -2,12 +2,10 @@
 
 namespace AuditCongress {
 
-    class Congresses extends AuditCongressTable {
+    class Congresses extends CacheTrackedTable {
         
-        private ?\Cache\Tracker $cacheTracker = null;
         private function __construct() {
-            parent::__construct("Congresses");
-            $this->cacheTracker = \Cache\Config::getTracker("bulk-congress");
+            parent::__construct("Congresses", "bulk-congress");
         }
 
         private static $congressTable = null;
@@ -17,18 +15,6 @@ namespace AuditCongress {
             return self::$congressTable;
         }
 
-        public function cacheIsValid() {
-            if ($this->cacheIsValid == null) {
-                //If this cache is updating right now, wait for it to update (up to 16 seconds)
-                if ($this->cacheTracker->isUpdating()) {
-                    //Cache is valid if the updated completed while we waited
-                    $this->cacheIsValid = $this->cacheTracker->waitForUpdate();
-                } 
-                //Otherwise just check if the cache is out of date
-                else $this->cacheIsValid = !$this->cacheTracker->isOutOfDate();
-            }
-            return $this->cacheIsValid;
-        }
 
         public function updateCache() {
             $this->cacheTracker->setRunning(true, "updating");
