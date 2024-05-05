@@ -201,7 +201,7 @@ def doBulkBillPull():
     #Final log of what happened
     logger.logInfo("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
 
-def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull, SCRIPT_NAME)
+def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull)
 
 if __name__ == "__main__": 
-    util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)
+    util.runAndCatchMain(main)

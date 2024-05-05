@@ -22,6 +22,7 @@
                     "status": { "type": "VARCHAR(50)", "null": "YES" },
                     "isRunning": { "type": "TINYINT(1)", "null": "NO" },
 
+                    "lastRunStart":  { "type": "DATETIME", "null": "YES" },
                     "lastUpdate":  { "type": "DATETIME", "null": "YES" },
                     "nextUpdate":  { "type": "DATETIME", "null": "YES" }
                 }

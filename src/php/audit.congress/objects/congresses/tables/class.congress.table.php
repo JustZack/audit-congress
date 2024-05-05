@@ -2,12 +2,10 @@
 
 namespace AuditCongress {
 
-    class Congresses extends AuditCongressTable {
+    class Congresses extends CacheTrackedTable {
         
-        private ?CacheTracker $cacheTracker = null;
         private function __construct() {
-            parent::__construct("Congresses");
-            $this->cacheTracker = new CacheTracker("bulk-congress");
+            parent::__construct("Congresses", "bulk-congress");
         }
 
         private static $congressTable = null;
@@ -17,11 +15,6 @@ namespace AuditCongress {
             return self::$congressTable;
         }
 
-        public function cacheIsValid() {
-            if ($this->cacheIsValid == null)
-                $this->cacheIsValid = !$this->cacheTracker->isReadyForUpdate();
-            return $this->cacheIsValid;
-        }
 
         public function updateCache() {
             $this->cacheTracker->setRunning(true, "updating");

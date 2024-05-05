@@ -19,6 +19,16 @@ namespace API {
             self::Return($route, $data);
         }
 
+        ///API Success
+        public static function Waiting($route, $action, $message) {
+            $data = ["request" => array()];
+            $data["request"]["status"] = "Waiting";
+            $data["request"]["action"] = $action;
+            $data["request"]["message"] = $message;
+            $data[$route] = [];
+            self::Return($route, $data);
+        }
+
         //API Error
         public static function Error($route, $error) {
             $data = ["request" => array()];
@@ -45,6 +55,8 @@ namespace API {
                
                 if ($result === null) self::NotFound($route);
                 else self::Success($route, $routeGroup->runnableClassName, $result);
+            } catch (\Cache\WaitingException $cacheException) {
+                self::Waiting($route, $routeGroup->runnableClassName, "Waiting for cache to finish compiling.");
             } catch (\API\Exception $exception) {
                 self::Error($route, $exception->getMessage());
             }

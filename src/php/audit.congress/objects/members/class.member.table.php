@@ -2,24 +2,13 @@
 
 namespace AuditCongress {
 
-    abstract class MemberTable extends AuditCongressTable {
+    abstract class MemberTable extends CacheTrackedTable {
 
-        private ?CacheTracker $cacheTracker = null;
         public function __construct($tableName) {
-            parent::__construct($tableName);
-            $this->cacheTracker = new CacheTracker("bulk-member");
+            parent::__construct($tableName, "bulk-member");
         }
 
-        public function cacheIsValid() {
-            if ($this->cacheIsValid == null)
-                $this->cacheIsValid = !$this->cacheTracker->isReadyForUpdate();
-            return $this->cacheIsValid;
-        }
-
-        public function updateCache() {
-            $this->cacheTracker->runCachingScript();
-            $this->cacheTracker->setUpdated(false, "done");
-        }
+        public function updateCache() { $this->cacheTracker->runUpdateScript(); }
         
         public static abstract function getInstance();
 

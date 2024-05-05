@@ -132,11 +132,9 @@ def genericBulkScriptSetup(scriptName):
     #Make sure the DB schema is valid first
     db.throwIfShemaInvalid()
 
-def genericBulkScriptMain(setupFunction, mainFunction, scriptName):
+def genericBulkScriptMain(setupFunction, mainFunction, scriptName=None):
     setupFunction()
 
-    cache.throwIfScriptAlreadyRunning(scriptName)
+    if scriptName is not None: cache.throwIfScriptAlreadyRunning(scriptName)
 
-    cache.setScriptRunning(scriptName, True)
     mainFunction()
-    cache.setScriptRunning(scriptName, False)
