@@ -34,18 +34,29 @@ def saveAsCSV(path, data, headers=None):
     ensureFoldersExist(path)
     with open(path, "w", newline='\n', encoding='utf-8') as file:
         writer = None
-        if type(data) is dict:
-            #Use headers if defined, else use the dict keys as header
-            fields = headers if headers is not None else data[0].keys()
-            writer = csv.DictWriter(file, fields)
-            writer.writeheader()
-        elif type(data) is list:
-            writer = csv.writer(file, delimiter=",",)
-            #Only write headers if they were supplied
-            if headers is not None and type(headers) is list: writer.writerow(headers)
-        #Write rows based on how the writer was initialized
-        for row in data: writer.writerow(row)
-        
+        if type(data) is dict: writer = writeCSVAsDict(file, data, headers)
+        elif type(data) is list: writer = writeCSVAsList(file, data, headers)
+
+        if writer == None: raise Exception("saveAsCSV: Expected data of type dict or list, found: {}".format(type(data)))
+        writeCSVRows(writer, data)
+
+def writeCSVAsDict(file, data, headers):
+    #Use headers if defined, else use the dict keys as header
+    fields = headers if headers is not None else data[0].keys()
+    writer = csv.DictWriter(file, fields)
+    writer.writeheader()
+    return writer
+
+def writeCSVAsList(file, data, headers):
+    writer = csv.writer(file, delimiter=",",)
+    #Only write headers if they were supplied
+    if headers is not None and type(headers) is list: 
+        writer.writerow(headers)
+    return writer
+
+def writeCSVRows(writer, data):
+    #Write rows based on how the writer was initialized
+    for row in data: writer.writerow(row)
 
 def readCSV(path): 
     contents = []
