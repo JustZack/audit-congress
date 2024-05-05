@@ -31,8 +31,8 @@ def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
 def saveAsCSV(path, data, headers=None):
     if len(data) == 0: return
-
-    with open(path, "w", newline='', encoding='utf-8') as file:
+    ensureFoldersExist(path)
+    with open(path, "w", newline='\n', encoding='utf-8') as file:
         writer = None
         if type(data) is dict:
             #Use headers if defined, else use the dict keys as header
@@ -40,7 +40,7 @@ def saveAsCSV(path, data, headers=None):
             writer = csv.DictWriter(file, fields)
             writer.writeheader()
         elif type(data) is list:
-            writer = csv.writer(file)
+            writer = csv.writer(file, delimiter=",",)
             #Only write headers if they were supplied
             if headers is not None and type(headers) is list: writer.writerow(headers)
         #Write rows based on how the writer was initialized
@@ -100,14 +100,15 @@ def pathIsFile(path):
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
 
+def relativeToAbsPath(path): return os.path.abspath(path)
+
 def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments):
         logger.logError(exceptionMessage)
         if onExceptFunction is not None: onExceptFunction(*onExceptArguments)
 
 def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
-    mainFunction()
     try:                      
-        None
+        mainFunction()
     except KeyboardInterrupt: 
         logExceptionThen("Manually ended script via ctrl+c", onExceptFunction, *onExceptArguments)
     except Exception as e:    
