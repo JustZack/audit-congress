@@ -24,7 +24,7 @@ namespace API {
             $data = ["request" => array()];
             $data["request"]["status"] = "Waiting";
             $data["request"]["action"] = $action;
-            $data["request"]["action"] = $message;
+            $data["request"]["message"] = $message;
             $data[$route] = [];
             self::Return($route, $data);
         }
