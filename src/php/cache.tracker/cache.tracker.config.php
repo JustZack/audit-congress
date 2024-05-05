@@ -25,9 +25,6 @@ namespace Cache {
             } else if (isset($updateInterval)) {
                 $this->updateIntervalInHours = $updateInterval;
                 $this->updateTimesIn24HrUTC = false;
-            } else {
-                $this->updateIntervalInHours = false;
-                $this->updateTimesIn24HrUTC = false;
             }
         }
         
@@ -38,6 +35,8 @@ namespace Cache {
             $this->status = $this->getSettingIfSet("status");
             $this->scriptPath = $this->getSettingIfSet("scriptPath");
             $this->scriptRunner = $this->getSettingIfSet("scriptRunner");
+            $this->updateIntervalInHours = false;
+            $this->updateTimesIn24HrUTC = false;
             $this->initUpdateConfig();
         }
 
