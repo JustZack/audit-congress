@@ -16,6 +16,6 @@ require_once AUDITCONGRESS_FOLDER."\..\util\autoload.php";
 require_once AUDITCONGRESS_FOLDER."\audit.congress.exception.php";
 require_once AUDITCONGRESS_FOLDER."\objects\autoload.php";
 
-\Cache\Tracker::initCacheTracker("CacheStatus", \AuditCongress\Enviroment::getCacheSettings());
+\Cache\Config::init("CacheStatus", \AuditCongress\Enviroment::getCacheSettings());
 
 ?>

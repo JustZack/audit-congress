@@ -1,83 +1,21 @@
 <?php
 
 namespace Cache {
+    class Tracker extends TrackerConfig {
+        public function getSource() { return $this->getValue("source"); }
 
-    class Tracker {
-        public 
-            $cacheName,
-            $cacheSettings,
-            $cacheRow = null;
-        private static $settings = null;
-        private static $defaultSettings = null;
+        public function getStatus() { return $this->getValue("status"); }
 
-        public function __construct($cacheName) {
-            $this->cacheName = $cacheName;
-            if (CacheTrackerQuery::$tableName == null)
-                throw new \Exception("CacheTracker: Must call static::initCacheTracker first");
-            if (isset(self::$settings) || isset(self::$defaultSettings)) 
-                $this->cacheSettings = self::getCacheSettings($cacheName);
-        }
-        
+        public function isUpdating() { return $this->getValue("isRunning"); }
 
+        public function isOutOfDate() { return strtotime($this->getValue("nextUpdate")) < time(); }
 
-        public static function initCacheTracker($tableName, $settings = null) { 
-            CacheTrackerQuery::$tableName = $tableName; 
-            if ($settings != null) {
-                self::$settings = $settings["caches"];
-                self::$defaultSettings = $settings["default"];
-            }
-        }
-
-        private static function cacheUsesSpecificTimes($settings) {
-            return isset($settings["updateTimesIn24HrUTC"]) && count($settings["updateTimesIn24HrUTC"]);
-        }
-
-        private static function cacheUsesScript($settings) {
-            return isset($settings["scriptPath"]);
-        }
-
-        private static function setNeededDefaults($settings) {
-            //Ensure required fields are set via the default settings if they are not present.
-            if (!self::cacheUsesSpecificTimes($settings) && !isset($settings["updateIntervalInHours"]))
-                $settings["updateIntervalInHours"] = self::$defaultSettings["updateIntervalInHours"];
-            if (!isset($settings["status"]))
-                $settings["status"] = self::$defaultSettings["status"];
-            return $settings;
-        }
-
-        public static function getCacheSettings($cacheName) {
-            $cSettings = null;
-            
-            //If this cache is defined in the settings array
-            if (isset(self::$settings[$cacheName]))
-                //Pull it and set any missing fields via the default settings
-                $cSettings = self::setNeededDefaults(self::$settings[$cacheName]);
-            else
-                //Otherwise use the default settings
-                $cSettings = self::$defaultSettings;
-
-            return $cSettings;
-        }
-
-
-        
-        public function getRow() {
-            if ($this->cacheRow == null) 
-                $this->cacheRow = CacheTrackerQuery::getCacheStatus($this->cacheName);
-            return $this->cacheRow;
-        }
-
-        private function getCacheColumn($column) {
-            $row = $this->getRow();
-            if ($row != null) return $row[$column];
-            else              return false;
-        }
-
-        public function getNextCacheUpdate() {
+        //Determine the next time this cache should update based on given config
+        public function nextUpdate() {
             $nextUpdate = 0;
-            //If updateTimesIn24Hr has values, use these as the basis for $nextUpdate
-            if (self::cacheUsesSpecificTimes($this->cacheSettings)) {
-                $updateHours = $this->cacheSettings["updateTimesIn24HrUTC"];
+            //If it uses update times (24hr UTC), use these as the basis for $nextUpdate
+            if ($this->usesUpdateTimes()) {
+                $updateHours = $this->getUpdateTimes();
                 
                 $nextHour = \Util\Time::getFirstHourPastNow($updateHours);
                 $offset = 0;
@@ -90,33 +28,42 @@ namespace Cache {
                 $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
                 $nextUpdate = $d->getTimestamp() + $offset;
             } else {
-                $nextUpdate = time() + \Util\Time::hoursToSeconds($this->cacheSettings["updateIntervalInHours"]);
+                $nextUpdate = time() + \Util\Time::hoursToSeconds($this->getUpdateInterval());
             }
 
             return \Util\Time::getDateTimeStr($nextUpdate);
         }
+        
+        //Wait up to $timeoutSeconds for the tracker row to report this cache isnt running
+        public function waitForUpdate($timeoutSeconds = 16) {
+            //Only run if a script is associated with the config
+            $secondsSlept = 0;
+            do {
+                //Refresh the cache row each iteration
+                $this->refresh();
+                //If the tracker is running based on the db column
+                if ($this->isUpdating()) {
+                    //update time spent and sleep
+                    $secondsSlept++;
+                    sleep(1);
+                } 
+                //Otherwise return true to signify completion
+                else return True;
+            } while ($secondsSlept < $timeoutSeconds || $timeoutSeconds == 0);
+            //If we made it out the sleep loop, the cache never finished running.
+            return False;
+        }
+        /*
+            Run the update script associated with this tracker.
+            Only run if this tracker uses a script and isnt running already.
 
-
-
-        public function getSource() { return $this->getCacheColumn("source"); }
-
-        public function getStatus() { return $this->getCacheColumn("status"); }
-
-        public function isRunning() { return $this->getCacheColumn("isRunning"); }
-
-        public function isSet() { return $this->getRow() != null; }
-
-        public function isOutOfDate() { return strtotime($this->getCacheColumn("nextUpdate")) < time(); }
-
-        public function isReadyForUpdate() { return !$this->isRunning() && $this->isOutOfDate(); }
-
-
-
-        public function runCachingScript($waitForComplete = true) {
+            Does not run setRunning(), the script within this updates that (I dont love this structure)
+        */
+        public function runUpdateScript($waitForComplete = true) {
             $out = array();
-            if (self::cacheUsesScript($this->cacheSettings)) {
-                $runner = $this->cacheSettings["scriptRunner"];
-                $path = \Util\File::getAbsolutePath($this->cacheSettings["scriptPath"]);
+            if (self::usesScript() && !self::isUpdating()) {
+                $runner = $this->scriptRunner();
+                $path = \Util\File::getAbsolutePath($this->scriptPath());
                 $dir = \Util\File::getFolderPath($path);
                 $file = \Util\File::getFileName($path);
 
@@ -128,26 +75,27 @@ namespace Cache {
             return $out;
         }
 
-        public function setCacheStatus($status = null, $isRunning = null, $lastUpdate = null, $nextUpdate = null) {
-            $function = "\AuditCongress\CacheTrackerQuery::updateCacheStatus";
-            if (!$this->isSet()) $function = "\AuditCongress\CacheTrackerQuery::insertCacheStatus";
-            $function($this->cacheName, $status, $isRunning, $lastUpdate, $nextUpdate);
-            $this->cacheRow = null;
+        //Set a value about this cache in the database
+        private function setCacheValue($status = null, $isRunning = null, $lastRunStart = null, $lastUpdate = null, $nextUpdate = null) {
+            $function = "\Cache\TrackerQuery::updateCacheStatus";
+            if (!$this->isset()) $function = "\Cache\TrackerQuery::insertCacheStatus";
+
+            $function($this->name(), $status, $isRunning, $lastRunStart, $lastUpdate, $nextUpdate);
+            $this->invalidate();
         }
 
-        public function setStatus($status) { $this->setCacheStatus($status); }
+        //Just set the cache status
+        public function setStatus($status) { $this->setCacheValue($status); }
 
+        /*
+            Set weather or not this cache is running (updating), and update the status
+            if (true): set lastRunStart to now
+            if (false): set lastUpdate to now & set next update to computed time
+        */
         public function setRunning($isRunning, $status = null) { 
             $nowStr = \Util\Time::getNowDateTimeStr();
-            if ($isRunning) 
-                $this->setCacheStatus($status, $isRunning, $nowStr); 
-            else 
-                $this->setCacheStatus($status, $isRunning, $nowStr, $this->getNextCacheUpdate());
-        }
-
-        public function setUpdated($status = null) {
-            $nowStr = \Util\Time::getNowDateTimeStr();
-            $this->setCacheStatus($status, null, $nowStr, $this->getNextCacheUpdate());
+            if ($isRunning) $this->setCacheValue($status, $isRunning, $nowStr); 
+            else $this->setCacheValue($status, $isRunning, null, $nowStr, $this->nextUpdate());
         }
     }
 }
