@@ -192,6 +192,6 @@ def doBulkMemberPull():
 
     logger.logInfo("Took", util.seconds_since(startPull), "seconds to insert member based data.")
 
-def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull, SCRIPT_NAME)
+def main(): util.genericBulkScriptMain(doSetup, doBulkMemberPull)
 
-if __name__ == "__main__": util.runAndCatchMain(main, cache.setScriptRunning, SCRIPT_NAME, False)
+if __name__ == "__main__": util.runAndCatchMain(main)

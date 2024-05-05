@@ -8,10 +8,7 @@ namespace AuditCongress {
             parent::__construct($tableName, "bulk-member");
         }
 
-        public function updateCache() {
-            $this->cacheTracker->runUpdateScript();
-            $this->cacheTracker->setRunning(false, "done");
-        }
+        public function updateCache() { $this->cacheTracker->runUpdateScript(); }
         
         public static abstract function getInstance();
 

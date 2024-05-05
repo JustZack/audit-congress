@@ -54,7 +54,7 @@ namespace Cache {
         }
         
         //Wait up to $timeoutSeconds for the tracker row to report this cache isnt running
-        public function waitForUpdate($timeoutSeconds = 15) {
+        public function waitForUpdate($timeoutSeconds = 10) {
             //Only run if a script is associated with the config
             $secondsSlept = 0;
             do {
@@ -71,14 +71,18 @@ namespace Cache {
             return False;
         }
         /*
-            Run the update script associated with this tracker.
-            Only run if this tracker uses a script and isnt running already.
-
-            Does not run setRunning(), the script within this updates that (I dont love this structure)
+            Run the update script associated with this tracker. Takes care of updating running status.
+            Only run if this tracker uses a script & isnt already running.
+            If already running, wait for completion (up to $timeoutSeconds)
         */
-        public function runUpdateScript($waitForComplete = true) {
+        public function runUpdateScript($waitForComplete = true, $inProgressStatus = "updating", $completeStatus = "done") {
             $out = array();
-            if (self::usesScript() && !self::isUpdating(true)) {
+
+            //If the update script is already running, wait for it to update
+            if ($this->isUpdating(true)) $this->waitForUpdate();
+            //Otherwise only run if this tracker uses a script
+            else if ($this->usesScript()) {
+                $this->setRunning(true, $inProgressStatus);
                 $runner = $this->scriptRunner();
                 $path = \Util\File::getAbsolutePath($this->scriptPath());
                 $dir = \Util\File::getFolderPath($path);
@@ -88,7 +92,8 @@ namespace Cache {
                 $cmd = "cd $dir && $runner $file";
                 array_push($out, $cmd);
                 exec($cmd, $out);
-            }
+                $this->setRunning(false, $completeStatus);
+            } 
             return $out;
         }
 
