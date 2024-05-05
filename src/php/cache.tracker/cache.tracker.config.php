@@ -9,23 +9,19 @@ namespace Cache {
             $updateTimesIn24HrUTC,
             $scriptPath,
             $scriptRunner,
-
-            $settings = null,
-            $cacheRow = null;
+            $config = null;
+            
         
-        public function __construct($name, $settings) {
-            $this->settings = $settings;
+        private function getSettingIfSet($name) {
+            return isset($this->config[$name]) ? $this->config[$name] : null;
+        }
 
-            $this->name = $name;
-            $this->status = $settings["status"];
-            $this->scriptPath = isset($settings["scriptPath"]) ? $settings["scriptPath"] : null;
-            $this->scriptRunner = isset($settings["scriptRunner"]) ? $settings["scriptRunner"] : null;
-
-            $dailyUpdateTimes = isset($settings["updateTimesIn24HrUTC"]) ? $settings["updateTimesIn24HrUTC"] : null;
-            $updateInterval = isset($settings["updateIntervalInHours"]) ? $settings["updateIntervalInHours"] : null;
-            if (isset($dailyUpdateTimes) && count($dailyUpdateTimes) > 0) {
+        private function initUpdateConfig() {
+            $updateTimes =$this->getSettingIfSet("updateTimesIn24HrUTC");
+            $updateInterval = $this->getSettingIfSet("updateIntervalInHours");
+            if (isset($updateTimes) && count($updateTimes) > 0) {
                 $this->updateIntervalInHours = false;
-                $this->updateTimesIn24HrUTC = $dailyUpdateTimes;
+                $this->updateTimesIn24HrUTC = $updateTimes;
             } else if (isset($updateInterval)) {
                 $this->updateIntervalInHours = $updateInterval;
                 $this->updateTimesIn24HrUTC = false;
@@ -34,28 +30,20 @@ namespace Cache {
                 $this->updateTimesIn24HrUTC = false;
             }
         }
+        
+        public function __construct($name, $settings) {
+            $this->config = $settings;
 
-        public function isset() { return $this->getRow() != null; }
-
-        protected function invalidate() { $this->cacheRow = null; }
-
-        public function refresh() {
-            $this->cacheRow = \Cache\TrackerQuery::getCacheStatus($this->name);
-        }
-
-        private function getRow() {
-            if ($this->cacheRow == null) $this->refresh();
-            return $this->cacheRow;
-        }
-
-        protected function getValue($column) {
-            $row = $this->getRow();
-            if ($row != null) return $row[$column];
-            else              return false;
+            $this->name = $name;
+            $this->status = $this->getSettingIfSet("status");
+            $this->scriptPath = $this->getSettingIfSet("scriptPath");
+            $this->scriptRunner = $this->getSettingIfSet("scriptRunner");
+            $this->initUpdateConfig();
         }
 
 
-        public function settings() { return $this->settings; }
+
+        public function config() { return $this->config; }
         public function name() { return $this->name; }
         public function defaultStatus() { return $this->status; }
 

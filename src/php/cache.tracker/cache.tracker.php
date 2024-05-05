@@ -2,6 +2,23 @@
 
 namespace Cache {
     class Tracker extends TrackerConfig {
+        private $cacheRow = null;
+        public function isset() { return $this->getRow() != null; }
+        protected function invalidate() { $this->cacheRow = null; }
+        public function refresh() {
+            $this->cacheRow = \Cache\TrackerQuery::getCacheStatus($this->name());
+        }
+        private function getRow() {
+            if ($this->cacheRow == null) $this->refresh();
+            return $this->cacheRow;
+        }
+        protected function getValue($column) {
+            $row = $this->getRow();
+            if ($row != null) return $row[$column];
+            else              return false;
+        }
+
+
         public function getSource() { return $this->getValue("source"); }
 
         public function getStatus() { return $this->getValue("status"); }
