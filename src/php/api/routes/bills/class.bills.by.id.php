@@ -6,8 +6,8 @@ namespace API {
         public static function parameters() { return ["id"]; }
         
         public static function fetchResult() {
-            $args = self::fetchParameters();
-            return \AuditCongress\Bills::getById($args["id"]);
+            $id = Parameters::getIfSet("id");
+            return \AuditCongress\Bills::getById($id);
         }
     }
 }
