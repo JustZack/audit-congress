@@ -25,6 +25,18 @@ namespace AuditCongress {
             $bill = BillsQuery::getById($billId);
             return self::returnFirst(self::parseResult($bill));
         }
+
+        public static function getByCongressTypeNumber($congress, $type, $number) {
+            self::enforceCache();
+            $bill = BillsQuery::getByCongressTypeNumber($congress, $type, $number);
+            return self::returnFirst(self::parseResult($bill));
+        }
+
+        public static function getByCongressAndType($congress, $type) {
+            self::enforceCache();
+            $bill = BillsQuery::getByCongressAndType($congress, $type);
+            return self::parseResult($bill);
+        }
     }
 }
 

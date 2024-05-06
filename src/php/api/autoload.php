@@ -31,5 +31,7 @@ require_once API_FOLDER."\\routes\\elections\class.elections.by.fec.id.php";
 
 require_once API_FOLDER."\\routes\\bills\class.bills.php";
 require_once API_FOLDER."\\routes\\bills\class.bills.by.id.php";
+require_once API_FOLDER."\\routes\\bills\class.bills.by.congress.type.number.php";
+require_once API_FOLDER."\\routes\\bills\class.bills.by.congress.and.type.php";
 
 ?>
