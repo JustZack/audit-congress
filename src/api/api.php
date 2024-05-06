@@ -13,9 +13,7 @@ require_once "../php/api/autoload.php";
 $route = API::getQueryArgIfSet("route");
 if ($route !== null) {
     switch($route) {
-        case "bill": API::HandleBillRoute(); break;
-        case "fullBill": API::HandleFullBillRoute(); break;
-        
+        case "bills": 
         case "member":
         case "terms":
         case "socials":
