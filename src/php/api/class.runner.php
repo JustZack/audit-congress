@@ -7,7 +7,7 @@ namespace API {
         private static function Return($route, $data) {
             $data["request"]["route"] = $route;
             $data["request"]["parameters"] = Parameters::getAll();
-            $data["request"]["pagination"] = self::$pagination->toArray();
+            $data["request"]["pagination"] = self::getPagination()->toArray();
             header('Content-Type: application/json');
             print_r(json_encode($data));
         }
@@ -78,16 +78,19 @@ namespace API {
         }
 
         public static function getPagination() : Pagination {
-            $page = Parameters::getIfSet("page", "int");
-            $pageSize = Parameters::getIfSet("pageSize", "int");
-            $offset = Parameters::getIfSet("offset", "int");
-            if ($offset != null) return Pagination::getFromOffset($offset, $pageSize);
-            else return Pagination::getFromPage($page, $pageSize);
+            if (self::$pagination == null) {
+                $page = Parameters::getIfSet("page", "int");
+                $pageSize = Parameters::getIfSet("pageSize", "int");
+                $offset = Parameters::getIfSet("offset", "int");
+                if ($offset != null) self::$pagination = Pagination::getFromOffset($offset, $pageSize);
+                else self::$pagination = Pagination::getFromPage($page, $pageSize);
+            } 
+            
+            return self::$pagination;
         }
 
         public static function processRequest() {
             $route = Parameters::getIfSet("route");
-            self::$pagination = self::getPagination();
             if ($route != null) self::runRoute($route);
             else                self::Error("", "No route provided.");
         }

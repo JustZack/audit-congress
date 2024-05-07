@@ -86,7 +86,8 @@ namespace Cache {
         */
         public function runUpdateScript($waitForComplete = true, $inProgressStatus = "updating", $completeStatus = "done") {
             $out = array();
-
+            if ($waitForComplete) $this->timeoutSeconds = 0;
+            
             //If the update script is already running, wait for it to update
             if ($this->isUpdating(true)) $this->waitForUpdate();
             //Otherwise only run if this tracker uses a script

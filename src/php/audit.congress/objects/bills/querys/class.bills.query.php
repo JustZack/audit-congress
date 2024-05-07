@@ -25,6 +25,7 @@ namespace AuditCongress {
             $bills = new BillsQuery();
             $bills->setSearchColumns(["congress", "type"]);
             $bills->setSearchValues([$congress, $type]);
+            $bills->applyPagination();
             return $bills->selectFromDB()->fetchAllAssoc();
         }
     }
