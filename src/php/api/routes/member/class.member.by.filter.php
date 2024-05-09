@@ -3,7 +3,7 @@
 namespace API {
     class MemberByFilter extends MemberRoute {
 
-        //Note: No required parameters = 
+        //Note: No required parameters
         public static function fetchResult() {
             $state = Parameters::getIfSet("state");
             $type = Parameters::getIfSet("type");

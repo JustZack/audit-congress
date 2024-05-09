@@ -26,16 +26,10 @@ namespace AuditCongress {
             return self::returnFirst(self::parseResult($bill));
         }
 
-        public static function getByCongressTypeNumber($congress, $type, $number) {
+        public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = ["updated"]) {
             self::enforceCache();
-            $bill = BillsQuery::getByCongressTypeNumber($congress, $type, $number);
-            return self::returnFirst(self::parseResult($bill));
-        }
-
-        public static function getByCongressAndType($congress, $type) {
-            self::enforceCache();
-            $bill = BillsQuery::getByCongressAndType($congress, $type);
-            return self::parseResult($bill);
+            $bills = BillsQuery::getByFilter($congress, $type, $number, $title, $sort);
+            return self::parseResult($bills);
         }
     }
 }

@@ -8,41 +8,34 @@ namespace API {
         
         private static $defaultPageSize = 25;
 
-        private static function enforcePageNumberBounds($pageNumber) {
-            if ($pageNumber == null || $pageNumber < 1) throw new \OutOfBoundsException("\API\Pagination: pageNumber must be an integer > 0.");
-        }
-        private static function enforcePageSizeBounds($pageSize) {
-            if ($pageSize < 1) throw new \OutOfBoundsException("\API\Pagination: pageSize must be an integer > 0.");
-        }
         private static function enforceOffsetBounds($offset) {
             if ($offset < 0) throw new \OutOfBoundsException("\API\Pagination: offset must be an integer >= 0.");
         }
 
-        private function convertNullPageSize($pageSize) {
-            return $pageSize == null ? self::$defaultPageSize : $pageSize; 
+        private function convertBadPageSize($pageSize) {
+            return ($pageSize == null || $pageSize <= 0) ? self::$defaultPageSize : $pageSize; 
         }
-        private function convertNullPage($page) {
-            return $page == null ? 1 : $page; 
+        private function convertBadPage($page) {
+            return ($page == null || $page <= 0) ? 1 : $page; 
+        }
+        private function convertBadOffset($offset) {
+            return ($offset == null ||   $offset < 0) ? 0 : $offset; 
         }
 
         public function __construct($pageNumber = 1, $pageSize = 25) {
-            $pageNumber = self::convertNullPage($pageNumber);
-            $pageSize = self::convertNullPageSize($pageSize);
-
-            self::enforcePageNumberBounds($pageNumber);
-            self::enforcePageSizeBounds($pageSize);
+            $pageNumber = self::convertBadPage($pageNumber);
+            $pageSize = self::convertBadPageSize($pageSize);
 
             $this->pageNumber = $pageNumber;
             $this->pageSize = $pageSize;
         }
 
         public static function getFromOffset($offset, $pageSize = 25) {
-            $pageSize = self::convertNullPageSize($pageSize);
-            
-            self::enforceOffsetBounds($offset);
-            
-            $number = floor((1.0 * $offset)/$pageSize)+1;
-            return new Pagination($number, $pageSize);
+            $offset = self::convertBadOffset($offset);
+            $pageSize = self::convertBadPageSize($pageSize);
+
+            $page = floor((1.0 * $offset)/$pageSize)+1;
+            return new Pagination($page, $pageSize);
         }
 
         public static function getFromPage($pageNumber, $pageSize = 25) {
