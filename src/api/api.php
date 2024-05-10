@@ -14,6 +14,7 @@ $route = API::getQueryArgIfSet("route");
 if ($route !== null) {
     switch($route) {
         case "bills": 
+        case "cosponsors":
         case "member":
         case "terms":
         case "socials":

@@ -34,4 +34,8 @@ require_once API_FOLDER."\\routes\\bills\class.bills.php";
 require_once API_FOLDER."\\routes\\bills\class.bills.by.id.php";
 require_once API_FOLDER."\\routes\\bills\class.bills.by.filter.php";
 
+require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.php";
+require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.id.php";
+require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.filter.php";
+
 ?>
