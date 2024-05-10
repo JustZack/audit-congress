@@ -22,9 +22,11 @@ namespace API {
                 case "double":
                 case "decimal":
                 case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
+                case "array": $filterType = "json"; break;
                 default: return $valueString;
             }
-            $value = filter_var($valueString, $filterType);
+            if ($filterType == "json") $value = json_decode($valueString);
+            else $value = filter_var($valueString, $filterType);
             return $value;
         }
 
@@ -56,6 +58,11 @@ namespace API {
         }
 
         public static function getAll() { return $_GET; }
+
+        public static function get($parameter) { return self::getIfSet($parameter); }
+        public static function getInt($parameter) { return self::getIfSet($parameter, "int"); }
+        public static function getFloat($parameter) { return self::getIfSet($parameter, "float"); }
+        public static function getArray($parameter) { return self::getIfSet($parameter, "array"); }
     }
 }
 
