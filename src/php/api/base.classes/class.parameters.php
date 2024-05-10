@@ -60,6 +60,7 @@ namespace API {
         public static function getAll() { return $_GET; }
 
         public static function get($parameter) { return self::getIfSet($parameter); }
+        public static function getBool($parameter) { return self::getIfSet($parameter, "bool"); }
         public static function getInt($parameter) { return self::getIfSet($parameter, "int"); }
         public static function getFloat($parameter) { return self::getIfSet($parameter, "float"); }
         public static function getArray($parameter) { return self::getIfSet($parameter, "array"); }

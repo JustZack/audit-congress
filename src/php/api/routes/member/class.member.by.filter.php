@@ -5,11 +5,11 @@ namespace API {
 
         //Note: No required parameters
         public static function fetchResult() {
-            $state = Parameters::getIfSet("state");
-            $type = Parameters::getIfSet("type");
-            $party = Parameters::getIfSet("party");
-            $gender = Parameters::getIfSet("gender");
-            $current = Parameters::getIfSet("current", "bool");
+            $state = Parameters::get("state");
+            $type = Parameters::get("type");
+            $party = Parameters::get("party");
+            $gender = Parameters::get("gender");
+            $current = Parameters::getBool("current");
 
             if (\Util\General::allNull($state, $type, $party, $gender, $current)) 
                 self::throwException("fetchResult", "Must provde atleast one of [state, type, party, gender, current]");

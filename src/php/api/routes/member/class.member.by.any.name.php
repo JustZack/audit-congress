@@ -6,9 +6,9 @@ namespace API {
         public static function parameters() { return ["name"]; }
 
         public static function fetchResult() {
-            $args = self::fetchParameters();
-            $current = Parameters::getIfSet("current", "bool");
-            return \AuditCongress\Members::getByAnyName($args["name"], $current);
+            $name = Parameters::get("name");
+            $current = Parameters::getBool("current");
+            return \AuditCongress\Members::getByAnyName($name, $current);
         }
     }
 }
