@@ -9,9 +9,9 @@ MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route
 MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "type", "congress", "number", "subjectIndex", "subject"]
-TITLE_COLUMNS = ["id", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
-COSPONSOR_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+SUBJECT_COLUMNS = ["id", "billid", "type", "congress", "number", "subjectIndex", "subject"]
+TITLE_COLUMNS = ["id", "billid", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "billid", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -229,28 +229,28 @@ def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)
     else: return "{}{}-{}-{}".format(typ, number, congress, index)
 
-def getSubjectRows(subjects, t, n, c):
+def getSubjectRows(bid, subjects, t, n, c):
     i, subjs = 0, []
     for subject in subjects: 
         sid = getBillObjectId(t, n, c, i)
-        subjs.append((sid, t, n, c, i, subject))
+        subjs.append((sid, bid, t, n, c, i, subject))
         i += 1
     return subjs
 
-def getTitleRows(titles, t, n, c):
+def getTitleRows(bid, titles, t, n, c):
     i, ttls = 0, []
     for title in titles: 
         tid = getBillObjectId(t, n, c, i)
         portion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-        ttls.append((tid, t, n, c, i, title["title"], title["type"], title["as"], portion))
+        ttls.append((tid, bid, t, n, c, i, title["title"], title["type"], title["as"], portion))
         i += 1
     return ttls
 
-def getCoSponsorRows(cosponsors, t, n, c):
+def getCoSponsorRows(bid, cosponsors, t, n, c):
     i, cospons = 0, []
     for cosponsor in cosponsors:
         cid = getBillObjectId(t, n, c, i)
-        cospons.append((cid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+        cospons.append((cid, bid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
         i += 1
     return cospons
 
@@ -261,12 +261,12 @@ def splitBillsIntoTableRows(bills):
         bill = parsedBill["bill"]
         tcn = (bill["type"].lower(),bill["congress"],bill["number"])
         bioguide = bill["bioguideId"]
-        bId = getBillObjectId(*tcn)
+        bid = getBillObjectId(*tcn)
         
-        billData.append((bId, *tcn, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
-        subjectData.extend(getSubjectRows(parsedBill["subjects"], *tcn))
-        titleData.extend(getTitleRows(parsedBill["titles"], *tcn))
-        cosponData.extend(getCoSponsorRows(parsedBill["cosponsors"], *tcn))
+        billData.append((bid, *tcn, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
+        subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
+        titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
+        cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, "BillCoSponsors": cosponData}
 
 def getInsertThreads(bills):
