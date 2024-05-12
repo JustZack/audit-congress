@@ -276,7 +276,7 @@
 
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
                     "sponsoredAt": { "type": "DATE", "null": "NO" },
-                    "withdrawnAt": { "type": "DATE", "null": "NO" },
+                    "withdrawnAt": { "type": "DATE", "null": "YES" },
 
                     "isOriginal": { "type": "TINYINT(1)", "null": "NO" }
                 },
