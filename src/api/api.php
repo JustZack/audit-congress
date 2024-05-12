@@ -15,6 +15,7 @@ if ($route !== null) {
     switch($route) {
         case "bills": 
         case "cosponsors":
+        case "titles":
         case "member":
         case "terms":
         case "socials":

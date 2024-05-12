@@ -38,4 +38,8 @@ require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.php";
 require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.id.php";
 require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.filter.php";
 
+require_once API_FOLDER."\\routes\\titles\class.titles.php";
+require_once API_FOLDER."\\routes\\titles\class.titles.by.id.php";
+require_once API_FOLDER."\\routes\\titles\class.titles.by.filter.php";
+
 ?>
