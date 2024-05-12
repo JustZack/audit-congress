@@ -9,9 +9,9 @@ MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route
 MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "billid", "type", "congress", "number", "subjectIndex", "subject"]
-TITLE_COLUMNS = ["id", "billid", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
-COSPONSOR_COLUMNS = ["id", "billid", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "subjectIndex", "subject"]
+TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
