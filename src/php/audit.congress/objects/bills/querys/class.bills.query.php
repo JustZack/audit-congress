@@ -17,8 +17,6 @@ namespace AuditCongress {
         }
 
         public static function getBySponsorId($bioguideId) {
-            $bill = self::getWithSearchSelect("id", "=", "hconres118-57");
-            return $bill->selectFromDB()->fetchAllAssoc();
             $bills = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
             $bills->applyUpdatedAtOrder();
             $bills->applyPagination();
