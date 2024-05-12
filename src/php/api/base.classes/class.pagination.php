@@ -8,10 +8,6 @@ namespace API {
         
         private static $defaultPageSize = 25;
 
-        private static function enforceOffsetBounds($offset) {
-            if ($offset < 0) throw new \OutOfBoundsException("\API\Pagination: offset must be an integer >= 0.");
-        }
-
         private function convertBadPageSize($pageSize) {
             return ($pageSize == null || $pageSize <= 0) ? self::$defaultPageSize : $pageSize; 
         }

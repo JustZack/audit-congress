@@ -26,6 +26,18 @@ namespace AuditCongress {
             return self::returnFirst(self::parseResult($cosponsor));
         }
 
+        public static function getByBillId($billId) {
+            self::enforceCache();
+            $cosponsor = BillCosponsorsQuery::getByBillId($billId);
+            return self::parseResult($cosponsor);
+        }
+
+        public static function getByBioguideId($biobuideId) {
+            self::enforceCache();
+            $cosponsor = BillCosponsorsQuery::getByBioguideId($biobuideId);
+            return self::parseResult($cosponsor);
+        }
+
         public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {
             self::enforceCache();
             $cosponsors = BillCosponsorsQuery::getByFilter($congress, $type, $number, $bioguideId, $sort);

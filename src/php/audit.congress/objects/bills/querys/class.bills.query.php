@@ -7,10 +7,21 @@ namespace AuditCongress {
             parent::__construct("Bills");
         }
 
+        public function applyUpdatedAtOrder() {
+            $this->setOrderBy(["updated"], false);
+        }
+
         public static function getById($id) {
-            $bills = new BillsQuery();
-            $bills->setSearchColumns(["id"]);
-            $bills->setSearchValues([$id]);
+            $bill = self::getWithSearchSelect("id", "=", $id);
+            return $bill->selectFromDB()->fetchAllAssoc();
+        }
+
+        public static function getBySponsorId($bioguideId) {
+            $bill = self::getWithSearchSelect("id", "=", "hconres118-57");
+            return $bill->selectFromDB()->fetchAllAssoc();
+            $bills = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
+            $bills->applyUpdatedAtOrder();
+            $bills->applyPagination();
             return $bills->selectFromDB()->fetchAllAssoc();
         }
 

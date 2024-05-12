@@ -26,7 +26,7 @@ def fetchLastCongress():
     result = db.runReturningSql(sql)
     if (len(result) == 1): 
         res = result[0][0]
-        if str.isdigit(res): LAST_CONGRESS_PROCESSED = int(res)
+        if res != None and str.isdigit(res): LAST_CONGRESS_PROCESSED = int(res)
         else: LAST_CONGRESS_PROCESSED = 93
     elif (len(result) == 0):
         sql = "INSERT INTO CacheStatus (source, status) VALUES ('bulk-bill', 93)"
@@ -190,7 +190,7 @@ def doBulkBillPull():
     timeToInsert = util.seconds_since(startInsert)
     
     #Final log of what happened
-    logger.logInfo("Took", startRun,"seconds to download, parse & insert bill files.")
+    logger.logInfo("Took", util.seconds_since(startRun),"seconds to download, parse & insert bill files.")
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull)
 

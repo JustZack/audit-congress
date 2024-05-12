@@ -5,6 +5,7 @@ namespace AuditCongress {
     class BillCosponsorRow extends \MySqlConnector\SqlRow {
         public
             $id,
+            $billId,
 
             $type,
             $congress,
@@ -18,11 +19,11 @@ namespace AuditCongress {
             $isOriginal;
     
         public function getColumns() {
-            return ["id","type","congress","number","bioguideId","sponsoredAt","withdrawnAt","isOriginal"];
+            return ["id","billId","type","congress","number","bioguideId","sponsoredAt","withdrawnAt","isOriginal"];
         }
 
         public function getValues() {
-            return [$this->id,$this->type,$this->congress,$this->number,
+            return [$this->id,$this->billId,$this->type,$this->congress,$this->number,
             $this->bioguideId,$this->sponsoredAt,$this->withdrawnAt,$this->isOriginal];
         }
     }

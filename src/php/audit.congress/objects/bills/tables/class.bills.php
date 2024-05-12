@@ -26,6 +26,12 @@ namespace AuditCongress {
             return self::returnFirst(self::parseResult($bill));
         }
 
+        public static function getBySponsorId($bioguideId) {
+            self::enforceCache();
+            $bills = BillsQuery::getBySponsorId($bioguideId);
+            return self::parseResult($bills);
+        }
+
         public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = ["updated"]) {
             self::enforceCache();
             $bills = BillsQuery::getByFilter($congress, $type, $number, $title, $sort);

@@ -268,7 +268,7 @@
                 "name": "BillCoSponsors",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
-                    "billid": { "type": "VARCHAR(50)", "null": "NO"},
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
 
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },

@@ -1,6 +1,9 @@
 <?php
 
 namespace Cache {
+
+    use DateTimeZone;
+
     class Tracker extends TrackerConfig {
         private $cacheRow = null;
         private $timeoutSeconds = 5;
@@ -45,7 +48,7 @@ namespace Cache {
                     $nextHour = $updateHours[0];
                     $offset = \Util\Time::hoursToSeconds(24);
                 }
-                $d = new \DateTime(date("Y-m-d $nextHour:00:00"));
+                $d = new \DateTime(date("Y-m-d $nextHour:00:00"), new DateTimeZone("UTC"));
                 $nextUpdate = $d->getTimestamp() + $offset;
             } else {
                 $nextUpdate = time() + \Util\Time::hoursToSeconds($this->getUpdateInterval());
@@ -111,7 +114,6 @@ namespace Cache {
         private function setCacheValue($status = null, $isRunning = null, $lastRunStart = null, $lastUpdate = null, $nextUpdate = null) {
             $function = "\Cache\TrackerQuery::updateCacheStatus";
             if (!$this->isset()) $function = "\Cache\TrackerQuery::insertCacheStatus";
-
             $function($this->name(), $status, $isRunning, $lastRunStart, $lastUpdate, $nextUpdate);
             $this->invalidate();
         }
