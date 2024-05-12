@@ -239,7 +239,8 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },
             {
@@ -261,7 +262,8 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },            
             {
@@ -283,7 +285,8 @@
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
                     "type_index": ["type"],
-                    "bioguideid_index": ["bioguideId"]
+                    "bioguideid_index": ["bioguideId"],
+                    "billid_index": ["billId"]
                 }
             },
             {
@@ -308,7 +311,8 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },
             {
