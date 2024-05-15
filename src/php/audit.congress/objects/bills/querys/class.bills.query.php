@@ -2,25 +2,16 @@
 
 namespace AuditCongress {
 
-    class BillsQuery extends AuditCongressQuery {
+    class BillsQuery extends BillQuery {
+        
+        use BillsGetByIdQuery, BillsGetByBioguideIdQuery;
+
         public function __construct() {
             parent::__construct("Bills");
         }
 
-        public function applyUpdatedAtOrder() {
+        public function applyDefaultOrder() {
             $this->setOrderBy(["updated"], false);
-        }
-
-        public static function getById($id) {
-            $bill = self::getWithSearchSelect("id", "=", $id);
-            return $bill->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getBySponsorId($bioguideId) {
-            $bills = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
-            $bills->applyUpdatedAtOrder();
-            $bills->applyPagination();
-            return $bills->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = ["updated"]) {

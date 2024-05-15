@@ -2,32 +2,16 @@
 
 namespace AuditCongress {
 
-    class BillCosponsorsQuery extends AuditCongressQuery {
+    class BillCosponsorsQuery extends BillQuery {
+        
+        use BillsGetByIdQuery, BillsGetByBillIdQuery, BillsGetByBioguideIdQuery;
+
         public function __construct() {
             parent::__construct("BillCosponsors");
         }
 
-        public function applySponsoredAtOrder() {
+        public function applyDefaultOrder() {
             $this->setOrderBy(["sponsoredAt"], false);
-        }
-
-        public static function getById($id) {
-            $cosponsor = self::getWithSearchSelect("id", "=", $id);
-            return $cosponsor->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByBillId($billid) {
-            $cosponsors = self::getWithSearchSelect("billId", "=", $billid);
-            $cosponsors->applySponsoredAtOrder();
-            $cosponsors->applyPagination();
-            return $cosponsors->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            $cosponsorships = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
-            $cosponsorships->applySponsoredAtOrder();
-            $cosponsorships->applyPagination();
-            return $cosponsorships->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {

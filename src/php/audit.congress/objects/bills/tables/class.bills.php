@@ -28,7 +28,7 @@ namespace AuditCongress {
 
         public static function getBySponsorId($bioguideId) {
             self::enforceCache();
-            $bills = BillsQuery::getBySponsorId($bioguideId);
+            $bills = BillsQuery::getByBioguideId($bioguideId);
             return self::parseResult($bills);
         }
 
