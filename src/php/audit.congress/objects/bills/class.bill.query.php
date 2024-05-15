@@ -35,7 +35,7 @@ namespace AuditCongress {
         }
     }
 
-    trait BillsGetByFilterQuery {
+    trait BillsGetWithFilterQuery {
 
         public static function getWithFilterPlusOne($congress = null, $type = null, $number = null, $likeSearchColumn = null, $likeSearchValue = null) {
             $query = new static();
