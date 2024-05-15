@@ -2,9 +2,9 @@
 
 namespace AuditCongress {
 
-    class BillSubjectsQuery extends AuditCongressQuery {
-        
-        use BillsGetByIdQuery, BillsGetByBillIdQuery;
+    class BillSubjectsQuery extends BillQuery {
+
+        use BillsGetByIdQuery, BillsGetByBillIdQuery, BillsGetByFilterQuery;
 
         public function __construct() {
             parent::__construct("BillSubjects");
@@ -14,18 +14,8 @@ namespace AuditCongress {
             $this->setOrderBy(["billId", "subjectIndex"], true);
         }
 
-        public static function getByFilter($congress = null, $type = null, $number = null, $subjectText = null) {
-            $subjects = new BillSubjectsQuery();
-
-            $subjects->setBooleanCondition("AND");
-
-            if ($congress != null) $subjects->addSearchValue("congress", "=", $congress);
-            if ($type != null) $subjects->addSearchValue("type", "=", $type);
-            if ($number != null) $subjects->addSearchValue("number", "=", $number);
-            if ($subjectText != null) $subjects->addSearchValue("subject", "like", $subjectText);
-
-            $subjects->applyDefaultOrder();
-            $subjects->applyPagination();
+        public static function getByFilter($congress = null, $type = null, $number = null, $subject = null) {
+            $subjects = self::getWithFilterPlusOne($congress, $type, $number, "subject", $subject);
             return $subjects->selectFromDB()->fetchAllAssoc();
         }
     }

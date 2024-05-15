@@ -3,8 +3,8 @@
 namespace AuditCongress {
 
     class BillCosponsorsQuery extends BillQuery {
-        
-        use BillsGetByIdQuery, BillsGetByBillIdQuery, BillsGetByBioguideIdQuery;
+
+        use BillsGetByIdQuery, BillsGetByBillIdQuery, BillsGetByBioguideIdQuery, BillsGetByFilterQuery;
 
         public function __construct() {
             parent::__construct("BillCosponsors");
@@ -15,17 +15,8 @@ namespace AuditCongress {
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {
-            $cosponsors = new BillCosponsorsQuery();
-
-            $cosponsors->setBooleanCondition("AND");
-            
-            if ($congress != null) $cosponsors->addSearchValue("congress", "=", $congress);
-            if ($type != null) $cosponsors->addSearchValue("type", "=", $type);
-            if ($number != null) $cosponsors->addSearchValue("number", "=", $number);
-            if ($bioguideId != null) $cosponsors->addSearchValue("bioguideId", "=", $bioguideId);
-
+            $cosponsors = self::getWithFilterPlusOne($congress, $type, $number, "bioguideId", $bioguideId);
             $cosponsors->setOrderBy($sort, false);
-            $cosponsors->applyPagination();
             return $cosponsors->selectFromDB()->fetchAllAssoc();
         }
     }
