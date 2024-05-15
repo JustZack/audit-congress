@@ -16,17 +16,18 @@ namespace API {
         //Convert the given string value to the given type
         public static function convert($valueString, $type) {
             $filterType = null;
+            $value = null;
             switch ($type) {
                 case "bool": $filterType = FILTER_VALIDATE_BOOLEAN; break;
                 case "int": $filterType = FILTER_VALIDATE_INT; break;
                 case "double":
                 case "decimal":
                 case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
-                case "array": $filterType = "json"; break;
-                default: return $valueString;
+                case "array":
+                case "json": $value = json_decode($valueString); break;
+                default: $value = $valueString;
             }
-            if ($filterType == "json") $value = json_decode($valueString);
-            else $value = filter_var($valueString, $filterType);
+            $value = $filterType == null ? $value : filter_var($valueString, $filterType);
             return $value;
         }
 

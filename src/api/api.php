@@ -16,6 +16,7 @@ if ($route !== null) {
         case "bills": 
         case "cosponsors":
         case "titles":
+        case "subjects":
         case "member":
         case "terms":
         case "socials":
