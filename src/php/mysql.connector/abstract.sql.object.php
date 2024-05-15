@@ -15,6 +15,10 @@ namespace MySqlConnector {
             $this->setBooleanCondition($booleanOperator);
         }
 
+        public function countInDB() {
+            return $this->table->count($this->whereCondition());
+        }
+
         public function selectFromDB() { 
             return $this->table->selectObject($this);
             /*return $this->table->select($this->getSelectColumns(), $this->whereCondition(), $this->getJoin(), 

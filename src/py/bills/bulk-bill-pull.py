@@ -26,7 +26,7 @@ def fetchLastCongress():
     result = db.runReturningSql(sql)
     if (len(result) == 1): 
         res = result[0][0]
-        if str.isdigit(res): LAST_CONGRESS_PROCESSED = int(res)
+        if res != None and str.isdigit(res): LAST_CONGRESS_PROCESSED = int(res)
         else: LAST_CONGRESS_PROCESSED = 93
     elif (len(result) == 0):
         sql = "INSERT INTO CacheStatus (source, status) VALUES ('bulk-bill', 93)"
@@ -128,13 +128,9 @@ def parseAndInsertBills(zipFile):
     congress = determineCongressNumberfromPath(zipFile)
     bills, totalRead = [], 0
 
-    deleteThread = zjthreads.buildThread(deleteBills, congress)
-    zjthreads.startThreads([deleteThread]) 
-
     startRead = datetime.now()
     bills = bparse.parseBills(zipFile)
     logger.logInfo("Took {} to read {} bills in congress {}".format(util.seconds_since(startRead), len(bills), congress))
-    zjthreads.joinThreads([deleteThread])
     
     insertBillsWithBulkLoad(bills, congress)
     #insertBillsWithInsert(bills)
@@ -180,6 +176,7 @@ def getUpdatedZips():
 #~1550s to run with 2048MB cache (With Truncate)
 #~1500s to run with 4096MB cache (With Truncate)
 def doBulkBillPull():
+    startRun = datetime.now()
     #State where the process is starting, based off the database
     logger.logInfo("Starting fetch, parse, and insert at congress", fetchLastCongress())
 
@@ -192,14 +189,8 @@ def doBulkBillPull():
     readBillZipFiles()
     timeToInsert = util.seconds_since(startInsert)
     
-    #Count rows in each updated table
-    billCount = db.countRows("Bills")
-    subjectCount = db.countRows("BillSubjects")
-    titlesCount = db.countRows("BillTitles")
-    cosponCount = db.countRows("BillCoSponsors")
-
     #Final log of what happened
-    logger.logInfo("Took", timeToInsert,"seconds to parse & insert",billCount,"bills,",subjectCount,"subjects,",titlesCount,"titles, and",cosponCount,"cosponsors.")
+    logger.logInfo("Took", util.seconds_since(startRun),"seconds to download, parse & insert bill files.")
 
 def main(): util.genericBulkScriptMain(doSetup, doBulkBillPull)
 

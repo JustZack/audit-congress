@@ -2,10 +2,12 @@
 
 namespace API {
     class Runner {
+        public static ?Pagination $pagination = null;
         //Actually print the response from the API
         private static function Return($route, $data) {
             $data["request"]["route"] = $route;
             $data["request"]["parameters"] = Parameters::getAll();
+            $data["request"]["pagination"] = self::getPagination()->toArray();
             header('Content-Type: application/json');
             print_r(json_encode($data));
         }
@@ -19,7 +21,7 @@ namespace API {
             self::Return($route, $data);
         }
 
-        ///API Success
+        //API Success, but waiting for the operation to be available
         public static function Waiting($route, $action, $message) {
             $data = ["request" => array()];
             $data["request"]["status"] = "Waiting";
@@ -73,6 +75,18 @@ namespace API {
                 }
             }
             self::NotFound($route);
+        }
+
+        public static function getPagination() : Pagination {
+            if (self::$pagination == null) {
+                $page = Parameters::getIfSet("page", "int");
+                $pageSize = Parameters::getIfSet("pageSize", "int");
+                $offset = Parameters::getIfSet("offset", "int");
+                if ($offset != null) self::$pagination = Pagination::getFromOffset($offset, $pageSize);
+                else self::$pagination = Pagination::getFromPage($page, $pageSize);
+            } 
+            
+            return self::$pagination;
         }
 
         public static function processRequest() {

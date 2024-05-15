@@ -227,6 +227,7 @@
                 "name": "BillSubjects",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
 
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
@@ -238,13 +239,15 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },
             {
                 "name": "BillTitles",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
 
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
@@ -259,13 +262,15 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },            
             {
                 "name": "BillCoSponsors",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
 
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
@@ -273,19 +278,23 @@
 
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO" },
                     "sponsoredAt": { "type": "DATE", "null": "NO" },
-                    "withdrawnAt": { "type": "DATE", "null": "NO" },
+                    "withdrawnAt": { "type": "DATE", "null": "YES" },
 
                     "isOriginal": { "type": "TINYINT(1)", "null": "NO" }
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
                     "type_index": ["type"],
-                    "bioguideid_index": ["bioguideId"]
+                    "bioguideid_index": ["bioguideId"],
+                    "billid_index": ["billId"]
                 }
             },
             {
                 "name": "BillActions",
                 "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
+
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },
@@ -302,12 +311,16 @@
                 },
                 "indexes": {
                     "congress_type_index": ["congress", "type"],
-                    "type_index": ["type"]
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
                 }
             },
             {
                 "name": "BillActionRefrences",
                 "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
+
                     "type": { "type": "VARCHAR(50)", "null": "NO" },
                     "congress": { "type": "INT", "null": "NO" },
                     "number": { "type": "INT", "null": "NO" },

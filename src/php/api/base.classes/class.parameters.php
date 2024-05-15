@@ -16,15 +16,18 @@ namespace API {
         //Convert the given string value to the given type
         public static function convert($valueString, $type) {
             $filterType = null;
+            $value = null;
             switch ($type) {
                 case "bool": $filterType = FILTER_VALIDATE_BOOLEAN; break;
                 case "int": $filterType = FILTER_VALIDATE_INT; break;
                 case "double":
                 case "decimal":
                 case "float": $filterType = FILTER_VALIDATE_FLOAT; break;
-                default: return $valueString;
+                case "array":
+                case "json": $value = json_decode($valueString); break;
+                default: $value = $valueString;
             }
-            $value = filter_var($valueString, $filterType);
+            $value = $filterType == null ? $value : filter_var($valueString, $filterType);
             return $value;
         }
 
@@ -56,6 +59,12 @@ namespace API {
         }
 
         public static function getAll() { return $_GET; }
+
+        public static function get($parameter) { return self::getIfSet($parameter); }
+        public static function getBool($parameter) { return self::getIfSet($parameter, "bool"); }
+        public static function getInt($parameter) { return self::getIfSet($parameter, "int"); }
+        public static function getFloat($parameter) { return self::getIfSet($parameter, "float"); }
+        public static function getArray($parameter) { return self::getIfSet($parameter, "array"); }
     }
 }
 

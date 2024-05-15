@@ -6,8 +6,8 @@ namespace API {
         public static function parameters() { return ["fecid"]; }
         
         public static function fetchResult() {
-            $args = self::fetchParameters();
-            return \AuditCongress\MemberElections::getByFecId($args["fecid"]);
+            $fecid = Parameters::get("fecid");
+            return \AuditCongress\MemberElections::getByFecId($fecid);
         }
     }
 }
