@@ -8,7 +8,6 @@ namespace AuditCongress {
     abstract class AuditCongressTable {
         protected $name;
         private ?Table $table = null;
-        protected $cacheIsValid = null;
 
         protected function __construct($tableName) {
             $this->name = $tableName;
@@ -25,27 +24,17 @@ namespace AuditCongress {
         }
 
         public function queueInsert(SqlRow $row) {
-            $this->getTable()->queueInsert($row->getColumns(), $row->getValues());
+            $this->getTable()->queueInsert($row);
         }
         public function commitInsert() {
             $this->getTable()->commitInsert();
         }
         public function insertRow(SqlRow $row) {
-            $this->getTable()->insert($row->getColumns(), $row->getValues());
+            $this->getTable()->insert($row);
         }
 
-        public static function enforceCache() {
-            $tableObj = static::getInstance();
-            if (!$tableObj->cacheIsValid()) {
-                $tableObj->updateCache();
-            }
-        }
 
         public static abstract function getInstance();
-
-        public abstract function cacheIsValid();
-
-        public abstract function updateCache();
 
         public static function returnFirst($results) {
             if ($results == null) return null;

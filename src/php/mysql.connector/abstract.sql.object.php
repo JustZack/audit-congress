@@ -15,33 +15,19 @@ namespace MySqlConnector {
             $this->setBooleanCondition($booleanOperator);
         }
 
-        public function countInDB() {
-            return $this->table->count($this->whereCondition());
-        }
+        public function getAsRow() { return SqlRow::fromColsAndVals($this->getColumns(), $this->getValues()); }
 
-        public function selectFromDB() { 
-            return $this->table->selectObject($this);
-            /*return $this->table->select($this->getSelectColumns(), $this->whereCondition(), $this->getJoin(), 
-                            $this->getGroupBy(), $this->getOrderBy(), $this->getLimit(), $this->getOffset());*/
-        }
+        public function countInDB() { return $this->table->count($this->whereCondition()); }
 
-        public function deleteFromDb() { 
-            return $this->table->delete($this->whereCondition());
-        }
+        public function selectFromDB() { return $this->table->selectObject($this); }
 
-        public function insertIntoDB() { 
-            return $this->table->insert($this->getColumns(), $this->getValues());
+        public function deleteFromDb() { return $this->table->delete($this->whereCondition()); }
 
-        }
+        public function insertIntoDB() { return $this->table->insert($this->getAsRow()); }
 
-        public function updateInDb() { 
-            return $this->table->update($this->getColumns(), $this->getValues(), 
-                                        $this->whereCondition());
-        }
+        public function updateInDb() { return $this->table->update($this->getAsRow(), $this->whereCondition()); }
 
-        public static function throwSqlObjectError($message) {
-            throw new SqlException("SqlObject: $message");
-        }
+        public static function throwSqlObjectError($message) { throw new SqlException("SqlObject: $message"); }
 
 
 
