@@ -4,8 +4,10 @@ namespace AuditCongress {
 
     class Bills extends BillTable {
 
+        use BillsGetById, BillsGetByBioguideId;
+
         private function __construct() {
-            parent::__construct("Bills");
+            parent::__construct("Bills", "\AuditCongress\BillsQuery");
         }
 
         private static $billsObject = null;
@@ -18,18 +20,6 @@ namespace AuditCongress {
         protected static function parseResult($rows) {
             $rows = BillRow::rowsToObjects($rows);
             return $rows;
-        }
-
-        public static function getById($billId) {
-            self::enforceCache();
-            $bill = BillsQuery::getById($billId);
-            return self::returnFirst(self::parseResult($bill));
-        }
-
-        public static function getBySponsorId($bioguideId) {
-            self::enforceCache();
-            $bills = BillsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($bills);
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = ["updated"]) {

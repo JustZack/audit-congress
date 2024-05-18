@@ -6,12 +6,19 @@ namespace AuditCongress {
     use MySqlConnector\Table;
 
     abstract class AuditCongressTable {
+        public $queryClassName = null;
         protected $name;
         private ?Table $table = null;
 
-        protected function __construct($tableName) {
+        protected function __construct($tableName, $queryClassName = null) {
             $this->name = $tableName;
+            $this->queryClassName = $queryClassName;
          }
+
+        public static function getQueryClass() {
+            $inst = static::getInstance();
+            return $inst->queryClassName;
+        }
 
         protected function getTable() { 
             if ($this->table == null) $this->table = new Table($this->name);

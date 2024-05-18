@@ -4,8 +4,10 @@ namespace AuditCongress {
 
     class BillSubjects extends BillTable {
 
+        use BillsGetById, BillsGetByBillId;
+
         private function __construct() {
-            parent::__construct("BillSubjects");
+            parent::__construct("BillSubjects", "\AuditCongress\BillSubjectsQuery");
         }
 
         private static $billsObject = null;
@@ -18,18 +20,6 @@ namespace AuditCongress {
         protected static function parseResult($rows) {
             $rows = BillSubjectRow::rowsToObjects($rows);
             return $rows;
-        }
-
-        public static function getById($billSubjectId) {
-            self::enforceCache();
-            $subject = BillSubjectsQuery::getById($billSubjectId);
-            return self::returnFirst(self::parseResult($subject));
-        }
-
-        public static function getByBillId($billId) {
-            self::enforceCache();
-            $subjects = BillSubjectsQuery::getByBillId($billId);
-            return self::parseResult($subjects);
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $subject = null) {

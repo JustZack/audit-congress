@@ -4,8 +4,10 @@ namespace AuditCongress {
 
     class BillCosponsors extends BillTable {
 
+        use BillsGetById, BillsGetByBillId, BillsGetByBioguideId;
+
         private function __construct() {
-            parent::__construct("BillCosponsors");
+            parent::__construct("BillCosponsors", "\AuditCongress\BillCosponsorsQuery");
         }
 
         private static $billsObject = null;
@@ -18,24 +20,6 @@ namespace AuditCongress {
         protected static function parseResult($rows) {
             $rows = BillCosponsorRow::rowsToObjects($rows);
             return $rows;
-        }
-
-        public static function getById($billCosponsorId) {
-            self::enforceCache();
-            $cosponsor = BillCosponsorsQuery::getById($billCosponsorId);
-            return self::returnFirst(self::parseResult($cosponsor));
-        }
-
-        public static function getByBillId($billId) {
-            self::enforceCache();
-            $cosponsor = BillCosponsorsQuery::getByBillId($billId);
-            return self::parseResult($cosponsor);
-        }
-
-        public static function getByBioguideId($biobuideId) {
-            self::enforceCache();
-            $cosponsor = BillCosponsorsQuery::getByBioguideId($biobuideId);
-            return self::parseResult($cosponsor);
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {
