@@ -5,7 +5,7 @@ namespace AuditCongress {
     class Sessions extends AuditCongressTable {
         
         private function __construct() {
-            parent::__construct("Sessions");
+            parent::__construct("Sessions", "\AuditCongress\SessionQuery");
         }
 
         private static $sessionTable = null;

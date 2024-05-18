@@ -5,7 +5,7 @@ namespace AuditCongress {
     class MemberSocials extends MemberTable {
         
         private function __construct() {
-            parent::__construct("MemberSocials");
+            parent::__construct("MemberSocials", "\AuditCongress\MemberSocialsQuery");
         }
 
         private static $memberSocialsTable = null;

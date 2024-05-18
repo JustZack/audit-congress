@@ -5,7 +5,7 @@ namespace AuditCongress {
     class Congresses extends CacheTrackedTable {
         
         private function __construct() {
-            parent::__construct("Congresses", "bulk-congress");
+            parent::__construct("Congresses", "\AuditCongress\CongressQuery", "bulk-congress");
         }
 
         private static $congressTable = null;

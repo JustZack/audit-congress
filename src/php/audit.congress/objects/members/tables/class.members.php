@@ -5,7 +5,7 @@ namespace AuditCongress {
     class Members extends MemberTable {
 
         private function __construct() {
-            parent::__construct("Members");
+            parent::__construct("Members", "\AuditCongress\MembersQuery");
         }
 
         private static $membersObject = null;

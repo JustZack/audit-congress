@@ -3,7 +3,7 @@
 namespace API {
     class Member extends RouteGroup {
         private function __construct() {
-            parent::__construct("member", "\API\MemberRoute");
+            parent::__construct("members", "\API\MemberRoute");
         }
 
         private static $memberInstance = null;
