@@ -17,15 +17,6 @@ namespace AuditCongress {
             return $query->selectFromDB()->fetchAllAssoc();
         }
     }
-    trait BillsGetByBioguideIdQuery {
-
-        public static function getByBioguideId($bioguideId) {
-            $query = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
-            $query->applyDefaultOrder();
-            $query->applyPagination();
-            return $query->selectFromDB()->fetchAllAssoc();
-        }
-    }
     trait BillsGetWithFilterQuery {
 
         public static function getWithFilterPlusOne($congress = null, $type = null, $number = null, $likeSearchColumn = null, $likeSearchValue = null) {

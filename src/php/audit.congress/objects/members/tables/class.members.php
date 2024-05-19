@@ -64,9 +64,9 @@ namespace AuditCongress {
             return $mapping;
         }
 
-        public static function getByBioguideId($bioguideId, $isCurrent = null) {
+        public static function getByBioguideId($bioguideId) {
             self::enforceCache();
-            $members = MembersQuery::getByBioguideId($bioguideId, $isCurrent);
+            $members = MembersQuery::getByBioguideId($bioguideId);
             return self::returnFirst(self::parseResult($members));
         }
 

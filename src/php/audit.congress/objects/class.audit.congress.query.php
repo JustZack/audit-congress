@@ -21,6 +21,15 @@ namespace AuditCongress {
             $this->setOffset($pagination->offset());
         }
     }
+
+    trait GetByBioguideIdQuery {
+        public static function getByBioguideId($bioguideId) {
+            $query = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
+            $query->applyDefaultOrder();
+            $query->applyPagination();
+            return $query->selectFromDB()->fetchAllAssoc();
+        }
+    }
 }
 
 ?>

@@ -3,19 +3,14 @@
 namespace AuditCongress {
 
     class MemberElectionsQuery extends AuditCongressQuery {
+        use GetByBioguideIdQuery;
+
         public function __construct() {
             parent::__construct("MemberElections");
         }
 
         public function applyDefaultOrder() {
             $this->setOrderBy(["fecId", "bioguideId"], false);
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            $terms = new MemberElectionsQuery();
-            $terms->setSearchColumns(["bioguideId"]);
-            $terms->setSearchValues([$bioguideId]);
-            return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByFecId($fecId) {
