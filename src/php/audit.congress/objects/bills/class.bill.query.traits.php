@@ -1,12 +1,6 @@
 <?php
 
 namespace AuditCongress {
-
-    abstract class BillQuery extends AuditCongressQuery {
-
-        public abstract function applyDefaultOrder();
-    }
-
     trait BillsGetByIdQuery {
 
         public static function getById($id) {
@@ -14,7 +8,6 @@ namespace AuditCongress {
             return $query->selectFromDB()->fetchAllAssoc();
         }
     }
-    
     trait BillsGetByBillIdQuery {
 
         public static function getByBillId($billid) {
@@ -24,7 +17,6 @@ namespace AuditCongress {
             return $query->selectFromDB()->fetchAllAssoc();
         }
     }
-
     trait BillsGetByBioguideIdQuery {
 
         public static function getByBioguideId($bioguideId) {
@@ -34,7 +26,6 @@ namespace AuditCongress {
             return $query->selectFromDB()->fetchAllAssoc();
         }
     }
-
     trait BillsGetWithFilterQuery {
 
         public static function getWithFilterPlusOne($congress = null, $type = null, $number = null, $likeSearchColumn = null, $likeSearchValue = null) {

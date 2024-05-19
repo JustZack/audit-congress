@@ -1,6 +1,6 @@
 <?php
 require_once AUDITCONGRESS_FOLDER."\objects\bills\class.bill.table.php";
-require_once AUDITCONGRESS_FOLDER."\objects\bills\class.bill.query.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\class.bill.query.traits.php";
 
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bills.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.titles.php";

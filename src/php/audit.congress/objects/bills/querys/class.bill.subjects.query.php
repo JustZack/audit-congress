@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class BillSubjectsQuery extends BillQuery {
+    class BillSubjectsQuery extends AuditCongressQuery {
 
         use BillsGetByIdQuery, BillsGetByBillIdQuery, BillsGetWithFilterQuery;
 
