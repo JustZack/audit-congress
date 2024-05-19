@@ -13,7 +13,7 @@ namespace AuditCongress {
             return $theQuery;
         }
 
-        protected function applyDefaultOrder() { }
+        protected abstract function applyDefaultOrder();
 
         protected function applyPagination() {
             $pagination = \API\Runner::getPagination();

@@ -7,6 +7,10 @@ namespace AuditCongress {
             parent::__construct("MemberSocials");
         }
 
+        public function applyDefaultOrder() {
+            $this->setOrderBy(["bioguideId"], false);
+        }
+
         public static function getByBioguideId($bioguideId) {
             $socials = new MemberSocialsQuery();
             $socials->setSearchColumns(["bioguideId"]);

@@ -7,6 +7,10 @@ namespace AuditCongress {
             parent::__construct("Members");
         }
 
+        public function applyDefaultOrder() {
+            $this->setOrderBy(["bioguideId", "start"], false);
+        }
+
         public static function getBioguideToThomasIdMapping() {
             $members = new MembersQuery();
             $members->setSelectColumns(["bioguideId", "thomasId"]);
