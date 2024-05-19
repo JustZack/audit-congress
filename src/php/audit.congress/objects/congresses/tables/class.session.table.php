@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class Sessions extends AuditCongressTable {
+    class Sessions extends CongressTable {
         
         private function __construct() {
             parent::__construct("Sessions", "\AuditCongress\SessionQuery");
@@ -13,20 +13,6 @@ namespace AuditCongress {
             if (self::$sessionTable == null) 
                 self::$sessionTable = new Sessions();
             return self::$sessionTable;
-        }
-
-        public function cacheIsValid() { 
-            return Congresses::getInstance()->cacheIsValid();
-        }
-
-        public function updateCache() { return False; }
-
-        public function insertSessions($congress, $sessions) {
-            foreach ($sessions as $session) {                
-                $session["congress"] = $congress;
-                $session = new SessionRow($session);
-                $this->queueInsert($session);
-            }
         }
 
         protected static function parseResult($resultRows) {

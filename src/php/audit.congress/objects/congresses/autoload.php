@@ -1,4 +1,7 @@
 <?php
+
+require_once AUDITCONGRESS_FOLDER."\objects\congresses\class.congress.table.php";
+
 require_once AUDITCONGRESS_FOLDER."\objects\congresses\\tables\class.congress.table.php";
 require_once AUDITCONGRESS_FOLDER."\objects\congresses\\tables\class.session.table.php";
 
