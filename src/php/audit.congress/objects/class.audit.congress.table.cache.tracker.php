@@ -37,8 +37,6 @@ namespace AuditCongress {
         }
 
         public abstract function updateCache();
-
-        public static abstract function getInstance();
     }
 }
 

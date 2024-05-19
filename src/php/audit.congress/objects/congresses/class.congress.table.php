@@ -46,10 +46,6 @@ namespace AuditCongress {
                 Sessions::getInstance()->queueInsert($session);
             }
         }
-
-        public static abstract function getInstance();
-
-        protected static abstract function parseResult($resultRows);
     }
 }
 

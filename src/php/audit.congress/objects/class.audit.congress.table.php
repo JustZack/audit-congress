@@ -43,6 +43,8 @@ namespace AuditCongress {
 
         public static abstract function getInstance();
 
+        protected static abstract function parseResult($resultRows);
+
         public static function returnFirst($results) {
             if ($results == null) return null;
             else if (count($results) > 0) return $results[0];

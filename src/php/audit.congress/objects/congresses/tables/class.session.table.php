@@ -20,7 +20,7 @@ namespace AuditCongress {
         }
 
         private static function genericQuery($function, ...$arguments) {
-            Congresses::enforceCache();
+            self::enforceCache();
             $result = ("\AuditCongress\SessionQuery::$function")(...$arguments);
             return self::parseResult($result);
         }
