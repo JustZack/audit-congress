@@ -1,13 +1,6 @@
 <?php
 
 namespace AuditCongress {
-    trait BillsGetByIdQuery {
-
-        public static function getById($id) {
-            $query = self::getWithSearchSelect("id", "=", $id);
-            return $query->selectFromDB()->fetchAllAssoc();
-        }
-    }
     trait BillsGetByBillIdQuery {
 
         public static function getByBillId($billid) {

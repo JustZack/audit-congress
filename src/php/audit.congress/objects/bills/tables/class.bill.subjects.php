@@ -4,7 +4,7 @@ namespace AuditCongress {
 
     class BillSubjects extends BillTable {
 
-        use BillsGetById, BillsGetByBillId;
+        use GetById, BillsGetByBillId;
 
         private function __construct() {
             parent::__construct("BillSubjects", "\AuditCongress\BillSubjectsQuery");

@@ -50,7 +50,21 @@ namespace AuditCongress {
             else if (count($results) > 0) return $results[0];
             else return $results;
         }
+    }
 
+    trait GetById {
+        public static function getById($id) {
+            self::enforceCache();
+            $items = self::getQueryClass()::getById($id);
+            return self::returnFirst(self::parseResult($items));
+        }
+    }
+    trait GetByBioguideId {
+        public static function getByBioguideId($bioguideId) {
+            self::enforceCache();
+            $items = self::getQueryClass()::getByBioguideId($bioguideId);
+            return self::parseResult($items);
+        }
     }
 }
 

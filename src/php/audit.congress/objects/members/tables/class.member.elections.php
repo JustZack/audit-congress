@@ -3,7 +3,8 @@
 namespace AuditCongress {
 
     class MemberElections extends MemberTable {
-        
+        use GetByBioguideId;
+
         private function __construct() {
             parent::__construct("MemberElections", "\AuditCongress\MemberElectionsQuery");
         }
@@ -17,12 +18,6 @@ namespace AuditCongress {
 
         protected static function parseResult($resultRows) {
             return MemberElectionRow::rowsToObjects($resultRows);
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $elections = MemberElectionsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($elections);
         }
 
         public static function getByFecId($fecId) {

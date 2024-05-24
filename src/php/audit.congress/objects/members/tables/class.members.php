@@ -3,6 +3,7 @@
 namespace AuditCongress {
 
     class Members extends MemberTable {
+        use GetByBioguideId;
 
         private function __construct() {
             parent::__construct("Members", "\AuditCongress\MembersQuery");
@@ -62,12 +63,6 @@ namespace AuditCongress {
                 if (strlen($member["thomasId"]) > 0 && strlen($member["bioguideId"]) > 0)
                     $mapping[$member["thomasId"]] = $member["bioguideId"];
             return $mapping;
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $members = MembersQuery::getByBioguideId($bioguideId);
-            return self::returnFirst(self::parseResult($members));
         }
 
         public static function getByName($firstName = null, $lastName = null, $isCurrent = null) {

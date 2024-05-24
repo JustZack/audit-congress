@@ -29,7 +29,7 @@ TERM_COLUMNS = ["bioguideId", "type", "start", "end", "state", "district", "part
 ELECTION_COLUMNS = ["fecId", "bioguideId"]
 SOCIAL_COLUMNS = ["bioguideId", "twitter", "twitterId", "facebook", "facebookId", "youtube", "youtubeId", 
                   "instagram", "instagramId"]
-OFFICES_COLUMNS = ["officeId", "bioguideId", "address", "suite", "building", "city", "state", "zip", 
+OFFICES_COLUMNS = ["id", "bioguideId", "address", "suite", "building", "city", "state", "zip", 
                    "latitude", "longitude", "phone", "fax"]
 
 COMMITTEE_COLUMNS = ["thomasId", "parentId", "type", "name", "wikipedia", "jurisdiction", "jurisdiction_source", 

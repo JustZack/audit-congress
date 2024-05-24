@@ -3,7 +3,8 @@
 namespace AuditCongress {
     
     class MemberTerms extends MemberTable {
-        
+        use GetByBioguideId;
+
         private function __construct() {
             parent::__construct("MemberTerms", "\AuditCongress\MemberTermsQuery");
         }
@@ -17,12 +18,6 @@ namespace AuditCongress {
 
         protected static function parseResult($resultRows) {
             return MemberTermRow::rowsToObjects($resultRows);
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $terms = MemberTermsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($terms);
         }
 
         public static function getLastByBioguideId($bioguideId) {

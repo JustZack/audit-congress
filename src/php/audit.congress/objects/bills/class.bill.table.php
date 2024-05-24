@@ -15,20 +15,6 @@ namespace AuditCongress {
 
 
     //Traits to use in the tables extending BillTable
-    trait BillsGetById {
-        public static function getById($id) {
-            self::enforceCache();
-            $items = self::getQueryClass()::getById($id);
-            return self::returnFirst(self::parseResult($items));
-        }
-    }
-    trait BillsGetByBioguideId {
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $items = self::getQueryClass()::getByBioguideId($bioguideId);
-            return self::parseResult($items);
-        }
-    }
     trait BillsGetByBillId {
         public static function getByBillId($billId) {
             self::enforceCache();

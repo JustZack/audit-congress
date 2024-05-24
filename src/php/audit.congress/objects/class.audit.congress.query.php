@@ -30,6 +30,15 @@ namespace AuditCongress {
             return $query->selectFromDB()->fetchAllAssoc();
         }
     }
+
+    trait GetByIdQuery {
+        public static function getById($id) {
+            $query = self::getWithSearchSelect("id", "=", $id);
+            $query->applyDefaultOrder();
+            $query->applyPagination();
+            return $query->selectFromDB()->fetchAllAssoc();
+        }
+    }
 }
 
 ?>

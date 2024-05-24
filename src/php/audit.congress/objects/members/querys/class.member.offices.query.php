@@ -3,21 +3,14 @@
 namespace AuditCongress {
 
     class MemberOfficesQuery extends AuditCongressQuery {
-        use GetByBioguideIdQuery;
+        use GetByBioguideIdQuery, GetByIdQuery;
 
         public function __construct() {
             parent::__construct("MemberOffices");
         }
 
         public function applyDefaultOrder() {
-            $this->setOrderBy(["officeId"], false);
-        }
-
-        public static function getByOfficeId($officeId) {
-            $offices = new MemberOfficesQuery();
-            $offices->setSearchColumns(["officeId"]);
-            $offices->setSearchValues([$officeId]);
-            return $offices->selectFromDB()->fetchAllAssoc();
+            $this->setOrderBy(["id"], false);
         }
     }
 }

@@ -3,11 +3,11 @@
 namespace API {
     class MemberByBioguideId extends MemberRoute {
 
-        public static function parameters() { return ["id"]; }
+        public static function parameters() { return ["bioguideId"]; }
         
         public static function fetchResult() {
-            $id = Parameters::get("id");
-            return \AuditCongress\Members::getByBioguideId($id);
+            $bioguideId = Parameters::get("bioguideId");
+            return \AuditCongress\Members::getByBioguideId($bioguideId);
         }
     }
 }
