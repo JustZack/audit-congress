@@ -3,9 +3,10 @@
 namespace AuditCongress {
 
     class MemberElections extends MemberTable {
-        
+        use GetByBioguideId;
+
         private function __construct() {
-            parent::__construct("MemberElections");
+            parent::__construct("MemberElections", "MemberElectionsQuery", "MemberElectionRow");
         }
 
         private static $memberTermsTable = null;
@@ -13,16 +14,6 @@ namespace AuditCongress {
             if (self::$memberTermsTable == null) 
                 self::$memberTermsTable = new MemberElections();
             return self::$memberTermsTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return MemberElectionRow::rowsToObjects($resultRows);
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $elections = MemberElectionsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($elections);
         }
 
         public static function getByFecId($fecId) {

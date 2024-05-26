@@ -4,17 +4,24 @@ namespace AuditCongress {
 
     abstract class BillTable extends CacheTrackedTable {
 
-        public function __construct($tableName) {
-            parent::__construct($tableName, "bulk-bill");
+        public function __construct($tableName, $queryClassName = null, $rowClassName = null) {
+            parent::__construct($tableName, $queryClassName, $rowClassName);
+            $this->setTrackedCache("bulk-bill");
         }
 
         public function updateCache() { 
             $this->cacheTracker->runUpdateScript(true, null, null); 
         }
-        
-        public static abstract function getInstance();
+    }
 
-        protected static abstract function parseResult($resultRows);
+
+    //Traits to use in the tables extending BillTable
+    trait BillsGetByBillId {
+        public static function getByBillId($billId) {
+            self::enforceCache();
+            $items = self::getQueryClass()::getByBillId($billId);
+            return self::parseResult($items);
+        }
     }
 }
 

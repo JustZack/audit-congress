@@ -3,15 +3,14 @@
 namespace AuditCongress {
 
     class MemberTermsQuery extends AuditCongressQuery {
+        use GetByBioguideIdQuery;
+        
         public function __construct() {
             parent::__construct("MemberTerms");
         }
 
-        public static function getByBioguideId($bioguideId) {
-            $terms = new MemberTermsQuery();
-            $terms->setSearchColumns(["bioguideId"]);
-            $terms->setSearchValues([$bioguideId]);
-            return $terms->selectFromDB()->fetchAllAssoc();
+        public function applyDefaultOrder() {
+            $this->setOrderBy(["start"], false);
         }
 
         private static function getSingleTermByBioguideId($bioguideId) {

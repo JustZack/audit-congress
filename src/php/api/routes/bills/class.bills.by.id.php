@@ -12,11 +12,11 @@ namespace API {
     }
     class BillsBySponsorId extends BillsRoute {
 
-        public static function parameters() { return ["sponsorId"]; }
+        public static function parameters() { return ["bioguideId"]; }
         
         public static function fetchResult() {
-            $id = Parameters::get("sponsorId");
-            return \AuditCongress\Bills::getBySponsorId($id);
+            $id = Parameters::get("bioguideId");
+            return \AuditCongress\Bills::getByBioguideId($id);
         }
     }
 }

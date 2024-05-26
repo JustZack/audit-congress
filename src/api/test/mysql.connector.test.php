@@ -29,12 +29,18 @@ namespace APITest {
 
         static function testInsertRow($tableName) {
             $table = new \MySqlConnector\Table($tableName);
-            var_dump($table->insert(["id", "name", "test", "tes3"], [((int)rand()), "namehere", "test", "x3"]));
+            $cols = ["id", "name", "test", "tes3"];
+            $vals = [((int)rand()), "namehere", "test", "x3"];
+            $row = \MySqlConnector\SqlRow::fromColsAndVals($cols, $vals); 
+            var_dump($table->insert($row));
         }
 
         static function testUpdateRow($tableName) {
             $table = new \MySqlConnector\Table($tableName);
-            var_dump($table->update(["id", "name", "test", "tes3"], [11, "dabba","updateddhfjajkld","here"], "id = 11"));
+            $cols = ["id", "name", "test", "tes3"];
+            $vals = [11, "dabba","updateddhfjajkld","here"];
+            $row = \MySqlConnector\SqlRow::fromColsAndVals($cols, $vals); 
+            var_dump($table->update($row, "id = 11"));
         }
 
         static function testDeleteRow($tableName) {

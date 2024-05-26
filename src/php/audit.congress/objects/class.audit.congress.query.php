@@ -13,10 +13,30 @@ namespace AuditCongress {
             return $theQuery;
         }
 
+        protected abstract function applyDefaultOrder();
+
         protected function applyPagination() {
             $pagination = \API\Runner::getPagination();
             $this->setLimit($pagination->pageSize());
             $this->setOffset($pagination->offset());
+        }
+    }
+
+    trait GetByBioguideIdQuery {
+        public static function getByBioguideId($bioguideId) {
+            $query = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
+            $query->applyDefaultOrder();
+            $query->applyPagination();
+            return $query->selectFromDB()->fetchAllAssoc();
+        }
+    }
+
+    trait GetByIdQuery {
+        public static function getById($id) {
+            $query = self::getWithSearchSelect("id", "=", $id);
+            $query->applyDefaultOrder();
+            $query->applyPagination();
+            return $query->selectFromDB()->fetchAllAssoc();
         }
     }
 }

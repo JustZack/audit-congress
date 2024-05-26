@@ -6,7 +6,8 @@ namespace MySqlConnector {
         private 
             $tableExists = null,
             $tableColumns = null,
-            $tableIndexes = null;
+            $tableIndexes = null,
+            $insertQueue = null;
         private ?Columns $columns = null;
         public $name;
         
@@ -104,17 +105,16 @@ namespace MySqlConnector {
 
 
         //Insert a row with the provided $columns and $values
-        public function insert($columns, $values) {
-            $sql = QueryBuilder::buildInsert($this->name, $columns, $values);
+        public function insert(SqlRow $row) {
+            $sql = QueryBuilder::buildInsert($this->name, $row->getColumns(), $row->getValues());
             
             return Query::runActionQuery($sql);
         }
-
-        private $insertQueue = null;
         //Queue an insert to be run
-        public function queueInsert($columns, $values) {
+        public function queueInsert(SqlRow $row) {
+            $values = $row->getValues();
             if ($this->insertQueue == null)
-                $this->insertQueue = QueryBuilder::buildInsert($this->name, $columns, $values);
+                $this->insertQueue = QueryBuilder::buildInsert($this->name, $row->getColumns(), $values);
             else 
                 $this->insertQueue .= ",".QueryBuilder::buildItemList($values, true, "'");
         }
@@ -128,9 +128,12 @@ namespace MySqlConnector {
         }
         
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
-        public function update($columns, $values, $whereCondition) {
+        public function update(SqlRow $row, $whereCondition) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
             $sql = "UPDATE `$this->name` SET %s WHERE %s";
+
+            $columns = $row->getColumns();
+            $values = $row->getValues();
 
             $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 

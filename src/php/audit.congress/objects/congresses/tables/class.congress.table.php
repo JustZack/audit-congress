@@ -2,10 +2,10 @@
 
 namespace AuditCongress {
 
-    class Congresses extends CacheTrackedTable {
+    class Congresses extends CongressTable {
         
         private function __construct() {
-            parent::__construct("Congresses", "bulk-congress");
+            parent::__construct("Congresses", "CongressQuery", "CongressRow");
         }
 
         private static $congressTable = null;
@@ -13,41 +13,6 @@ namespace AuditCongress {
             if (self::$congressTable == null) 
                 self::$congressTable = new Congresses();
             return self::$congressTable;
-        }
-
-
-        public function updateCache() {
-            $this->cacheTracker->setRunning(true, "updating");
-            $sessionsInstance = Sessions::getInstance();
-            
-            $congresses = new \CongressGov\Congresses();
-
-            $this->clearRows();
-            $sessionsInstance->clearRows();
-
-            $this->insertCongresses($congresses->congresses);
-
-            $this->commitInsert();
-            $sessionsInstance->commitInsert();
-            
-            $this->cacheIsValid = true;
-
-            $this->cacheTracker->setRunning(false, "done");
-        }
-
-        public function insertCongresses($congresses) {
-            $sessionsInstance = Sessions::getInstance();
-            foreach ($congresses as $congress) {  
-                $sessions = $congress->sessions;
-                $congress = new CongressRow($congress);
-                $current = $congress->number;
-                $sessionsInstance->insertSessions($current, $sessions);
-                $this->queueInsert($congress);
-            }
-        }
-
-        protected static function parseResult($resultRows) {
-            return CongressRow::rowsToObjects($resultRows);
         }
 
         private static function genericQuery($function, ...$arguments) {

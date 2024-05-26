@@ -7,6 +7,10 @@ namespace AuditCongress {
             parent::__construct("Sessions");
         }
 
+        public function applyDefaultOrder() {
+            $this->setOrderBy(["congress", "chamber", "number"], false);
+        }
+
         public static function getByCongress($congress) {
             $congresses = new SessionQuery();
             $congresses->setSearchColumns(["congress"]);

@@ -3,9 +3,10 @@
 namespace AuditCongress {
     
     class MemberTerms extends MemberTable {
-        
+        use GetByBioguideId;
+
         private function __construct() {
-            parent::__construct("MemberTerms");
+            parent::__construct("MemberTerms", "MemberTermsQuery", "MemberTermRow");
         }
 
         private static $memberTermsTable = null;
@@ -13,16 +14,6 @@ namespace AuditCongress {
             if (self::$memberTermsTable == null) 
                 self::$memberTermsTable = new MemberTerms();
             return self::$memberTermsTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return MemberTermRow::rowsToObjects($resultRows);
-        }
-
-        public static function getByBioguideId($bioguideId) {
-            self::enforceCache();
-            $terms = MemberTermsQuery::getByBioguideId($bioguideId);
-            return self::parseResult($terms);
         }
 
         public static function getLastByBioguideId($bioguideId) {

@@ -3,8 +3,13 @@
 namespace AuditCongress {
     abstract class CacheTrackedTable extends AuditCongressTable{
         protected ?\Cache\Tracker $cacheTracker = null;
-        protected function __construct($tableName, $cacheName, $cacheTimeout = 5) {
-            parent::__construct($tableName);
+        protected $cacheIsValid = null;
+        
+        protected function __construct($tableName, $queryClassName = null, $rowClassName = null) {
+            parent::__construct($tableName, $queryClassName, $rowClassName);
+        }
+
+        public function setTrackedCache($cacheName, $cacheTimeout = 5) {
             $this->cacheTracker = \Cache\Config::getTracker($cacheName);
             $this->cacheTracker->setTimeout($cacheTimeout);
         }
@@ -19,13 +24,10 @@ namespace AuditCongress {
                     $this->cacheIsValid = $this->cacheTracker->waitForUpdate();
                 } 
                 //Otherwise just check if the cache is out of date
-                else {
-                    $this->cacheIsValid = !$this->cacheTracker->isOutOfDate();
-                }
+                else $this->cacheIsValid = !$this->cacheTracker->isOutOfDate();
             }
             return $this->cacheIsValid;
         }
-
 
         /*
             @throws \Cache\WaitingException
@@ -34,13 +36,10 @@ namespace AuditCongress {
             //Fetch this tables instance
             $tableObj = static::getInstance();
             //If the cache is reported to be invalid (out of date) update it
-
             if (!$tableObj->cacheIsValid()) $tableObj->updateCache();
         }
 
         public abstract function updateCache();
-
-        public static abstract function getInstance();
     }
 }
 

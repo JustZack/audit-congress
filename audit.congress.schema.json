@@ -107,7 +107,7 @@
             {
                 "name": "MemberOffices",
                 "columns": {
-                    "officeId": { "type": "VARCHAR(100)", "null": "NO", "primary": true  },
+                    "id": { "type": "VARCHAR(100)", "null": "NO", "primary": true  },
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO"},
                     
                     "address": { "type": "VARCHAR(250)", "null": "YES" },

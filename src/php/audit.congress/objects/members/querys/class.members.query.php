@@ -3,20 +3,19 @@
 namespace AuditCongress {
 
     class MembersQuery extends AuditCongressQuery {
+        use GetByBioguideIdQuery;
+        
         public function __construct() {
             parent::__construct("Members");
+        }
+
+        public function applyDefaultOrder() {
+            $this->setOrderBy(["bioguideId"], false);
         }
 
         public static function getBioguideToThomasIdMapping() {
             $members = new MembersQuery();
             $members->setSelectColumns(["bioguideId", "thomasId"]);
-            return $members->selectFromDB()->fetchAllAssoc();
-        }
-
-        public static function getByBioguideId($bioguideId, $isCurrent = null) {
-            $members = new MembersQuery();
-            $members->setSearchColumns(["bioguideId", "isCurrent"]);
-            $members->setSearchValues([$bioguideId, $isCurrent]);
             return $members->selectFromDB()->fetchAllAssoc();
         }
 

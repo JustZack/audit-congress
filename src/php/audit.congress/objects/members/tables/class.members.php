@@ -3,9 +3,10 @@
 namespace AuditCongress {
 
     class Members extends MemberTable {
+        use GetByBioguideId;
 
         private function __construct() {
-            parent::__construct("Members");
+            parent::__construct("Members", "MembersQuery", "MemberRow");
         }
 
         private static $membersObject = null;
@@ -23,11 +24,13 @@ namespace AuditCongress {
             try {
                 $congressMember = new \CongressGov\Member($bioguideId);
                 $depiction = $congressMember->depiction;
-            } catch (ApiException $e) { }
+            } catch (ApiException $e) { 
+                //var_dump("Exception $e");
+            }
 
             if (is_array($depiction)) {
-                $imageUrl = in_array("imageUrl", $depiction) ? $depiction["imageUrl"] : 'false';
-                $imageAttribution = in_array("attribution", $depiction) ? $depiction["attribution"] : 'false';
+                $imageUrl = array_key_exists("imageUrl", $depiction) ? $depiction["imageUrl"] : 'false';
+                $imageAttribution = array_key_exists("attribution", $depiction) ? $depiction["attribution"] : 'false';
             }
 
             return array("imageUrl" => $imageUrl, "imageAttribution" => $imageAttribution);
@@ -49,9 +52,8 @@ namespace AuditCongress {
             return $members;
         }
 
-        protected static function parseResult($rows) {
-            $rows = self::ensureMembersHaveImage($rows);
-            return $rows;
+        public static function parseResult($rows) {
+            return self::ensureMembersHaveImage($rows);
         }
 
         public static function getBioguideToThomasIdMapping() {
@@ -62,12 +64,6 @@ namespace AuditCongress {
                 if (strlen($member["thomasId"]) > 0 && strlen($member["bioguideId"]) > 0)
                     $mapping[$member["thomasId"]] = $member["bioguideId"];
             return $mapping;
-        }
-
-        public static function getByBioguideId($bioguideId, $isCurrent = null) {
-            self::enforceCache();
-            $members = MembersQuery::getByBioguideId($bioguideId, $isCurrent);
-            return self::returnFirst(self::parseResult($members));
         }
 
         public static function getByName($firstName = null, $lastName = null, $isCurrent = null) {

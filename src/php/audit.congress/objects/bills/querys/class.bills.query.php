@@ -2,9 +2,9 @@
 
 namespace AuditCongress {
 
-    class BillsQuery extends BillQuery {
+    class BillsQuery extends AuditCongressQuery {
         
-        use BillsGetByIdQuery, BillsGetByBioguideIdQuery, BillsGetWithFilterQuery;
+        use GetByIdQuery, GetByBioguideIdQuery, BillsGetWithFilterQuery;
 
         public function __construct() {
             parent::__construct("Bills");
