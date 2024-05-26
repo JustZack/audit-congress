@@ -5,7 +5,8 @@ namespace AuditCongress {
     abstract class CongressTable extends CacheTrackedTable {
 
         public function __construct($tableName, $queryClassName = null, $rowClassName = null) {
-            parent::__construct($tableName, $queryClassName, $rowClassName, "bulk-congress");
+            parent::__construct($tableName, $queryClassName, $rowClassName);
+            $this->setTrackedCache("bulk-congress");
         }
 
         public function updateCache() { 
