@@ -30,8 +30,7 @@ def getMemberByThomasId(thomasId):
 def parseBillFDSYSXmlList(key, listKey, bill):
     items = bill[key] if key in bill else None
     if items is not None:
-        if listKey in items: items = items[listKey]
-        else: items = []
+        items = items[listKey] if listKey in items else []
     else: items = []
     return items
 
