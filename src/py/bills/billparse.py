@@ -27,7 +27,15 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+def parseBillFDSYSXmlList(key, listKey, bill):
+    items = bill[key] if key in bill else None
+    if items is not None:
+        if listKey in items: items = items[listKey]
+        else: items = []
+    else: items = []
+    return items
 
+def parseBillFDSYSXmlItemList(key, bill): return parseBillFDSYSXmlList(key, "item", bill)
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
@@ -73,11 +81,7 @@ def parseBillFDSYSXml(fileData):
         if type(subjects) is dict: subjects = [subjects]
     else: subjects = []
 
-    cosponsoredDat = bill["cosponsors"] if "cosponsors" in bill else None
-    ["cosponsors", "item"]
-    if cosponsoredDat is not None: cosponsoredDat = cosponsoredDat["item"]
-    else: cosponsoredDat = []
-
+    cosponsoredDat = parseBillFDSYSXmlItemList("cosponsors", bill)
     cosponsored = []
     if type(cosponsoredDat) is list:
         for cospon in cosponsoredDat:
@@ -102,46 +106,22 @@ def parseBillFDSYSXml(fileData):
         else: committees = []
     else: committees = []
 
-    amendments = bill["amendments"] if "amendments" in bill else None
-    ["amendments", "amendment"]
-    if amendments is not None:
-        if "amendment" in amendments: amendments = amendments["amendment"]
-        else: amendments = []
-    else: amendments = []
-
-    actions = bill["actions"] if "actions" in bill else None
-    if actions is not None:
-        if "item" in actions: actions = actions["item"]
-        else: actions = []
-    else: actions = []
-
-    laws = bill["laws"] if "laws" in bill else None
-    if laws is not None:
-        if "item" in laws: laws = laws["item"]
-        else: laws = []
-    else: laws = []
-
-    titles = bill["titles"] if "titles" in bill else None
-    if titles is not None:
-        if "item" in titles: titles = titles["item"]
-        else: titles = []
-    else: titles = []
-
-    try:    
-        actualBill["title"] = bill["title"]
-    except Exception:
-        if len(titles) > 0: actualBill["title"] = titles[0]["title"]
-
+    titles = parseBillFDSYSXmlItemList("titles", bill)
     titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
+    try: 
+        actualBill["title"] = bill["title"]
+    except Exception: 
+        if len(titles) > 0: 
+            actualBill["title"] = titles[0]["title"]
 
     billData["bill"] = actualBill
     billData["titles"] = titles
     billData["subjects"] = [subject["name"] for subject in subjects]
     billData["cosponsors"] = cosponsored
     billData["committees"] = committees
-    billData["amendments"] = amendments
-    billData["actions"] = actions
-    billData["laws"] = laws
+    billData["amendments"] = parseBillFDSYSXmlList("amendments", "amendment", bill)
+    billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
+    billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
 
     return billData
 
