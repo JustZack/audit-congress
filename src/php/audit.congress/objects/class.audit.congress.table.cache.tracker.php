@@ -5,8 +5,8 @@ namespace AuditCongress {
         protected ?\Cache\Tracker $cacheTracker = null;
         protected $cacheIsValid = null;
         
-        protected function __construct($tableName, $queryClassName = null, $cacheName, $cacheTimeout = 5) {
-            parent::__construct($tableName, $queryClassName);
+        protected function __construct($tableName, $queryClassName = null, $rowClassName = null, $cacheName, $cacheTimeout = 5) {
+            parent::__construct($tableName, $queryClassName, $rowClassName);
             $this->cacheTracker = \Cache\Config::getTracker($cacheName);
             $this->cacheTracker->setTimeout($cacheTimeout);
         }

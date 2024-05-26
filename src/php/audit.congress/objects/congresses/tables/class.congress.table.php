@@ -5,7 +5,7 @@ namespace AuditCongress {
     class Congresses extends CongressTable {
         
         private function __construct() {
-            parent::__construct("Congresses", "\AuditCongress\CongressQuery");
+            parent::__construct("Congresses", "CongressQuery", "CongressRow");
         }
 
         private static $congressTable = null;
@@ -13,10 +13,6 @@ namespace AuditCongress {
             if (self::$congressTable == null) 
                 self::$congressTable = new Congresses();
             return self::$congressTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return CongressRow::rowsToObjects($resultRows);
         }
 
         private static function genericQuery($function, ...$arguments) {

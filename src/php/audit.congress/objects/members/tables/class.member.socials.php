@@ -6,7 +6,7 @@ namespace AuditCongress {
         use GetByBioguideId;
 
         private function __construct() {
-            parent::__construct("MemberSocials", "\AuditCongress\MemberSocialsQuery");
+            parent::__construct("MemberSocials", "MemberSocialsQuery", "MemberSocialsRow");
         }
 
         private static $memberSocialsTable = null;
@@ -14,10 +14,6 @@ namespace AuditCongress {
             if (self::$memberSocialsTable == null) 
                 self::$memberSocialsTable = new MemberSocials();
             return self::$memberSocialsTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return MemberSocialsRow::rowsToObjects($resultRows);
         }
     }
 }

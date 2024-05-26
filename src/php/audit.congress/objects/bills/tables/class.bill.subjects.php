@@ -7,7 +7,7 @@ namespace AuditCongress {
         use GetById, BillsGetByBillId;
 
         private function __construct() {
-            parent::__construct("BillSubjects", "\AuditCongress\BillSubjectsQuery");
+            parent::__construct("BillSubjects", "BillSubjectsQuery", "BillSubjectRow");
         }
 
         private static $billsObject = null;
@@ -15,11 +15,6 @@ namespace AuditCongress {
             if (self::$billsObject == null) 
                 self::$billsObject = new BillSubjects();
             return self::$billsObject;
-        }
-
-        protected static function parseResult($rows) {
-            $rows = BillSubjectRow::rowsToObjects($rows);
-            return $rows;
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $subject = null) {

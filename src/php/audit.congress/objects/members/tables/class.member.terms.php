@@ -6,7 +6,7 @@ namespace AuditCongress {
         use GetByBioguideId;
 
         private function __construct() {
-            parent::__construct("MemberTerms", "\AuditCongress\MemberTermsQuery");
+            parent::__construct("MemberTerms", "MemberTermsQuery", "MemberTermRow");
         }
 
         private static $memberTermsTable = null;
@@ -14,10 +14,6 @@ namespace AuditCongress {
             if (self::$memberTermsTable == null) 
                 self::$memberTermsTable = new MemberTerms();
             return self::$memberTermsTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return MemberTermRow::rowsToObjects($resultRows);
         }
 
         public static function getLastByBioguideId($bioguideId) {

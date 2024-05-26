@@ -5,7 +5,7 @@ namespace AuditCongress {
     class Sessions extends CongressTable {
         
         private function __construct() {
-            parent::__construct("Sessions", "\AuditCongress\SessionQuery");
+            parent::__construct("Sessions", "SessionQuery", "SessionRow");
         }
 
         private static $sessionTable = null;
@@ -13,10 +13,6 @@ namespace AuditCongress {
             if (self::$sessionTable == null) 
                 self::$sessionTable = new Sessions();
             return self::$sessionTable;
-        }
-
-        protected static function parseResult($resultRows) {
-            return SessionRow::rowsToObjects($resultRows);
         }
 
         private static function genericQuery($function, ...$arguments) {

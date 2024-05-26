@@ -7,17 +7,24 @@ namespace AuditCongress {
 
     abstract class AuditCongressTable {
         public $queryClassName = null;
+        public $rowClassName = null;
         protected $name;
         private ?Table $table = null;
 
-        protected function __construct($tableName, $queryClassName = null) {
+        protected function __construct($tableName, $queryClassName = null, $rowClassName = null) {
             $this->name = $tableName;
-            $this->queryClassName = $queryClassName;
+            $this->queryClassName = "\AuditCongress\\$queryClassName";
+            $this->rowClassName = "\AuditCongress\\$rowClassName";
          }
 
         public static function getQueryClass() {
             $inst = static::getInstance();
             return $inst->queryClassName;
+        }
+
+        public static function getRowClass() {
+            $inst = static::getInstance();
+            return $inst->rowClassName;
         }
 
         protected function getTable() { 
@@ -43,7 +50,10 @@ namespace AuditCongress {
 
         public static abstract function getInstance();
 
-        protected static abstract function parseResult($resultRows);
+        public static function parseResult($resultRows) {
+            return self::getRowClass()::rowsToObjects($resultRows);
+        }
+
 
         public static function returnFirst($results) {
             if ($results == null) return null;
