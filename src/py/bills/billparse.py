@@ -16,8 +16,8 @@ COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId",
 def fetchMemberMapping():
     global MEMBERS_MAPPING
     resp = util.getParsedJson(MEMBERS_MAPPING_API_URL)
-    if "mapping" in resp:
-        MEMBERS_MAPPING =  resp["mapping"]
+    if "bioguideToThomas" in resp:
+        MEMBERS_MAPPING =  resp["bioguideToThomas"]
         return True
     else:
         return False

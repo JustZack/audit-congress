@@ -10,28 +10,6 @@ require_once "../php/api/autoload.php";
     API Entry Point
 */
 
-$route = API::getQueryArgIfSet("route");
-if ($route !== null) {
-    switch($route) {
-        case "bills": 
-        case "cosponsors":
-        case "titles":
-        case "subjects":
-        case "members":
-        case "terms":
-        case "socials":
-        case "offices":
-        case "elections": 
-        case "congress": 
-        case "session": 
-        case "validateSchema": \API\Runner::processRequest(); break;
-        
-
-        case "bioguideToThomas": API::HandleBioguideToThomasMapping(); break;
-        API::HandleValidateSchema(); break;
-        default: API::NotFound($route); break;
-    }
-} else API::NotFound($route);
-
+\API\Runner::processRequest();
 
 ?>

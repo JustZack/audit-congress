@@ -51,5 +51,6 @@ require_once API_FOLDER."\\routes\\session\class.session.php";
 require_once API_FOLDER."\\routes\\session\class.session.by.field.php";
 
 require_once API_FOLDER."\\routes\\system\class.validateSchema.php";
+require_once API_FOLDER."\\routes\\system\class.bioguideToThomas.php";
 
 ?>
