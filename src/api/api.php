@@ -21,10 +21,10 @@ if ($route !== null) {
         case "terms":
         case "socials":
         case "offices":
-        case "elections": \API\Runner::processRequest(); break;
+        case "elections": 
+        case "congress": 
+        case "session": \API\Runner::processRequest(); break;
         
-        case "congress": API::HandleGetCongress(); break;
-        case "session": API::HandleGetSession(); break;
 
         case "recentBills": API::HandleRecentBillsRoute(); break;
         case "bioguideToThomas": API::HandleBioguideToThomasMapping(); break;

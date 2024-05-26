@@ -44,4 +44,10 @@ require_once API_FOLDER."\\routes\\subjects\class.subjects.php";
 require_once API_FOLDER."\\routes\\subjects\class.subjects.by.id.php";
 require_once API_FOLDER."\\routes\\subjects\class.subjects.by.filter.php";
 
+require_once API_FOLDER."\\routes\\congress\class.congress.php";
+require_once API_FOLDER."\\routes\\congress\class.congress.by.field.php";
+
+require_once API_FOLDER."\\routes\\session\class.session.php";
+require_once API_FOLDER."\\routes\\session\class.session.by.field.php";
+
 ?>
