@@ -1,7 +1,7 @@
 import time
 from shared import util
 
-CURRENT_CONGRESS_API_URL = "http://localhost/audit-congress/src/api/api.php?route=congress&current"
+CURRENT_CONGRESS_API_URL = "http://localhost/audit-congress/api.php?route=congress&current=1"
 CURRENT_CONGRESS = None
 
 def fetchCurrentCongress():

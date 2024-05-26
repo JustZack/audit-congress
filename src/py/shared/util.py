@@ -118,7 +118,7 @@ def logExceptionThen(exceptionMessage, onExceptFunction=None, *onExceptArguments
         if onExceptFunction is not None: onExceptFunction(*onExceptArguments)
 
 def runAndCatchMain(mainFunction, onExceptFunction=None, *onExceptArguments):
-    try:                      
+    try:          
         mainFunction()
     except KeyboardInterrupt: 
         logExceptionThen("Manually ended script via ctrl+c", onExceptFunction, *onExceptArguments)

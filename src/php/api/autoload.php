@@ -23,12 +23,10 @@ require_once API_FOLDER."\\routes\\socials\class.socials.php";
 require_once API_FOLDER."\\routes\\socials\class.socials.by.bioguide.id.php";
 
 require_once API_FOLDER."\\routes\\offices\class.offices.php";
-require_once API_FOLDER."\\routes\\offices\class.offices.by.bioguide.id.php";
-require_once API_FOLDER."\\routes\\offices\class.offices.by.office.id.php";
+require_once API_FOLDER."\\routes\\offices\class.offices.by.id.php";
 
 require_once API_FOLDER."\\routes\\elections\class.elections.php";
-require_once API_FOLDER."\\routes\\elections\class.elections.by.bioguide.id.php";
-require_once API_FOLDER."\\routes\\elections\class.elections.by.fec.id.php";
+require_once API_FOLDER."\\routes\\elections\class.elections.by.id.php";
 
 require_once API_FOLDER."\\routes\\bills\class.bills.php";
 require_once API_FOLDER."\\routes\\bills\class.bills.by.id.php";
@@ -45,5 +43,14 @@ require_once API_FOLDER."\\routes\\titles\class.titles.by.filter.php";
 require_once API_FOLDER."\\routes\\subjects\class.subjects.php";
 require_once API_FOLDER."\\routes\\subjects\class.subjects.by.id.php";
 require_once API_FOLDER."\\routes\\subjects\class.subjects.by.filter.php";
+
+require_once API_FOLDER."\\routes\\congress\class.congress.php";
+require_once API_FOLDER."\\routes\\congress\class.congress.by.field.php";
+
+require_once API_FOLDER."\\routes\\session\class.session.php";
+require_once API_FOLDER."\\routes\\session\class.session.by.field.php";
+
+require_once API_FOLDER."\\routes\\system\class.validateSchema.php";
+require_once API_FOLDER."\\routes\\system\class.bioguideToThomas.php";
 
 ?>

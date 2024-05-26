@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath("../"))
 
 from shared import util, zjthreads, logger
 
-VALIDATE_DB_API_URL = "http://localhost/audit-congress/src/api/api.php?route=validateSchema"
+VALIDATE_DB_API_URL = "http://localhost/audit-congress/api.php?route=validateSchema"
 
 TRUNCATE_SQL = "TRUNCATE {}"
 DELETE_SQL = "DELETE FROM {} WHERE {} = {}"
@@ -105,7 +105,8 @@ def loadDataInFile(tableName, filePath, hasHeaders=False):
     filePath = filePath.replace("/", "//").replace("\\", "\\\\")
     return runCommitingSql(sql.format(filePath, tableName))
 
-def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
+def schemaIsValid(): 
+    return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)["validateSchema"]
 
 def throwIfShemaInvalid():
     #Make sure the DB schema is valid first

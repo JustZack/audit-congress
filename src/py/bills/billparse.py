@@ -5,7 +5,7 @@ from zipfile import ZipFile
 #All folders that we care about in the bills folder
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", "sres"]
 
-MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
+MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
@@ -16,8 +16,8 @@ COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId",
 def fetchMemberMapping():
     global MEMBERS_MAPPING
     resp = util.getParsedJson(MEMBERS_MAPPING_API_URL)
-    if "mapping" in resp:
-        MEMBERS_MAPPING =  resp["mapping"]
+    if "bioguideToThomas" in resp:
+        MEMBERS_MAPPING =  resp["bioguideToThomas"]
         return True
     else:
         return False
@@ -27,7 +27,14 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+def parseBillFDSYSXmlList(key, listKey, bill):
+    items = bill[key] if key in bill else None
+    if items is not None:
+        items = items[listKey] if listKey in items else []
+    else: items = []
+    return items
 
+def parseBillFDSYSXmlItemList(key, bill): return parseBillFDSYSXmlList(key, "item", bill)
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
@@ -52,10 +59,7 @@ def parseBillFDSYSXml(fileData):
     if type(sponsor) is list: sponsor = sponsor[0]
     if type(sponsor) is dict: sponsor = sponsor["bioguideId"]
     actualBill["bioguideId"] = sponsor
-    
-
-    actualBill["title"] = bill["title"]
-    
+   
     actualBill["introduced_at"] = bill["introducedDate"]
     actualBill["updated_at"] = bill["updateDate"]
 
@@ -76,11 +80,7 @@ def parseBillFDSYSXml(fileData):
         if type(subjects) is dict: subjects = [subjects]
     else: subjects = []
 
-    cosponsoredDat = bill["cosponsors"] if "cosponsors" in bill else None
-    ["cosponsors", "item"]
-    if cosponsoredDat is not None: cosponsoredDat = cosponsoredDat["item"]
-    else: cosponsoredDat = []
-
+    cosponsoredDat = parseBillFDSYSXmlItemList("cosponsors", bill)
     cosponsored = []
     if type(cosponsoredDat) is list:
         for cospon in cosponsoredDat:
@@ -105,41 +105,22 @@ def parseBillFDSYSXml(fileData):
         else: committees = []
     else: committees = []
 
-    amendments = bill["amendments"] if "amendments" in bill else None
-    ["amendments", "amendment"]
-    if amendments is not None:
-        if "amendment" in amendments: amendments = amendments["amendment"]
-        else: amendments = []
-    else: amendments = []
-
-    actions = bill["actions"] if "actions" in bill else None
-    if actions is not None:
-        if "item" in actions: actions = actions["item"]
-        else: actions = []
-    else: actions = []
-
-    laws = bill["laws"] if "laws" in bill else None
-    if laws is not None:
-        if "item" in laws: laws = laws["item"]
-        else: laws = []
-    else: laws = []
-
-    titles = bill["titles"] if "titles" in bill else None
-    if titles is not None:
-        if "item" in titles: titles = titles["item"]
-        else: titles = []
-    else: titles = []
-
+    titles = parseBillFDSYSXmlItemList("titles", bill)
     titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
+    try: 
+        actualBill["title"] = bill["title"]
+    except Exception: 
+        if len(titles) > 0: 
+            actualBill["title"] = titles[0]["title"]
 
     billData["bill"] = actualBill
     billData["titles"] = titles
     billData["subjects"] = [subject["name"] for subject in subjects]
     billData["cosponsors"] = cosponsored
     billData["committees"] = committees
-    billData["amendments"] = amendments
-    billData["actions"] = actions
-    billData["laws"] = laws
+    billData["amendments"] = parseBillFDSYSXmlList("amendments", "amendment", bill)
+    billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
+    billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
 
     return billData
 
