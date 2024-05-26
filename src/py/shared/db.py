@@ -105,7 +105,8 @@ def loadDataInFile(tableName, filePath, hasHeaders=False):
     filePath = filePath.replace("/", "//").replace("\\", "\\\\")
     return runCommitingSql(sql.format(filePath, tableName))
 
-def schemaIsValid(): return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)
+def schemaIsValid(): 
+    return "valid" in util.getParsedJson(VALIDATE_DB_API_URL)["validateSchema"]
 
 def throwIfShemaInvalid():
     #Make sure the DB schema is valid first

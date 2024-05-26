@@ -23,12 +23,12 @@ if ($route !== null) {
         case "offices":
         case "elections": 
         case "congress": 
-        case "session": \API\Runner::processRequest(); break;
+        case "session": 
+        case "validateSchema": \API\Runner::processRequest(); break;
         
 
-        case "recentBills": API::HandleRecentBillsRoute(); break;
         case "bioguideToThomas": API::HandleBioguideToThomasMapping(); break;
-        case "validateSchema": API::HandleValidateSchema(); break;
+        API::HandleValidateSchema(); break;
         default: API::NotFound($route); break;
     }
 } else API::NotFound($route);

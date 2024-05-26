@@ -52,10 +52,7 @@ def parseBillFDSYSXml(fileData):
     if type(sponsor) is list: sponsor = sponsor[0]
     if type(sponsor) is dict: sponsor = sponsor["bioguideId"]
     actualBill["bioguideId"] = sponsor
-    
-
-    actualBill["title"] = bill["title"]
-    
+   
     actualBill["introduced_at"] = bill["introducedDate"]
     actualBill["updated_at"] = bill["updateDate"]
 
@@ -129,6 +126,11 @@ def parseBillFDSYSXml(fileData):
         if "item" in titles: titles = titles["item"]
         else: titles = []
     else: titles = []
+
+    try:    
+        actualBill["title"] = bill["title"]
+    except Exception:
+        if len(titles) > 0: actualBill["title"] = titles[0]["title"]
 
     titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
 

@@ -50,4 +50,6 @@ require_once API_FOLDER."\\routes\\congress\class.congress.by.field.php";
 require_once API_FOLDER."\\routes\\session\class.session.php";
 require_once API_FOLDER."\\routes\\session\class.session.by.field.php";
 
+require_once API_FOLDER."\\routes\\system\class.validateSchema.php";
+
 ?>
