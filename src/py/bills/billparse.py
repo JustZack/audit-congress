@@ -5,7 +5,7 @@ from zipfile import ZipFile
 #All folders that we care about in the bills folder
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", "sres"]
 
-MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/src/api/api.php?route=bioguideToThomas"
+MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
