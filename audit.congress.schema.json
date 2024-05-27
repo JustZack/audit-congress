@@ -215,6 +215,8 @@
 
                     "title": { "type": "VARCHAR(500)", "null": "YES" },
                     
+                    "policyArea": { "type": "VARCHAR(500)", "null": "YES" },
+
                     "introduced": { "type": "VARCHAR(50)", "null": "NO" },
                     "updated": { "type": "VARCHAR(50)", "null": "NO" }
                 },

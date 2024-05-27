@@ -8,7 +8,7 @@ BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
-BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
+BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "policyArea", "introduced", "updated"]
 SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "subjectIndex", "subject"]
 TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
 COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
@@ -27,10 +27,12 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+def getIfSet(key, dct, defaultValue = None): 
+    return dct[key] if key in dct else defaultValue
+
 def parseBillFDSYSXmlList(key, listKey, bill):
-    items = bill[key] if key in bill else None
-    if items is not None:
-        items = items[listKey] if listKey in items else []
+    items = getIfSet(key, bill)
+    if items is not None: items = getIfSet(listKey, items, [])
     else: items = []
     return items
 
@@ -65,8 +67,8 @@ def parseBillFDSYSXml(fileData):
 
     actualBill["originChamber"] = bill["originChamber"]
 
-    policyArea = bill["policyArea"] if "policyArea" in bill else None
-    actualBill["policyArea"] = policyArea["name"] if policyArea is not None else ""
+    policyArea = getIfSet("policyArea", bill, "")
+    actualBill["policyArea"] = policyArea["name"] if type(policyArea) is dict else policyArea
     actualBill["summaries"] = bill["summaries"] if "summaries" in bill else []
     
     subjects = bill["subjects"] if "subjects" in bill else None
@@ -107,11 +109,7 @@ def parseBillFDSYSXml(fileData):
 
     titles = parseBillFDSYSXmlItemList("titles", bill)
     titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
-    try: 
-        actualBill["title"] = bill["title"]
-    except Exception: 
-        if len(titles) > 0: 
-            actualBill["title"] = titles[0]["title"]
+    actualBill["title"] = bill["title"] if "title" in bill else (titles[0]["title"] if len(titles) > 0 else "")
 
     billData["bill"] = actualBill
     billData["titles"] = titles
@@ -180,10 +178,10 @@ def parseBillDataJson(fileData):
     else:
         actualBill["bioguideId"] = None
 
-    actualBill["title"] = jsonData["official_title"]
-
-    actualBill["introduced_at"] = jsonData["introduced_at"]
-    actualBill["updated_at"] = jsonData["updated_at"]
+    actualBill["title"] = getIfSet("official_title", jsonData, "")
+    actualBill["policyArea"] = getIfSet("subjects_top_term", jsonData, "")
+    actualBill["introduced_at"] = getIfSet("introduced_at", jsonData, "")
+    actualBill["updated_at"] = getIfSet("updated_at", jsonData, "")
 
     cosponsors = []
     for cospon in jsonData["cosponsors"]:
@@ -244,7 +242,7 @@ def splitBillsIntoTableRows(bills):
         bioguide = bill["bioguideId"]
         bid = getBillObjectId(*tcn)
         
-        billData.append((bid, *tcn, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
+        billData.append((bid, *tcn, bioguide, bill["title"], bill["policyArea"], bill["introduced_at"], bill["updated_at"]))
         subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
         titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
         cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
