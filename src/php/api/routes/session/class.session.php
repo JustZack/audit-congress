@@ -2,14 +2,8 @@
 
 namespace API {
     class Session extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("session", "\API\SessionRoute");
-        }
-
-        private static $sessionInstance = null;
-        public static function getInstance() {
-            if (self::$sessionInstance == null) self::$sessionInstance = new \API\Session();
-            return self::$sessionInstance;
         }
     }
 

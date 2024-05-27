@@ -68,9 +68,9 @@ namespace API {
             //Get all classes that extend RouteGroups
             $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
             foreach ($routeGroups as $group) {
-                $instance = ("$group::getInstance")();
-                if ($instance->isRoute($route)) {
-                    self::runRouteGroup($instance);
+                $group = new $group();
+                if ($group->isRoute($route)) {
+                    self::runRouteGroup($group);
                     return;
                 }
             }

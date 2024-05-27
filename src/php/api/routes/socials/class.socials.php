@@ -2,14 +2,8 @@
 
 namespace API {
     class Socials extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("socials", "\API\SocialsRoute");
-        }
-
-        private static $memberInstance = null;
-        public static function getInstance() {
-            if (self::$memberInstance == null) self::$memberInstance = new \API\Socials();
-            return self::$memberInstance;
         }
     }
 

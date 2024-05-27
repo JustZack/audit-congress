@@ -2,14 +2,8 @@
 
 namespace API {
     class Subjects extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("subjects", "\API\SubjectsRoute");
-        }
-
-        private static $subjectsInstance = null;
-        public static function getInstance() {
-            if (self::$subjectsInstance == null) self::$subjectsInstance = new \API\Subjects();
-            return self::$subjectsInstance;
         }
     }
 

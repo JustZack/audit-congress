@@ -3,17 +3,10 @@
 namespace AuditCongress {
     
     class MemberTerms extends MemberTable {
-        use GetByBioguideId;
+        use \Util\GetInstance, GetByBioguideId;
 
         private function __construct() {
             parent::__construct("MemberTerms", "MemberTermsQuery", "MemberTermRow");
-        }
-
-        private static $memberTermsTable = null;
-        public static function getInstance() {
-            if (self::$memberTermsTable == null) 
-                self::$memberTermsTable = new MemberTerms();
-            return self::$memberTermsTable;
         }
 
         public static function getLastByBioguideId($bioguideId) {

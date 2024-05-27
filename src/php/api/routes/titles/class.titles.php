@@ -2,14 +2,8 @@
 
 namespace API {
     class Titles extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("titles", "\API\TitlesRoute");
-        }
-
-        private static $cosponsorsInstance = null;
-        public static function getInstance() {
-            if (self::$cosponsorsInstance == null) self::$cosponsorsInstance = new \API\Titles();
-            return self::$cosponsorsInstance;
         }
     }
 

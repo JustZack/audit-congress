@@ -2,14 +2,8 @@
 
 namespace API {
     class Member extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("members", "\API\MemberRoute");
-        }
-
-        private static $memberInstance = null;
-        public static function getInstance() {
-            if (self::$memberInstance == null) self::$memberInstance = new \API\Member();
-            return self::$memberInstance;
         }
     }
 

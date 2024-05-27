@@ -2,14 +2,8 @@
 
 namespace API {
     class ValidateSchema extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("validateSchema", "\API\ValidateSchemaRoute");
-        }
-
-        private static $validateInstance = null;
-        public static function getInstance() {
-            if (self::$validateInstance == null) self::$validateInstance = new \API\ValidateSchema();
-            return self::$validateInstance;
         }
     }
 

@@ -2,14 +2,8 @@
 
 namespace API {
     class Bills extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("bills", "\API\BillsRoute");
-        }
-
-        private static $billInstance = null;
-        public static function getInstance() {
-            if (self::$billInstance == null) self::$billInstance = new \API\Bills();
-            return self::$billInstance;
         }
     }
 

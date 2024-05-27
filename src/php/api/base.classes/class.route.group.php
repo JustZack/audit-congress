@@ -15,9 +15,6 @@ namespace API {
 
         public function name() { return $this->baseRoute; }
 
-        //All RouteGroups exist as singletons
-        public abstract static function getInstance();
-
         //Fetch all route names used by this group
         public function fetchRouteClassNames() {
             return \Util\Classes::thatExtend($this->routeBaseClass);

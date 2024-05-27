@@ -2,14 +2,8 @@
 
 namespace API {
     class BioguideToThomas extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("bioguideToThomas", "\API\BioguideToThomasRoute");
-        }
-
-        private static $bioguideToThomasInstance = null;
-        public static function getInstance() {
-            if (self::$bioguideToThomasInstance == null) self::$bioguideToThomasInstance = new \API\BioguideToThomas();
-            return self::$bioguideToThomasInstance;
         }
     }
 

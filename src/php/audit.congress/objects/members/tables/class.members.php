@@ -3,17 +3,10 @@
 namespace AuditCongress {
 
     class Members extends MemberTable {
-        use GetByBioguideId;
+        use \Util\GetInstance, GetByBioguideId;
 
         private function __construct() {
             parent::__construct("Members", "MembersQuery", "MemberRow");
-        }
-
-        private static $membersObject = null;
-        public static function getInstance() {
-            if (self::$membersObject == null) 
-                self::$membersObject = new Members();
-            return self::$membersObject;
         }
 
         //Set the given members image if available (false if not)

@@ -9,6 +9,15 @@ namespace Util {
             return true;
         }
     }
+
+    trait GetInstance {
+        private static $theInstance = null;
+        public static function getInstance() {
+            if (self::$theInstance == null) 
+                self::$theInstance = new static();
+            return self::$theInstance;
+        }
+    }
 }
 
 ?>
