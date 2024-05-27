@@ -47,7 +47,7 @@ namespace AuditCongress {
             $this->getTable()->insert($row);
         }
 
-
+        //All Tables are singletons. Use \Util\GetInstance on each class.
         public static abstract function getInstance();
 
         public static function parseResult($resultRows) {

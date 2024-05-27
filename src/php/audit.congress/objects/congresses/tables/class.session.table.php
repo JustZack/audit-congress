@@ -4,15 +4,10 @@ namespace AuditCongress {
 
     class Sessions extends CongressTable {
         
+        use \Util\GetInstance;
+
         private function __construct() {
             parent::__construct("Sessions", "SessionQuery", "SessionRow");
-        }
-
-        private static $sessionTable = null;
-        public static function getInstance() {
-            if (self::$sessionTable == null) 
-                self::$sessionTable = new Sessions();
-            return self::$sessionTable;
         }
 
         private static function genericQuery($function, ...$arguments) {

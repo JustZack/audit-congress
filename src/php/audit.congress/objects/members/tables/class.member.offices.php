@@ -3,16 +3,9 @@
 namespace AuditCongress {
 
     class MemberOffices extends MemberTable {
-        use GetByBioguideId, GetById;
+        use \Util\GetInstance, GetByBioguideId, GetById;
         private function __construct() {
             parent::__construct("MemberOffices", "MemberOfficesQuery", "MemberOfficesRow");
-        }
-
-        private static $memberOfficesTable = null;
-        public static function getInstance() {
-            if (self::$memberOfficesTable == null) 
-                self::$memberOfficesTable = new MemberOffices();
-            return self::$memberOfficesTable;
         }
     }
 }
