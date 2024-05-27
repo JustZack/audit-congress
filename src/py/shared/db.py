@@ -9,6 +9,8 @@ from shared import util, zjthreads, logger
 
 VALIDATE_DB_API_URL = "http://localhost/audit-congress/api.php?route=validateSchema"
 
+DB_CONFIG = util.readJsonFile("../../../config.json")
+
 TRUNCATE_SQL = "TRUNCATE {}"
 DELETE_SQL = "DELETE FROM {} WHERE {} = {}"
 THREADED_DELETE = False
@@ -22,7 +24,7 @@ LOAD_DATA_INFILE_SQL = "LOAD DATA INFILE '{}' REPLACE INTO TABLE {} FIELDS OPTIO
 
 # Opens a connection with a MySQL host
 def mysql_connect():
-    return mysql.connector.connect(host="127.0.0.1", user="AuditCongress", password="?6n78$y\"\"~'Fvdy", database="auditcongress")
+    return mysql.connector.connect(host=DB_CONFIG["dburl"], user=DB_CONFIG["dbuser"], password=DB_CONFIG["dbpassword"], database=DB_CONFIG["db"])
 
 # Executes a single query string
 def mysql_execute_query(mysql_conn, sql, use_database):
