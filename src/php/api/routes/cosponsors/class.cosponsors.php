@@ -2,14 +2,8 @@
 
 namespace API {
     class Cosponsors extends RouteGroup {
-        private function __construct() {
+        public function __construct() {
             parent::__construct("cosponsors", "\API\CosponsorsRoute");
-        }
-
-        private static $cosponsorsInstance = null;
-        public static function getInstance() {
-            if (self::$cosponsorsInstance == null) self::$cosponsorsInstance = new \API\Cosponsors();
-            return self::$cosponsorsInstance;
         }
     }
 
