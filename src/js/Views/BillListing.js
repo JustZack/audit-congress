@@ -9,7 +9,6 @@ export default class BillListing extends APICallingComponent {
       isset: false,
       jsx: (<h1>Loading Data...</h1>)
     };
-
     this.handleRecentBills = this.handleRecentBills.bind(this);
     this.componentDidMount = this.componentDidMount.bind(this);
   }
@@ -18,7 +17,7 @@ export default class BillListing extends APICallingComponent {
     var page = 1;
     if (this.props.options != undefined) page = this.props.options.page;
     UrlUtil.setWindowUrl(`Bill Listing`, `bill-listing/${page}`);
-    this.APIFetch("recentBills", {page: page}, this.handleRecentBills)
+    this.APIFetch("bills", {page: page}, this.handleRecentBills)
   }
 
   handleRecentBills = (json) => {

@@ -9,7 +9,7 @@ export default class BillListItem extends React.Component {
     super(props);
     var bill = this.props.bill;
     this.state = {
-      updated: DateUtil.buildLocaleDateTimeString(bill.updateDateIncludingText),
+      updated: DateUtil.buildLocaleDateTimeString(bill.updated),
       bill: bill
     };
 
@@ -38,7 +38,9 @@ export default class BillListItem extends React.Component {
         <div className={'li-bill-details'}>
           <div className={'bill-details-title fullwidth'}>{bill.title}</div>
           <div className={'bill-details-update fullwidth'}>Last Update: {this.state.updated}</div>
-          <BillStatus action={bill.latestAction}/>
+          {
+            //<BillStatus action={bill.latestAction}/>
+          }
         </div>
       </li>
     );
