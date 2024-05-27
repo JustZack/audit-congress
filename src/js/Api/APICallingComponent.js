@@ -24,7 +24,7 @@ export default class APICallingComponent extends React.Component {
       var json, url = this.apiUrl(route, options);
       //Check for route in cache, otherwise fetch
       if (APICache.HasRoute(url) && !updateCache) {
-        json = APICache.GetRouteCache(route);
+        json = APICache.GetRouteCache(url);
         console.log(`Fetched ${route} from cache`);
       } else {
         console.log(`Fetching ${route} from ${url}`);

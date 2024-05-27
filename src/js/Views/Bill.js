@@ -39,15 +39,14 @@ export default class Bill extends APICallingComponent {
     var number = bill.number;
     var path = Bill.getPath(congress, type, number);
     UrlUtil.setWindowUrl(`Bill ${type} ${number}`, path);
-
-    this.APIFetch("fullBill", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
+    this.APIFetch("bills", {congress: bill.congress, type: bill.type, number: bill.number}, this.handleBillData);
   };
 
   handleBillData = (json) => {
-    var billObj = json.bill;
+    var billObj = json.bills[0];
     this.setState({
       bill: billObj,
-      updated: DateUtil.buildLocaleDateTimeString(billObj.updateDateIncludingText),
+      updated: DateUtil.buildLocaleDateTimeString(billObj.updated),
       jsx: this.getJSX(billObj),
       isset: true
     });
@@ -59,7 +58,7 @@ export default class Bill extends APICallingComponent {
         <h1>{bill.title}</h1>
         <h1>{bill.updated}</h1>
 
-        <div>
+        {/*<div>
           <PolicyArea policyArea={bill.policyArea}/>
           <Congress congress={bill.congress}/>
           <Chamber chamber={bill.originChamber}/>
@@ -72,7 +71,7 @@ export default class Bill extends APICallingComponent {
           <Actions actions={bill.actions}/>
           <Committees committees={bill.committees} setView={this.props.setView}/>
           <Titles titles={bill.titles}/>
-        </div>
+    </div>*/}
       </div>
     )
   }
