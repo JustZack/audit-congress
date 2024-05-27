@@ -23,10 +23,13 @@ def countFiles(inDir):
 
 def ensureFoldersExist(path): os.makedirs(os.path.dirname(path), exist_ok=True)
 
+def readFile(path):
+    with open(path, "r") as file: return file.read()
+def readJsonFile(path): return json.loads(readFile(path))
+
 def saveFileAny(writeType, path, data):
     ensureFoldersExist(path)
     with open(path, writeType) as file: file.write(data)
-    
 def saveBinaryFile(path, data): saveFileAny("wb", path, data)
 def saveFile(path, data): saveFileAny("w", path, data)
 def saveAsCSV(path, data, headers=None):
