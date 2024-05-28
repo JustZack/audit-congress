@@ -12,6 +12,7 @@ BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "poli
 SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "subjectIndex", "subject"]
 TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
 COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+ACTION_COLUMNS = ["id", "billId", "index", "type", "text", "acted"]
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -191,15 +192,17 @@ def parseBillDataJson(fileData):
         isOriginal = None
         cosponsors.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
     
+    actns = jsonData["actions"]
+    actions = []
+    for act in actns:
+        actions.append({"type": act["type"], "text": act["text"], "actionDate": act["acted_at"]})
     billData["bill"] = actualBill
     billData["titles"] = jsonData["titles"]
     billData["subjects"] = jsonData["subjects"]
     billData["cosponsors"] = cosponsors
     billData["committees"] = jsonData["committees"]
     billData["amendments"] = jsonData["amendments"]
-    billData["actions"] = jsonData["actions"]
-    billData["actions"] = jsonData["actions"]
-
+    billData["actions"] = actions
     return billData
 
 
@@ -233,8 +236,16 @@ def getCoSponsorRows(bid, cosponsors, t, n, c):
         i += 1
     return cospons
 
+def getActionRows(bid, actions, t, n, c):
+    i, acts = 0, []
+    for action in actions:
+        aid = getBillObjectId(t, n, c, i)
+        acts.append((aid, bid, i, action["type"], action["text"], action["actionDate"]))
+        i += 1
+    return acts
+
 def splitBillsIntoTableRows(bills):
-    billData,subjectData,titleData,cosponData = [],[],[],[]
+    billData,subjectData,titleData,cosponData,actionData = [],[],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -246,7 +257,9 @@ def splitBillsIntoTableRows(bills):
         subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
         titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
         cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
-    return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, "BillCoSponsors": cosponData}
+        actionData.extend(getActionRows(bid, parsedBill["actions"], *tcn))
+    return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
+            "BillActions": actionData, "BillCoSponsors": cosponData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
@@ -255,6 +268,7 @@ def getInsertThreads(bills):
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, billToTables["BillSubjects"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, billToTables["BillCoSponsors"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", ACTION_COLUMNS, billToTables["BillActions"]))
     return threads
 
 def readBillFileFromZip(zipFile, name,path):
