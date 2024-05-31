@@ -9,8 +9,8 @@ MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguid
 MEMBERS_MAPPING = None
 
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "policyArea", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "subjectIndex", "subject"]
-TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
+SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "subject"]
+TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "title", "titleType", "titleAs", "isForPortion"]
 COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 ACTION_COLUMNS = ["id", "billId", "index", "type", "text", "acted"]
 

@@ -11,7 +11,7 @@ namespace AuditCongress {
             $congress,
             $number,
 
-            $titleIndex,
+            $index,
 
             $title,
             $titleAs,
@@ -19,12 +19,12 @@ namespace AuditCongress {
             $isForPortion;
     
         public function getColumns() {
-            return ["id","billId","type","congress","number","titleIndex","title","titleAs","titleType", "isForPortion"];
+            return ["id","billId","type","congress","number","index","title","titleAs","titleType", "isForPortion"];
         }
 
         public function getValues() {
             return [$this->id,$this->billId,$this->type,$this->congress,$this->number,
-            $this->titleIndex,$this->title,$this->titleAs,$this->titleType,$this->isForPortion];
+            $this->index,$this->title,$this->titleAs,$this->titleType,$this->isForPortion];
         }
     }
 }
