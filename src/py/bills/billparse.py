@@ -70,7 +70,6 @@ def parseBillFDSYSXml(fileData):
 
     policyArea = getIfSet("policyArea", bill, "")
     actualBill["policyArea"] = policyArea["name"] if type(policyArea) is dict else policyArea
-    actualBill["summaries"] = bill["summaries"] if "summaries" in bill else []
     
     subjects = bill["subjects"] if "subjects" in bill else None
     ["subjects", "billSubjects", "legislativeSubjects", "item"]
@@ -120,6 +119,8 @@ def parseBillFDSYSXml(fileData):
     billData["amendments"] = parseBillFDSYSXmlList("amendments", "amendment", bill)
     billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
     billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
+    billData["textVersions"] = parseBillFDSYSXmlItemList("textVersions", bill)
+    billData["summaries"] = parseBillFDSYSXmlList("summaries", "summary", bill)
 
     return billData
 
@@ -257,6 +258,7 @@ def splitBillsIntoTableRows(bills):
         subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
         titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
         cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
+        #print("{}, {} {}".format(*tcn))
         actionData.extend(getActionRows(bid, parsedBill["actions"], *tcn))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
             "BillActions": actionData, "BillCoSponsors": cosponData}
@@ -280,8 +282,9 @@ def readBillFileFromZip(zipFile, name,path):
     if file is None: return None
 
     data, bill = zipFile.read(file), None
-    if "data.json" in file: bill = parseBillDataJson(data)
-    elif "fdsys_billstatus.xml" in file: bill = parseBillFDSYSXml(data)
+    #Prefer fdsys.xml files, they have way more info available
+    if "fdsys_billstatus.xml" in file: bill = parseBillFDSYSXml(data)
+    elif "data.json" in file: bill = parseBillDataJson(data)
     #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
 
     return bill

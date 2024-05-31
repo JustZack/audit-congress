@@ -310,6 +310,25 @@
                 }
             },
             {
+                "name": "BillSummaries",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
+
+                    "index": { "type": "INT", "null": "NO" },
+
+                    "text": { "type": "TEXT", "null": "YES" },
+
+                    "versionCode": { "type": "VARCHAR(250)", "null": "YES" },
+                    "description": { "type": "VARCHAR(250)", "null": "YES" },
+                    "date": { "type": "DATE", "null": "NO" },
+                    "updated": { "type": "DATE", "null": "NO" }
+                },
+                "indexes": {
+                    "billid_index": ["billId"]
+                }
+            },
+            {
                 "name": "BillTextVersions",
                 "columns": {
                     "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
