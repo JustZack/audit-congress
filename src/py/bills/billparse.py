@@ -8,6 +8,9 @@ BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
+BILL_DATA_SCHEMA = util.readJsonFile("bill.data.schema.json")
+BILL_DATA_SCHEMA_TYPES = BILL_DATA_SCHEMA.keys()
+
 BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "policyArea", "introduced", "updated"]
 SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "subject"]
 TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "title", "titleType", "titleAs", "isForPortion"]
@@ -39,9 +42,18 @@ def parseBillFDSYSXmlList(key, listKey, bill):
 
 def parseBillFDSYSXmlItemList(key, bill): return parseBillFDSYSXmlList(key, "item", bill)
 
+def getFirstListIn(obj):
+    if (type(obj)) is list: return obj
+    elif (type(obj) is dict):
+        for key in obj.keys(): 
+            item = getFirstList(obj[key])
+            if item is not None: return item
+    
+    return None
+
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
-    
+
     bill = xmlData["billStatus"]["bill"] 
 
     billData = dict()
@@ -49,6 +61,9 @@ def parseBillFDSYSXml(fileData):
     typ = bill["type"] if "type" in bill.keys() else bill["billType"]
     cong = bill["congress"]
     num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
+
+    tst = parseBillWithSchema(xmlData, "xml")
+    util.saveAsJSON("tests/{}-{}{}.json".format(cong, typ, num), tst)
 
     actualBill = dict()
     billData["bill"] = actualBill
@@ -111,6 +126,9 @@ def parseBillFDSYSXml(fileData):
     titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
     actualBill["title"] = bill["title"] if "title" in bill else (titles[0]["title"] if len(titles) > 0 else "")
 
+    summaries = parseBillFDSYSXmlList("summaries", "summary", bill)
+    if type(summaries) is dict: summaries = [summaries]
+
     billData["bill"] = actualBill
     billData["titles"] = titles
     billData["subjects"] = [subject["name"] for subject in subjects]
@@ -120,7 +138,7 @@ def parseBillFDSYSXml(fileData):
     billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
     billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
     billData["textVersions"] = parseBillFDSYSXmlItemList("textVersions", bill)
-    billData["summaries"] = parseBillFDSYSXmlList("summaries", "summary", bill)
+    billData["summaries"] = summaries
 
     return billData
 
@@ -207,6 +225,45 @@ def parseBillDataJson(fileData):
     return billData
 
 
+def getElementWithSchema(obj, optionalPaths):
+    for path in optionalPaths:
+        tmpObj = obj
+        for element in path:
+            if tmpObj is not None and element in tmpObj.keys(): 
+                tmpObj = tmpObj[element]
+            else: 
+                tmpObj = None
+                break
+        if tmpObj is not None: return tmpObj
+    return None
+
+def getFieldWithSchema(rootElement, fieldValue):
+        if type(fieldValue) is list: 
+            return getElementWithSchema(rootElement, fieldValue)
+        elif type(fieldValue) is dict:
+            data = dict()
+            for field in fieldValue.keys():
+                subFieldValues = fieldValue[field]
+                data[field] = getFieldWithSchema(rootElement, subFieldValues)
+            return data
+        else: return None
+
+def parseBillWithSchema(bill, schemaType):
+    if schemaType not in BILL_DATA_SCHEMA_TYPES:
+        raise Exception("bill.parse: invalid schema type provided: {}. use one of {}"
+                        .format(schemaType, BILL_DATA_SCHEMA_TYPES))
+    
+    schema = BILL_DATA_SCHEMA[schemaType]
+    root = getElementWithSchema(bill, schema["root"])
+    
+    data = dict()
+    fields = schema["fields"].keys()
+    for field in fields:
+        fieldValue = schema["fields"][field]
+        data[field] = getFieldWithSchema(root, fieldValue)
+    return data
+             
+
 
 def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)
@@ -275,8 +332,8 @@ def getInsertThreads(bills):
 
 def readBillFileFromZip(zipFile, name,path):
     file = None
-    if "data.json" in path: file = name+"data.json"
-    elif "fdsys_billstatus.xml" in path: file = name+"fdsys_billstatus.xml"
+    if "fdsys_billstatus.xml" in path: file = name+"fdsys_billstatus.xml"
+    elif "data.json" in path: file = name+"data.json"
     #elif "data.xml" in folder: file = name+"data.xml"
 
     if file is None: return None

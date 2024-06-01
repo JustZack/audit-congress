@@ -42,6 +42,9 @@ def saveAsCSV(path, data, headers=None):
 
         if writer == None: raise Exception("saveAsCSV: Expected data of type dict or list, found: {}".format(type(data)))
         writeCSVRows(writer, data)
+def saveAsJSON(path, data):
+    jsonData = json.dumps(data)
+    saveFile(path, jsonData)
 
 def writeCSVAsDict(file, data, headers):
     #Use headers if defined, else use the dict keys as header

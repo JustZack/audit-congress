@@ -19,6 +19,8 @@ CSV_CACHE_DIR = "csv/"
 
 LAST_CONGRESS_PROCESSED = None
 
+REFRESH_BILL_ZIPS = True
+
 def fetchLastCongress():
     global LAST_CONGRESS_PROCESSED
 
@@ -162,7 +164,6 @@ def doSetup():
 
 
 
-refreshZips = True
 def getUpdatedZips():
     #If the cache exists, ensure old data is deleted (based on CacheStatus table)
     if os.path.exists(ZIP_CACHE_DIR): deleteOutOfDateZips()
@@ -182,7 +183,7 @@ def doBulkBillPull():
 
     #Ensure the bulk zip files are up to date (based on the last zip file fetched)
     #Note that any zip files not coming before the current congress are considered old (as determined by api.congress.gov)
-    if refreshZips: getUpdatedZips()
+    if REFRESH_BILL_ZIPS: getUpdatedZips()
 
     #Track how long it takes to parse and insert the bills
     startInsert = datetime.now()
