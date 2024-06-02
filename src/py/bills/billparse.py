@@ -31,116 +31,88 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+def getElementWithSchema(obj, optionalPaths):
+    for path in optionalPaths:
+        tmpObj = obj
+        for element in path:
+            if tmpObj is not None and element in tmpObj.keys(): 
+                tmpObj = tmpObj[element]
+            else: 
+                tmpObj = None
+                break
+        if tmpObj is not None: return tmpObj
+    return None
+
+def getFieldWithSchema(rootElement, fieldValue):
+    if type(fieldValue) is list: 
+        return getElementWithSchema(rootElement, fieldValue)
+    elif type(fieldValue) is dict:
+        data = dict()
+        for field in fieldValue.keys():
+            subFieldValues = fieldValue[field]
+            data[field] = getFieldWithSchema(rootElement, subFieldValues)
+        return data
+    else: return None
+
+def parseBillWithSchema(bill, schemaType):
+    if schemaType not in BILL_DATA_SCHEMA_TYPES:
+        raise Exception("bill.parse: invalid schema type provided: {}. use one of {}"
+                        .format(schemaType, BILL_DATA_SCHEMA_TYPES))
+    
+    schema = BILL_DATA_SCHEMA[schemaType]
+    root = getElementWithSchema(bill, schema["root"])
+    
+    data = dict()
+    fields = schema["fields"].keys()
+    for field in fields:
+        fieldValue = schema["fields"][field]
+        data[field] = getFieldWithSchema(root, fieldValue)
+    return data
+
 def getIfSet(key, dct, defaultValue = None): 
     return dct[key] if key in dct else defaultValue
 
-def parseBillFDSYSXmlList(key, listKey, bill):
-    items = getIfSet(key, bill)
-    if items is not None: items = getIfSet(listKey, items, [])
-    else: items = []
-    return items
+def getTitleFromXML(title):
+    return {"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""}
 
-def parseBillFDSYSXmlItemList(key, bill): return parseBillFDSYSXmlList(key, "item", bill)
+def getCosponsorFromXML(cosponsor):
+    id = cosponsor["bioguideId"] if "bioguideId" in cosponsor else getMemberByThomasId(cosponsor["thomas_id"])
+    since = cosponsor["sponsorshipDate"]
+    withdrawn = cosponsor["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsor else None
+    isOriginal = cosponsor["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsor else None
+    return {"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal}
 
-def getFirstListIn(obj):
-    if (type(obj)) is list: return obj
-    elif (type(obj) is dict):
-        for key in obj.keys(): 
-            item = getFirstList(obj[key])
-            if item is not None: return item
-    
-    return None
+def ensureFieldIsList(obj, field):
+    if (obj[field] is None): return []
+    if type(obj[field]) is dict: return [obj[field]]
+    return obj[field]
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
 
-    bill = xmlData["billStatus"]["bill"] 
+    bill = parseBillWithSchema(xmlData, "xml")
 
-    billData = dict()
-
-    typ = bill["type"] if "type" in bill.keys() else bill["billType"]
-    cong = bill["congress"]
-    num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
-
-    tst = parseBillWithSchema(xmlData, "xml")
-    util.saveAsJSON("tests/{}-{}{}.json".format(cong, typ, num), tst)
-
-    actualBill = dict()
-    billData["bill"] = actualBill
-
-    actualBill["type"] = typ
-    actualBill["congress"] = cong
-    actualBill["number"] = num
-
-    sponsor = bill["sponsors"]
-    sponsor = sponsor["item"] if sponsor is not None else ""
+    sponsor = bill["bill"]["sponsor"]
     if type(sponsor) is list: sponsor = sponsor[0]
     if type(sponsor) is dict: sponsor = sponsor["bioguideId"]
-    actualBill["bioguideId"] = sponsor
-   
-    actualBill["introduced_at"] = bill["introducedDate"]
-    actualBill["updated_at"] = bill["updateDate"]
+    bill["bill"]["bioguideId"] = sponsor
 
-    actualBill["originChamber"] = bill["originChamber"]
+    bill["titles"] = [getTitleFromXML(title) for title in ensureFieldIsList(bill, "titles")]
+    bill["subjects"] = [subject["name"] for subject in ensureFieldIsList(bill, "subjects")]
+    bill["cosponsors"] = [getCosponsorFromXML(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
+    bill["actions"] = ensureFieldIsList(bill, "actions")
+    bill["summaries"] = ensureFieldIsList(bill, "summaries")
+    bill["committees"] = ensureFieldIsList(bill, "committees")
+    bill["amendments"] = ensureFieldIsList(bill, "amendments")
+    bill["laws"] = ensureFieldIsList(bill, "laws")
+    bill["textVersions"] = ensureFieldIsList(bill, "textVersions")
+    bill["relatedBills"] = ensureFieldIsList(bill, "relatedBills")
+    bill["committeeReports"] = ensureFieldIsList(bill, "committeeReports")
+    bill["cboCostEstimates"] = ensureFieldIsList(bill, "cboCostEstimates")
 
-    policyArea = getIfSet("policyArea", bill, "")
-    actualBill["policyArea"] = policyArea["name"] if type(policyArea) is dict else policyArea
-    
-    subjects = bill["subjects"] if "subjects" in bill else None
-    ["subjects", "billSubjects", "legislativeSubjects", "item"]
-    if subjects is not None:
-        if "billSubjects" in subjects: subjects = subjects["billSubjects"]
-        subjects = subjects["legislativeSubjects"]
-        if subjects is not None: subjects = subjects["item"]
-        else: subjects = []
-        
-        if type(subjects) is dict: subjects = [subjects]
-    else: subjects = []
-
-    cosponsoredDat = parseBillFDSYSXmlItemList("cosponsors", bill)
-    cosponsored = []
-    if type(cosponsoredDat) is list:
-        for cospon in cosponsoredDat:
-            id = cospon["bioguideId"] if "bioguideId" in cospon else getMemberByThomasId(cospon["thomas_id"])
-            since = cospon["sponsorshipDate"]
-            withdrawn = cospon["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cospon else None
-            isOriginal = cospon["isOriginalCosponsor"] if "isOriginalCosponsor" in cospon else None
-            cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
-    elif type(cosponsoredDat) is dict:
-        id = cosponsoredDat["bioguideId"] if "bioguideId" in cosponsoredDat else getMemberByThomasId(cosponsoredDat["thomas_id"])
-        since = cosponsoredDat["sponsorshipDate"]
-        withdrawn = cosponsoredDat["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsoredDat else None
-        isOriginal = cosponsoredDat["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsoredDat else None
-        cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
-
-
-    committees = bill["committees"] if "committees" in bill else None
-    ["billCommittees", "item"]
-    if committees is not None:
-        if "billCommittees" in committees: committees = committees["billCommittees"]
-        if committees is not None and "item" in committees: committees = committees["item"]
-        else: committees = []
-    else: committees = []
-
-    titles = parseBillFDSYSXmlItemList("titles", bill)
-    titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
-    actualBill["title"] = bill["title"] if "title" in bill else (titles[0]["title"] if len(titles) > 0 else "")
-
-    summaries = parseBillFDSYSXmlList("summaries", "summary", bill)
-    if type(summaries) is dict: summaries = [summaries]
-
-    billData["bill"] = actualBill
-    billData["titles"] = titles
-    billData["subjects"] = [subject["name"] for subject in subjects]
-    billData["cosponsors"] = cosponsored
-    billData["committees"] = committees
-    billData["amendments"] = parseBillFDSYSXmlList("amendments", "amendment", bill)
-    billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
-    billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
-    billData["textVersions"] = parseBillFDSYSXmlItemList("textVersions", bill)
-    billData["summaries"] = summaries
-
-    return billData
+    #util.saveAsJSON("tests/{}/{}/{}.json".format(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"]), bill)
+    #print("{}-{}{}".format(cong, typ, num))
+    return bill
 
 def parseBillDataXml(fileData):
     raise Exception("data.xml is not implemented")
@@ -222,48 +194,7 @@ def parseBillDataJson(fileData):
     billData["committees"] = jsonData["committees"]
     billData["amendments"] = jsonData["amendments"]
     billData["actions"] = actions
-    return billData
-
-
-def getElementWithSchema(obj, optionalPaths):
-    for path in optionalPaths:
-        tmpObj = obj
-        for element in path:
-            if tmpObj is not None and element in tmpObj.keys(): 
-                tmpObj = tmpObj[element]
-            else: 
-                tmpObj = None
-                break
-        if tmpObj is not None: return tmpObj
-    return None
-
-def getFieldWithSchema(rootElement, fieldValue):
-        if type(fieldValue) is list: 
-            return getElementWithSchema(rootElement, fieldValue)
-        elif type(fieldValue) is dict:
-            data = dict()
-            for field in fieldValue.keys():
-                subFieldValues = fieldValue[field]
-                data[field] = getFieldWithSchema(rootElement, subFieldValues)
-            return data
-        else: return None
-
-def parseBillWithSchema(bill, schemaType):
-    if schemaType not in BILL_DATA_SCHEMA_TYPES:
-        raise Exception("bill.parse: invalid schema type provided: {}. use one of {}"
-                        .format(schemaType, BILL_DATA_SCHEMA_TYPES))
-    
-    schema = BILL_DATA_SCHEMA[schemaType]
-    root = getElementWithSchema(bill, schema["root"])
-    
-    data = dict()
-    fields = schema["fields"].keys()
-    for field in fields:
-        fieldValue = schema["fields"][field]
-        data[field] = getFieldWithSchema(root, fieldValue)
-    return data
-             
-
+    return billData            
 
 def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)

@@ -24,7 +24,7 @@
                 "congress": [["congress"]],
                 "type": [["type"],["billType"]],
                 "number": [["number"],["billNumber"]],
-                "bioguideId": [["sponsors","item","bioguideId"]],
+                "sponsor": [["sponsors","item"]],
                 "introduced_at": [["introducedDate"]],
                 "updated_at": [["updateDate"]],
                 "originChamber": [["originChamber"]],
