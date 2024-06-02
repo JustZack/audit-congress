@@ -21,6 +21,8 @@ FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
 DATA_JSON_FILE_NAME = "data.json"
 
+WRITE_PARSED_BILL_FILES = True
+
 def fetchMemberMapping():
     global MEMBERS_MAPPING
     resp = util.getParsedJson(MEMBERS_MAPPING_API_URL)
@@ -83,7 +85,8 @@ def saveTestBillFile(bill):
     util.saveAsJSON("tests/{}/{}/{}.json".format(bill["bill"]["congress"], 
                                                  bill["bill"]["type"], 
                                                  bill["bill"]["number"]), bill)
-    #print("{}-{}{}".format(cong, typ, num))
+    print("{}-{}{}".format(cong, typ, num))
+    return
 
 
 
@@ -148,8 +151,6 @@ def parseBillFDSYSXml(fileData):
     bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
-
-    saveTestBillFile(bill)
     return bill
 
 #There can be data.xml's available too, but seemingly only when fdsysxml is too. Not implemented unless needed.
@@ -176,7 +177,6 @@ def parseBillDataJson(fileData):
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
 
-    saveTestBillFile(bill)
     return bill     
 
 
@@ -255,7 +255,7 @@ def getInsertThreads(bills):
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", ACTION_COLUMNS, billToTables["BillActions"]))
     return threads
 
-def readBillFileFromZip(zipFile, name,path):
+def readBillFileFromZip(zipFile, name, path):
     file = None
     if FDSYS_XML_FILE_NAME in path: file = name+FDSYS_XML_FILE_NAME
     #elif DATA_XML_FILE_NAME in folder: file = name+DATA_XML_FILE_NAME
@@ -269,6 +269,7 @@ def readBillFileFromZip(zipFile, name,path):
     #elif DATA_XML_FILE_NAME IN file: bill = parseBillDataXml(data)
     elif DATA_JSON_FILE_NAME in file: bill = parseBillDataJson(data)
 
+    if WRITE_PARSED_BILL_FILES: saveTestBillFile(bill)
     return bill
 
 def getBillItemsByFolder(fileList):
