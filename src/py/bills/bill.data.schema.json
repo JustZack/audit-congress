@@ -55,6 +55,31 @@
         }
     },
     "json": {
-
+        "root": null,
+        "fields": {
+            "bill": {
+                "congress": [["congress"]],
+                "type": [["bill_type"]],
+                "number": [["number"]],
+                "sponsor": [["sponsor"]],
+                "introduced_at": [["introduced_at"]],
+                "updated_at": [["updated_at"]],
+                "originChamber": null,
+                "policyArea": [["subjects_top_term"]],
+                "title": [["official_title"]]
+            },
+            "titles": [["titles"]],
+            "subjects": [["subjects"]],
+            "cosponsors": [["cosponsors"]],
+            "actions": [["actions"]],
+            "summaries": [["summary"]],
+            "committees": [["committees"]],
+            "amendments": [["amendments"]],
+            "laws": [["laws", "item"]],
+            "textVersions": null,
+            "relatedBills": [["related_bills"]],
+            "committeeReports": [["committee_reports"]],
+            "cboCostEstimates": null
+        }
     }
 }

@@ -61,7 +61,7 @@ def parseBillWithSchema(bill, schemaType):
                         .format(schemaType, BILL_DATA_SCHEMA_TYPES))
     
     schema = BILL_DATA_SCHEMA[schemaType]
-    root = getElementWithSchema(bill, schema["root"])
+    root = getElementWithSchema(bill, schema["root"]) if schema["root"] is not None else bill
     
     data = dict()
     fields = schema["fields"].keys()
@@ -75,129 +75,103 @@ def getIfSet(key, dct, defaultValue = None):
 
 
 
+def saveTestBillFile(congress, type_, number, data):
+    util.saveAsJSON("tests/{}/{}/{}.json".format(congress, type_, number), data)
+    #print("{}-{}{}".format(cong, typ, num))
+
+
+
 def ensureFieldIsList(obj, field):
     if (obj[field] is None): return []
     if type(obj[field]) is dict: return [obj[field]]
     return obj[field]
 
+
+
+def getSponsorBioguideId(sponsor, bioguideKey, thomasKey):
+    if sponsor is not None:
+        return sponsor[bioguideKey] if bioguideKey in sponsor else getMemberByThomasId(sponsor[thomasKey])
+    else: return None
+
+def getCosponsorDict(id, sponsoredAt, withdrawnAt, isOriginal):
+    return {"id": id, "sponsoredAt": sponsoredAt, "withdrawnAt": withdrawnAt, "isOriginal": isOriginal}
+
+def getActionDict(type, text, actionDate):
+    return {"type": type, "text": text, "actionDate": actionDate}
+
 def getTitleFromXML(title):
     return {"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""}
 
 def getCosponsorFromXML(cosponsor):
-    id = cosponsor["bioguideId"] if "bioguideId" in cosponsor else getMemberByThomasId(cosponsor["thomas_id"])
+    id = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
     since = cosponsor["sponsorshipDate"]
-    withdrawn = cosponsor["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsor else None
-    isOriginal = cosponsor["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsor else None
-    return {"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal}
+    withdrawn = getIfSet("sponsorshipWithdrawnDate", cosponsor)
+    isOriginal = getIfSet("isOriginalCosponsor", cosponsor)
+    return getCosponsorDict(id, since, withdrawn, isOriginal)
+
+def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
+
+def getCosponsorFromJSON(cosponsor):
+    id = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
+    since = cosponsor["sponsored_at"]
+    withdrawn = getIfSet("withdrawn_at", cosponsor)
+    isOriginal = None
+    return getCosponsorDict(id, since, withdrawn, isOriginal)
+
+def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
+
+
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
-
     bill = parseBillWithSchema(xmlData, "xml")
 
     sponsor = bill["bill"]["sponsor"]
     if type(sponsor) is list: sponsor = sponsor[0]
-    if type(sponsor) is dict: sponsor = sponsor["bioguideId"]
-    bill["bill"]["bioguideId"] = sponsor
-
-    bill["titles"] = [getTitleFromXML(title) for title in ensureFieldIsList(bill, "titles")]
-    bill["subjects"] = [subject["name"] for subject in ensureFieldIsList(bill, "subjects")]
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(sponsor, "bioguideId", "thomas_id")
+    
+    bill["titles"] =     [getTitleFromXML(title) for title in ensureFieldIsList(bill, "titles")]
+    bill["subjects"] =   [subject["name"] for subject in ensureFieldIsList(bill, "subjects")]
     bill["cosponsors"] = [getCosponsorFromXML(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
-    bill["actions"] = ensureFieldIsList(bill, "actions")
-    bill["summaries"] = ensureFieldIsList(bill, "summaries")
-    bill["committees"] = ensureFieldIsList(bill, "committees")
-    bill["amendments"] = ensureFieldIsList(bill, "amendments")
-    bill["laws"] = ensureFieldIsList(bill, "laws")
-    bill["textVersions"] = ensureFieldIsList(bill, "textVersions")
-    bill["relatedBills"] = ensureFieldIsList(bill, "relatedBills")
-    bill["committeeReports"] = ensureFieldIsList(bill, "committeeReports")
-    bill["cboCostEstimates"] = ensureFieldIsList(bill, "cboCostEstimates")
+    bill["actions"] =    [getActionFromXML(action) for action in ensureFieldIsList(bill, "actions")]
+    bill["summaries"] =         ensureFieldIsList(bill, "summaries")
+    bill["committees"] =        ensureFieldIsList(bill, "committees")
+    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
+    bill["laws"] =              ensureFieldIsList(bill, "laws")
+    bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
+    bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
+    bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
+    bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
 
-    #util.saveAsJSON("tests/{}/{}/{}.json".format(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"]), bill)
-    #print("{}-{}{}".format(cong, typ, num))
+    #saveTestBillFile(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"], bill)
     return bill
 
-def parseBillDataXml(fileData):
-    raise Exception("data.xml is not implemented")
-
-    billData = dict()
-    xmlData = xmltodict.parse(fileData)
-    
-    actualBill = dict()
-    actualBill["id"] = jsonData["bill_id"]
-
-    billElem = xmlData.select("<bill>")
-    print(billElem)
-    actualBill["type"] = billElem["type"]
-    actualBill["congress"] = billElem["session"]
-    actualBill["number"] = billElem["number"]
-    return billData
-    sponsor = jsonData["sponsor"]
-    if (sponsor is not None):
-        if "bioguide_id" in sponsor:
-            actualBill["bioguideId"] = sponsor["bioguide_id"]
-        else:
-            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
-    else:
-        actualBill["bioguideId"] = None
-
-    actualBill["officialTitle"] = jsonData["official_title"]
-    actualBill["popularTitle"] = jsonData["popular_title"]
-
-    billData["bill"] = actualBill
-    billData["titles"] = jsonData["titles"]
-    billData["subjects"] = jsonData["subjects"]
-    billData["cosponsors"] = jsonData["cosponsors"]
-    billData["committees"] = jsonData["committees"]
-    billData["amendments"] = jsonData["amendments"]
-    billData["actions"] = jsonData["actions"]
-
-    return billData
+#There can be data.xml's available too, but seemingly only when fdsysxml is too. Not implemented unless needed.
+def parseBillDataXml(fileData): raise Exception("data.xml is not implemented")
 
 def parseBillDataJson(fileData):
-    billData = dict()
     jsonData = util.getParsedJsonFile(fileData)
-
-    actualBill = dict()
+    bill = parseBillWithSchema(jsonData, "json")
     
-    actualBill["type"] = jsonData["bill_type"]
-    actualBill["congress"] = jsonData["congress"]
-    actualBill["number"] = jsonData["number"]
-
-    sponsor = jsonData["sponsor"]
-    if (sponsor is not None):
-        if "bioguide_id" in sponsor:
-            actualBill["bioguideId"] = sponsor["bioguide_id"]
-        else:
-            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
-    else:
-        actualBill["bioguideId"] = None
-
-    actualBill["title"] = getIfSet("official_title", jsonData, "")
-    actualBill["policyArea"] = getIfSet("subjects_top_term", jsonData, "")
-    actualBill["introduced_at"] = getIfSet("introduced_at", jsonData, "")
-    actualBill["updated_at"] = getIfSet("updated_at", jsonData, "")
-
-    cosponsors = []
-    for cospon in jsonData["cosponsors"]:
-        id = cospon["bioguide_id"] if "bioguide_id" in cospon else getMemberByThomasId(cospon["thomas_id"])
-        since = cospon["sponsored_at"]
-        withdrawn = cospon["withdrawn_at"] if "withdrawn_at" in cospon else None
-        isOriginal = None
-        cosponsors.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
+    sponsor = bill["bill"]["sponsor"]
+    if type(sponsor) is list: sponsor = sponsor[0]
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(sponsor, "bioguide_id", "thomas_id")
     
-    actns = jsonData["actions"]
-    actions = []
-    for act in actns:
-        actions.append({"type": act["type"], "text": act["text"], "actionDate": act["acted_at"]})
-    billData["bill"] = actualBill
-    billData["titles"] = jsonData["titles"]
-    billData["subjects"] = jsonData["subjects"]
-    billData["cosponsors"] = cosponsors
-    billData["committees"] = jsonData["committees"]
-    billData["amendments"] = jsonData["amendments"]
-    billData["actions"] = actions
-    return billData            
+    bill["titles"] =        ensureFieldIsList(bill, "titles")
+    bill["subjects"] =      ensureFieldIsList(bill, "subjects")
+    bill["cosponsors"] =    [getCosponsorFromJSON(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
+    bill["actions"] =       [getActionFromJSON(action) for action in ensureFieldIsList(bill, "actions")]
+    bill["summaries"] =         ensureFieldIsList(bill, "summaries")
+    bill["committees"] =        ensureFieldIsList(bill, "committees")
+    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
+    bill["laws"] =              ensureFieldIsList(bill, "laws")
+    bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
+    bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
+    bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
+    bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
+
+    #saveTestBillFile(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"], bill)
+    return bill     
 
 
 
