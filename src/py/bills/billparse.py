@@ -17,6 +17,10 @@ TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "title",
 COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 ACTION_COLUMNS = ["id", "billId", "index", "type", "text", "acted"]
 
+FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
+DATA_XML_FILE_NAME = "data.xml"
+DATA_JSON_FILE_NAME = "data.xml"
+
 def fetchMemberMapping():
     global MEMBERS_MAPPING
     resp = util.getParsedJson(MEMBERS_MAPPING_API_URL)
@@ -75,8 +79,10 @@ def getIfSet(key, dct, defaultValue = None):
 
 
 
-def saveTestBillFile(congress, type_, number, data):
-    util.saveAsJSON("tests/{}/{}/{}.json".format(congress, type_, number), data)
+def saveTestBillFile(bill):
+    util.saveAsJSON("tests/{}/{}/{}.json".format(bill["bill"]["congress"], 
+                                                 bill["bill"]["type"], 
+                                                 bill["bill"]["number"]), bill)
     #print("{}-{}{}".format(cong, typ, num))
 
 
@@ -143,7 +149,7 @@ def parseBillFDSYSXml(fileData):
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
 
-    #saveTestBillFile(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"], bill)
+    saveTestBillFile(bill)
     return bill
 
 #There can be data.xml's available too, but seemingly only when fdsysxml is too. Not implemented unless needed.
@@ -170,14 +176,15 @@ def parseBillDataJson(fileData):
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
 
-    #saveTestBillFile(bill["bill"]["congress"], bill["bill"]["type"], bill["bill"]["number"], bill)
+    saveTestBillFile(bill)
     return bill     
 
 
 
 def getBillObjectId(typ, number, congress, index=None):
-    if index is None: return "{}{}-{}".format(typ, number, congress)
-    else: return "{}{}-{}-{}".format(typ, number, congress, index)
+    id = "{}{}-{}".format(typ, number, congress)
+    if index is not None: id += "-{}".format(index)
+    return id
 
 def getSubjectRows(bid, subjects, t, n, c):
     i, subjs = 0, []
@@ -244,17 +251,17 @@ def getInsertThreads(bills):
 
 def readBillFileFromZip(zipFile, name,path):
     file = None
-    if "fdsys_billstatus.xml" in path: file = name+"fdsys_billstatus.xml"
-    elif "data.json" in path: file = name+"data.json"
-    #elif "data.xml" in folder: file = name+"data.xml"
+    if FDSYS_XML_FILE_NAME in path: file = name+FDSYS_XML_FILE_NAME
+    #elif DATA_XML_FILE_NAME in folder: file = name+DATA_XML_FILE_NAME
+    elif DATA_JSON_FILE_NAME in path: file = name+DATA_JSON_FILE_NAME
 
     if file is None: return None
 
     data, bill = zipFile.read(file), None
     #Prefer fdsys.xml files, they have way more info available
-    if "fdsys_billstatus.xml" in file: bill = parseBillFDSYSXml(data)
-    elif "data.json" in file: bill = parseBillDataJson(data)
-    #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
+    if FDSYS_XML_FILE_NAME in file: bill = parseBillFDSYSXml(data)
+    #elif DATA_XML_FILE_NAME IN file: bill = parseBillDataXml(data)
+    elif DATA_JSON_FILE_NAME in file: bill = parseBillDataJson(data)
 
     return bill
 
