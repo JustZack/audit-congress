@@ -31,6 +31,8 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
+
+
 def getElementWithSchema(obj, optionalPaths):
     for path in optionalPaths:
         tmpObj = obj
@@ -49,8 +51,7 @@ def getFieldWithSchema(rootElement, fieldValue):
     elif type(fieldValue) is dict:
         data = dict()
         for field in fieldValue.keys():
-            subFieldValues = fieldValue[field]
-            data[field] = getFieldWithSchema(rootElement, subFieldValues)
+            data[field] = getFieldWithSchema(rootElement, fieldValue[field])
         return data
     else: return None
 
@@ -72,6 +73,13 @@ def parseBillWithSchema(bill, schemaType):
 def getIfSet(key, dct, defaultValue = None): 
     return dct[key] if key in dct else defaultValue
 
+
+
+def ensureFieldIsList(obj, field):
+    if (obj[field] is None): return []
+    if type(obj[field]) is dict: return [obj[field]]
+    return obj[field]
+
 def getTitleFromXML(title):
     return {"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""}
 
@@ -81,11 +89,6 @@ def getCosponsorFromXML(cosponsor):
     withdrawn = cosponsor["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsor else None
     isOriginal = cosponsor["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsor else None
     return {"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal}
-
-def ensureFieldIsList(obj, field):
-    if (obj[field] is None): return []
-    if type(obj[field]) is dict: return [obj[field]]
-    return obj[field]
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
@@ -196,6 +199,8 @@ def parseBillDataJson(fileData):
     billData["actions"] = actions
     return billData            
 
+
+
 def getBillObjectId(typ, number, congress, index=None):
     if index is None: return "{}{}-{}".format(typ, number, congress)
     else: return "{}{}-{}-{}".format(typ, number, congress, index)
@@ -232,6 +237,8 @@ def getActionRows(bid, actions, t, n, c):
         acts.append((aid, bid, i, action["type"], action["text"], action["actionDate"]))
         i += 1
     return acts
+
+
 
 def splitBillsIntoTableRows(bills):
     billData,subjectData,titleData,cosponData,actionData = [],[],[],[],[]
