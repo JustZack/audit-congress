@@ -11,15 +11,15 @@ MEMBERS_MAPPING = None
 BILL_DATA_SCHEMA = util.readJsonFile("bill.data.schema.json")
 BILL_DATA_SCHEMA_TYPES = BILL_DATA_SCHEMA.keys()
 
-BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "policyArea", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "subject"]
-TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "index", "title", "titleType", "titleAs", "isForPortion"]
-COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "policyArea", "introduced", "updated"]
+SUBJECT_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "subject"]
+TITLE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "billId", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 ACTION_COLUMNS = ["id", "billId", "index", "type", "text", "acted"]
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
-DATA_JSON_FILE_NAME = "data.xml"
+DATA_JSON_FILE_NAME = "data.json"
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -186,35 +186,43 @@ def getBillObjectId(typ, number, congress, index=None):
     if index is not None: id += "-{}".format(index)
     return id
 
-def getSubjectRows(bid, subjects, t, n, c):
+def getBillRow(bid, bill, tnc):
+    bioguide = bill["bioguideId"]
+    title = bill["title"]
+    policyArea = bill["policyArea"]
+    introduced = bill["introduced_at"]
+    updated = bill["updated_at"]
+    return (bid, *tnc, bioguide, title, policyArea, introduced, updated)
+
+def getSubjectRows(bid, subjects, tnc):
     i, subjs = 0, []
     for subject in subjects: 
-        sid = getBillObjectId(t, n, c, i)
-        subjs.append((sid, bid, t, n, c, i, subject))
+        sid = getBillObjectId(*tnc, i)
+        subjs.append((sid, bid, *tnc, i, subject))
         i += 1
     return subjs
 
-def getTitleRows(bid, titles, t, n, c):
+def getTitleRows(bid, titles, tnc):
     i, ttls = 0, []
     for title in titles: 
-        tid = getBillObjectId(t, n, c, i)
+        tid = getBillObjectId(*tnc, i)
         portion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-        ttls.append((tid, bid, t, n, c, i, title["title"], title["type"], title["as"], portion))
+        ttls.append((tid, bid, *tnc, i, title["title"], title["type"], title["as"], portion))
         i += 1
     return ttls
 
-def getCoSponsorRows(bid, cosponsors, t, n, c):
+def getCoSponsorRows(bid, cosponsors, tnc):
     i, cospons = 0, []
     for cosponsor in cosponsors:
-        cid = getBillObjectId(t, n, c, i)
-        cospons.append((cid, bid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
+        cid = getBillObjectId(*tnc, i)
+        cospons.append((cid, bid, *tnc, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
         i += 1
     return cospons
 
-def getActionRows(bid, actions, t, n, c):
+def getActionRows(bid, actions, tnc):
     i, acts = 0, []
     for action in actions:
-        aid = getBillObjectId(t, n, c, i)
+        aid = getBillObjectId(*tnc, i)
         acts.append((aid, bid, i, action["type"], action["text"], action["actionDate"]))
         i += 1
     return acts
@@ -226,16 +234,14 @@ def splitBillsIntoTableRows(bills):
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
-        tcn = (bill["type"].lower(),bill["congress"],bill["number"])
-        bioguide = bill["bioguideId"]
-        bid = getBillObjectId(*tcn)
-        
-        billData.append((bid, *tcn, bioguide, bill["title"], bill["policyArea"], bill["introduced_at"], bill["updated_at"]))
-        subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
-        titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
-        cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
+        tnc = (bill["type"].lower(),bill["number"],bill["congress"])
+        bid = getBillObjectId(*tnc)
         #print("{}, {} {}".format(*tcn))
-        actionData.extend(getActionRows(bid, parsedBill["actions"], *tcn))
+        billData.append(getBillRow(bid, bill, tnc))
+        subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], tnc))
+        titleData.extend(getTitleRows(bid, parsedBill["titles"], tnc))
+        cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], tnc))
+        actionData.extend(getActionRows(bid, parsedBill["actions"], tnc))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
             "BillActions": actionData, "BillCoSponsors": cosponData}
 
