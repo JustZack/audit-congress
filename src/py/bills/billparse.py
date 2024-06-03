@@ -21,7 +21,7 @@ FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
 DATA_JSON_FILE_NAME = "data.json"
 
-WRITE_PARSED_BILL_FILES = True
+WRITE_PARSED_BILL_FILES = False
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -82,10 +82,11 @@ def getIfSet(key, dct, defaultValue = None):
 
 
 def saveTestBillFile(bill):
-    util.saveAsJSON("tests/{}/{}/{}.json".format(bill["bill"]["congress"], 
-                                                 bill["bill"]["type"], 
-                                                 bill["bill"]["number"]), bill)
-    print("{}-{}{}".format(cong, typ, num))
+    congress = bill["bill"]["congress"]
+    type_ = bill["bill"]["type"]
+    number = bill["bill"]["number"]
+    util.saveAsJSON("tests/{}/{}/{}.json".format(congress, type_, number), bill)
+    #print("{}-{}{}".format(congress, type_, number))
     return
 
 
