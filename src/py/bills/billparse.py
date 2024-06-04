@@ -39,26 +39,33 @@ def getMemberByThomasId(thomasId):
 
 
 
+def getIfSet(key, dct, defaultValue = None): 
+    return dct[key] if type(dct) is dict and key in dct else defaultValue
+
+def getMatchingElement(obj, path):
+    tmpObj = obj
+    for element in path:
+        tmpObj = getIfSet(element, tmpObj)
+        if tmpObj is None: break
+    return tmpObj
+
 def getElementWithSchema(obj, optionalPaths):
     for path in optionalPaths:
-        tmpObj = obj
-        for element in path:
-            if tmpObj is not None and element in tmpObj.keys(): 
-                tmpObj = tmpObj[element]
-            else: 
-                tmpObj = None
-                break
+        tmpObj = getMatchingElement(obj, path)
         if tmpObj is not None: return tmpObj
     return None
+
+def getDictOfFieldsWithSchema(rootElement, fieldValue):
+    data = dict()
+    for field in fieldValue.keys():
+        data[field] = getFieldWithSchema(rootElement, fieldValue[field])
+    return data
 
 def getFieldWithSchema(rootElement, fieldValue):
     if type(fieldValue) is list: 
         return getElementWithSchema(rootElement, fieldValue)
     elif type(fieldValue) is dict:
-        data = dict()
-        for field in fieldValue.keys():
-            data[field] = getFieldWithSchema(rootElement, fieldValue[field])
-        return data
+        return getDictOfFieldsWithSchema(rootElement, fieldValue)
     else: return None
 
 def parseBillWithSchema(bill, schemaType):
@@ -75,9 +82,6 @@ def parseBillWithSchema(bill, schemaType):
         fieldValue = schema["fields"][field]
         data[field] = getFieldWithSchema(root, fieldValue)
     return data
-
-def getIfSet(key, dct, defaultValue = None): 
-    return dct[key] if key in dct else defaultValue
 
 
 
@@ -274,18 +278,16 @@ def getInsertThreads(bills):
     return threads
 
 def readBillFileFromZip(zipFile, name, path):
-    file = None
-    if FDSYS_XML_FILE_NAME in path: file = name+FDSYS_XML_FILE_NAME
-    #elif DATA_XML_FILE_NAME in folder: file = name+DATA_XML_FILE_NAME
-    elif DATA_JSON_FILE_NAME in path: file = name+DATA_JSON_FILE_NAME
-
-    if file is None: return None
-
-    data, bill = zipFile.read(file), None
-    #Prefer fdsys.xml files, they have way more info available
-    if FDSYS_XML_FILE_NAME in file: bill = parseBillFDSYSXml(data)
-    #elif DATA_XML_FILE_NAME IN file: bill = parseBillDataXml(data)
-    elif DATA_JSON_FILE_NAME in file: bill = parseBillDataJson(data)
+    file, bill = None, None
+    if FDSYS_XML_FILE_NAME in path: 
+        file = name+FDSYS_XML_FILE_NAME
+        bill = parseBillFDSYSXml(zipFile.read(file))
+    #elif DATA_XML_FILE_NAME in folder: 
+    #   file = name+DATA_XML_FILE_NAME
+    #   bill = parseBillDataXml(zipFile.read(file))
+    elif DATA_JSON_FILE_NAME in path: 
+        file = name+DATA_JSON_FILE_NAME
+        bill = parseBillDataJson(zipFile.read(file))
 
     if WRITE_PARSED_BILL_FILES: saveTestBillFile(bill)
     return bill
