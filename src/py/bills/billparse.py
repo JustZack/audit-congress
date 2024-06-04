@@ -15,7 +15,8 @@ BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "poli
 SUBJECT_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "subject"]
 TITLE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "title", "titleType", "titleAs", "isForPortion"]
 COSPONSOR_COLUMNS = ["id", "billId", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
-ACTION_COLUMNS = ["id", "billId", "index", "type", "text", "acted"]
+ACTION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "actionType", "text", "acted"]
+SUMMARY_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "text", "description", "date", "updated"]
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
@@ -219,46 +220,34 @@ def getBillRow(bid, bill, tnc):
     updated = bill["updated_at"]
     return (bid, *tnc, bioguide, title, policyArea, introduced, updated)
 
-def getSubjectRows(bid, subjects, tnc):
-    i, subjs = 0, []
-    for subject in subjects: 
-        sid = getBillObjectId(*tnc, i)
-        subjs.append((sid, bid, *tnc, i, subject))
+def getRows(bid, items, tnc, fieldList = None):
+    i, rows = 0, []
+    for item in items: 
+        rid = getBillObjectId(*tnc, i)
+        row = (rid, bid, *tnc, i)
+        if fieldList is None: row += (item,)
+        else: 
+            for field in fieldList:
+                row = row + (getIfSet(field, item, ""),)
+        rows.append(row)
         i += 1
-    return subjs
+    return rows
+
+def getSubjectRows(bid, subjects, tnc):
+    return getRows(bid, subjects, tnc)
 
 def getTitleRows(bid, titles, tnc):
-    i, ttls = 0, []
-    for title in titles: 
-        tid = getBillObjectId(*tnc, i)
-        portion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-        ttls.append((tid, bid, *tnc, i, title["title"], title["type"], title["as"], portion))
-        i += 1
-    return ttls
+    return getRows(bid, titles, tnc, ["title", "type", "as", "is_for_portion"])
 
 def getCoSponsorRows(bid, cosponsors, tnc):
-    i, cospons = 0, []
-    for cosponsor in cosponsors:
-        cid = getBillObjectId(*tnc, i)
-        cospons.append((cid, bid, *tnc, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
-        i += 1
-    return cospons
+    return getRows(bid, cosponsors, tnc, ["id", "sponsoredAt", "withdrawnAt", "isOriginal"])
 
 def getActionRows(bid, actions, tnc):
-    i, acts = 0, []
-    for action in actions:
-        aid = getBillObjectId(*tnc, i)
-        acts.append((aid, bid, i, action["type"], action["text"], action["actionDate"]))
-        i += 1
-    return acts
+    return getRows(bid, actions, tnc, ["type", "text", "actionDate"])
 
 def getSummaryRows(bid, summaries, tnc):
-    i, sums = 0, []
-    for summary in summaries:
-        sid = getBillObjectId(*tnc, i)
-        sums.append((sid, bid, i, summary["text"], summary["description"], summary["date"], summary["updated"]))
-        i += 1
-    return sums
+    return getRows(bid, summaries, tnc, ["text", "description", "date", "updated"])
+
 
 
 def splitBillsIntoTableRows(bills):
@@ -284,8 +273,9 @@ def getInsertThreads(bills):
     threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billToTables["Bills"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, billToTables["BillSubjects"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillActions", ACTION_COLUMNS, billToTables["BillActions"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillSummaries", SUMMARY_COLUMNS, billToTables["BillSummaries"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, billToTables["BillCoSponsors"]))
-    threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", ACTION_COLUMNS, billToTables["BillActions"]))
     return threads
 
 def readBillFileFromZip(zipFile, name, path):
