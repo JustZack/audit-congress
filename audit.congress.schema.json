@@ -317,12 +317,11 @@
 
                     "index": { "type": "INT", "null": "NO" },
 
-                    "text": { "type": "TEXT", "null": "YES" },
+                    "text": { "type": "MEDIUMTEXT", "null": "YES" },
 
-                    "versionCode": { "type": "VARCHAR(250)", "null": "YES" },
                     "description": { "type": "VARCHAR(250)", "null": "YES" },
                     "date": { "type": "DATE", "null": "NO" },
-                    "updated": { "type": "DATE", "null": "NO" }
+                    "updated": { "type": "DATE", "null": "YES" }
                 },
                 "indexes": {
                     "billid_index": ["billId"]

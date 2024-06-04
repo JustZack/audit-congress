@@ -109,6 +109,11 @@ def getCosponsorDict(id, sponsoredAt, withdrawnAt, isOriginal):
 def getActionDict(type, text, actionDate):
     return {"type": type, "text": text, "actionDate": actionDate}
 
+def getSummaryDict(text, description, date, updated = None):
+    return {"text": text, "description": description, "date": date, "updated": updated}
+
+
+
 def getTitleFromXML(title):
     return {"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""}
 
@@ -121,6 +126,8 @@ def getCosponsorFromXML(cosponsor):
 
 def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
 
+def getSummaryFromXML(sum): return getSummaryDict(sum["text"], sum["actionDesc"], sum["actionDate"], sum["updateDate"])
+
 def getCosponsorFromJSON(cosponsor):
     id = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
     since = cosponsor["sponsored_at"]
@@ -129,6 +136,8 @@ def getCosponsorFromJSON(cosponsor):
     return getCosponsorDict(id, since, withdrawn, isOriginal)
 
 def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
+
+def getSummaryFromJSON(sum): return getSummaryDict(sum["text"], sum["as"], sum["date"])
 
 
 
@@ -144,7 +153,7 @@ def parseBillFDSYSXml(fileData):
     bill["subjects"] =   [subject["name"] for subject in ensureFieldIsList(bill, "subjects")]
     bill["cosponsors"] = [getCosponsorFromXML(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
     bill["actions"] =    [getActionFromXML(action) for action in ensureFieldIsList(bill, "actions")]
-    bill["summaries"] =         ensureFieldIsList(bill, "summaries")
+    bill["summaries"] =  [getSummaryFromXML(summary) for summary in ensureFieldIsList(bill, "summaries")]
     bill["committees"] =        ensureFieldIsList(bill, "committees")
     bill["amendments"] =        ensureFieldIsList(bill, "amendments")
     bill["laws"] =              ensureFieldIsList(bill, "laws")
@@ -169,7 +178,7 @@ def parseBillDataJson(fileData):
     bill["subjects"] =      ensureFieldIsList(bill, "subjects")
     bill["cosponsors"] =    [getCosponsorFromJSON(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
     bill["actions"] =       [getActionFromJSON(action) for action in ensureFieldIsList(bill, "actions")]
-    bill["summaries"] =         ensureFieldIsList(bill, "summaries")
+    bill["summaries"] =     [getSummaryFromJSON(summary) for summary in ensureFieldIsList(bill, "summaries")]
     bill["committees"] =        ensureFieldIsList(bill, "committees")
     bill["amendments"] =        ensureFieldIsList(bill, "amendments")
     bill["laws"] =              ensureFieldIsList(bill, "laws")
@@ -228,10 +237,17 @@ def getActionRows(bid, actions, tnc):
         i += 1
     return acts
 
+def getSummaryRows(bid, summaries, tnc):
+    i, sums = 0, []
+    for summary in summaries:
+        sid = getBillObjectId(*tnc, i)
+        sums.append((sid, bid, i, summary["text"], summary["description"], summary["date"], summary["updated"]))
+        i += 1
+    return sums
 
 
 def splitBillsIntoTableRows(bills):
-    billData,subjectData,titleData,cosponData,actionData = [],[],[],[],[]
+    billData,subjectData,titleData,cosponData,actionData,summaryData = [],[],[],[],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -243,8 +259,9 @@ def splitBillsIntoTableRows(bills):
         titleData.extend(getTitleRows(bid, parsedBill["titles"], tnc))
         cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], tnc))
         actionData.extend(getActionRows(bid, parsedBill["actions"], tnc))
+        summaryData.extend(getSummaryRows(bid, parsedBill["summaries"], tnc))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
-            "BillActions": actionData, "BillCoSponsors": cosponData}
+            "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
