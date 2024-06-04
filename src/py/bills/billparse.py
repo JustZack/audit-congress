@@ -107,7 +107,10 @@ def getSponsorBioguideId(sponsor, bioguideKey, thomasKey):
         return sponsor[bioguideKey] if bioguideKey in sponsor else getMemberByThomasId(sponsor[thomasKey])
     else: return None
 
-def getCosponsorDict(id, sponsoredAt, withdrawnAt, isOriginal):
+def getTitleDict(type_, title, as_="", is_for_portion=""):
+    return {"type": type_, "title": title, "as": as_, "is_for_portion": is_for_portion}   
+
+def getCosponsorDict(id, sponsoredAt, withdrawnAt, isOriginal=None):
     return {"id": id, "sponsoredAt": sponsoredAt, "withdrawnAt": withdrawnAt, "isOriginal": isOriginal}
 
 def getActionDict(type, text, actionDate):
@@ -119,11 +122,13 @@ def getSummaryDict(text, description, date, updated = None):
 
 
 def getTitleFromXML(title):
-    return {"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""}
+    type_ = getIfSet("titleType", title)
+    title = getIfSet("title", title)
+    return getTitleDict(type_, title)
 
 def getCosponsorFromXML(cosponsor):
     id = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
-    since = cosponsor["sponsorshipDate"]
+    since = getIfSet("sponsorshipDate", cosponsor)
     withdrawn = getIfSet("sponsorshipWithdrawnDate", cosponsor)
     isOriginal = getIfSet("isOriginalCosponsor", cosponsor)
     return getCosponsorDict(id, since, withdrawn, isOriginal)
@@ -132,12 +137,17 @@ def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["a
 
 def getSummaryFromXML(sum): return getSummaryDict(sum["text"], sum["actionDesc"], sum["actionDate"], sum["updateDate"])
 
+def getTitleFromJSON(title):
+    type_ = getIfSet("type", title)
+    title = getIfSet("title", title)
+    as_ = getIfSet("as", title)
+    return getTitleDict(type_, title, as_)
+
 def getCosponsorFromJSON(cosponsor):
     id = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
-    since = cosponsor["sponsored_at"]
+    since = getIfSet("sponsored_at", cosponsor)
     withdrawn = getIfSet("withdrawn_at", cosponsor)
-    isOriginal = None
-    return getCosponsorDict(id, since, withdrawn, isOriginal)
+    return getCosponsorDict(id, since, withdrawn)
 
 def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
 
@@ -178,7 +188,7 @@ def parseBillDataJson(fileData):
     if type(sponsor) is list: sponsor = sponsor[0]
     bill["bill"]["bioguideId"] = getSponsorBioguideId(sponsor, "bioguide_id", "thomas_id")
     
-    bill["titles"] =        ensureFieldIsList(bill, "titles")
+    bill["titles"] =        [getTitleFromJSON(title) for title in ensureFieldIsList(bill, "titles")]
     bill["subjects"] =      ensureFieldIsList(bill, "subjects")
     bill["cosponsors"] =    [getCosponsorFromJSON(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
     bill["actions"] =       [getActionFromJSON(action) for action in ensureFieldIsList(bill, "actions")]
