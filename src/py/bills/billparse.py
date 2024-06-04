@@ -40,7 +40,7 @@ def getMemberByThomasId(thomasId):
 
 
 def getIfSet(key, dct, defaultValue = None): 
-    if type(dct) is dict and key in dct: return dct[key] 
+    if dct is not None and type(dct) is dict and key in dct: return dct[key]
     else: return defaultValue
 
 def getMatchingElement(obj, path):
