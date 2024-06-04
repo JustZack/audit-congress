@@ -7,7 +7,14 @@ import xmltodict as xml2d
 
 from shared import logger, db, cache
 
-def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
+
+
+def getIfSet(dct, key, defaultValue = None): 
+    if dct is not None and type(dct) is dict and key in dct: return dct[key]
+    else: return defaultValue
+
+def getIfSetAsStr(dct, key): 
+    return getIfSet(dct, key, "")
 
 def dictArrayToDict(dictArray, dictKeyToUse):
     newDict = dict()

@@ -40,14 +40,10 @@ def getMemberByThomasId(thomasId):
 
 
 
-def getIfSet(key, dct, defaultValue = None): 
-    if dct is not None and type(dct) is dict and key in dct: return dct[key]
-    else: return defaultValue
-
 def getMatchingElement(obj, path):
     tmpObj = obj
     for element in path:
-        tmpObj = getIfSet(element, tmpObj)
+        tmpObj = util.getIfSet(tmpObj, element)
         if tmpObj is None: break
     return tmpObj
 
@@ -124,15 +120,15 @@ def getSummaryDict(text, description, date, updated = None):
 
 
 def getTitleFromXML(title):
-    type_ = getIfSet("titleType", title)
-    title = getIfSet("title", title)
+    type_ = util.getIfSet(title, "titleType")
+    title = util.getIfSet(title, "title")
     return getTitleDict(type_, title)
 
 def getCosponsorFromXML(cosponsor):
     id_ = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
-    since = getIfSet("sponsorshipDate", cosponsor)
-    withdrawn = getIfSet("sponsorshipWithdrawnDate", cosponsor)
-    isOriginal = getIfSet("isOriginalCosponsor", cosponsor)
+    since = util.getIfSet(cosponsor, "sponsorshipDate")
+    withdrawn = util.getIfSet(cosponsor, "sponsorshipWithdrawnDate")
+    isOriginal = util.getIfSet(cosponsor, "isOriginalCosponsor")
     return getCosponsorDict(id_, since, withdrawn, isOriginal)
 
 def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
@@ -140,15 +136,15 @@ def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["a
 def getSummaryFromXML(sum): return getSummaryDict(sum["text"], sum["actionDesc"], sum["actionDate"], sum["updateDate"])
 
 def getTitleFromJSON(title):
-    type_ = getIfSet("type", title)
-    title = getIfSet("title", title)
-    as_ = getIfSet("as", title)
+    type_ = util.getIfSet(title, "type")
+    title = util.getIfSet(title, "title")
+    as_ = util.getIfSet(title, "as")
     return getTitleDict(type_, title, as_)
 
 def getCosponsorFromJSON(cosponsor):
     id_ = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
-    since = getIfSet("sponsored_at", cosponsor)
-    withdrawn = getIfSet("withdrawn_at", cosponsor)
+    since = util.getIfSet(cosponsor, "sponsored_at")
+    withdrawn = util.getIfSet(cosponsor, "withdrawn_at")
     return getCosponsorDict(id_, since, withdrawn)
 
 def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
@@ -228,7 +224,7 @@ def getRows(bid, items, tnc, fieldList = None):
         if fieldList is None: row += (item,)
         else: 
             for field in fieldList:
-                row = row + (getIfSet(field, item, ""),)
+                row = row + (util.getIfSet(item, field, ""),)
         rows.append(row)
         i += 1
     return rows
