@@ -111,8 +111,8 @@ def getSponsorBioguideId(sponsor, bioguideKey, thomasKey):
 def getTitleDict(type_, title, as_="", is_for_portion=""):
     return {"type": type_, "title": title, "as": as_, "is_for_portion": is_for_portion}   
 
-def getCosponsorDict(id, sponsoredAt, withdrawnAt, isOriginal=None):
-    return {"id": id, "sponsoredAt": sponsoredAt, "withdrawnAt": withdrawnAt, "isOriginal": isOriginal}
+def getCosponsorDict(id_, sponsoredAt, withdrawnAt, isOriginal=None):
+    return {"id": id_, "sponsoredAt": sponsoredAt, "withdrawnAt": withdrawnAt, "isOriginal": isOriginal}
 
 def getActionDict(type, text, actionDate):
     return {"type": type, "text": text, "actionDate": actionDate}
@@ -128,11 +128,11 @@ def getTitleFromXML(title):
     return getTitleDict(type_, title)
 
 def getCosponsorFromXML(cosponsor):
-    id = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
+    id_ = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
     since = getIfSet("sponsorshipDate", cosponsor)
     withdrawn = getIfSet("sponsorshipWithdrawnDate", cosponsor)
     isOriginal = getIfSet("isOriginalCosponsor", cosponsor)
-    return getCosponsorDict(id, since, withdrawn, isOriginal)
+    return getCosponsorDict(id_, since, withdrawn, isOriginal)
 
 def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
 
@@ -145,10 +145,10 @@ def getTitleFromJSON(title):
     return getTitleDict(type_, title, as_)
 
 def getCosponsorFromJSON(cosponsor):
-    id = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
+    id_ = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
     since = getIfSet("sponsored_at", cosponsor)
     withdrawn = getIfSet("withdrawn_at", cosponsor)
-    return getCosponsorDict(id, since, withdrawn)
+    return getCosponsorDict(id_, since, withdrawn)
 
 def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
 
@@ -207,9 +207,9 @@ def parseBillDataJson(fileData):
 
 
 def getBillObjectId(typ, number, congress, index=None):
-    id = "{}{}-{}".format(typ, number, congress)
-    if index is not None: id += "-{}".format(index)
-    return id
+    id_ = "{}{}-{}".format(typ, number, congress)
+    if index is not None: id_ += "-{}".format(index)
+    return id_
 
 def getBillRow(bid, bill, tnc):
     bioguide = bill["bioguideId"]
