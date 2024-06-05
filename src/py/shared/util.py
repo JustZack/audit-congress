@@ -124,10 +124,23 @@ def getPathFile(path):
     lastSlash = path.rfind("/") + 1
     return path[lastSlash:]
 
+def pathIsDir(path):
+    if type(path) is not str: return False
+    lastSlash = path.rfind("/") + 1
+    lastDot = path.rfind(".") + 1
+    return lastSlash > lastDot
+
 def pathIsFile(path):
+    if type(path) is not str: return False
     lastSlash = path.rfind("/") + 1
     lastDot = path.rfind(".") + 1
     return lastDot > lastSlash
+
+def getFileType(path):
+    splitLocation = 0
+    if pathIsFile(path): splitLocation = path.rfind(".") + 1
+    elif pathIsDir(path): splitLocation = path.rfind("/") + 1
+    return path[splitLocation:]
 
 def relativeToAbsPath(path): return os.path.abspath(path)
 

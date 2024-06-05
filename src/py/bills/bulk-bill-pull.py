@@ -120,6 +120,9 @@ def insertBillsWithBulkLoad(bills, congress):
     path = util.relativeToAbsPath(CSV_CACHE_DIR+"{}-{}.csv")
     for name in tableRows.keys():
         data = tableRows[name]
+        if len(data) == 0: 
+            logger.logInfo("No data to insert for", name,"in congress",congress)
+            continue
         filePath = path.format(name, congress)
         logger.logInfo("Bulk inserting", len(data),"into",name,"for congress",congress)
         util.saveAsCSV(filePath, tableRows[name])
