@@ -32,13 +32,11 @@ def getMemberRow(member, isCurrent):
 
 def getTermRows(terms, bioguideId):
     mTerms = []
-    termFields = ["type", "start", "end", "state", "district", "party", "class", "how",
+    termFields = ["bioguideId", "type", "start", "end", "state", "district", "party", "class", "how",
                    "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone"]
     for term in terms:
-        mTerm = []
-        mTerm.append(bioguideId)
-        mTerm.extend(util.getFields(term, termFields))
-        mTerms.append(mTerm)
+        term["bioguideId"] = bioguideId
+        mTerms.append(util.getFields(term, termFields))
     return mTerms
 
 def getElectionRows(elections, bioguideId):
@@ -62,8 +60,6 @@ def getSocialRow(social):
     sRow.extend(util.getFields(sSocial, sSocialFields))
     return sRow
 
-
-
 def getOfficeRows(bioguideId, offices):
     mOffices = []
     officeFields = ["id", "bioguideId", "address", "suite", "building", 
@@ -73,8 +69,6 @@ def getOfficeRows(bioguideId, offices):
         mOffices.append(util.getFields(office, officeFields))
     return mOffices
 
-
-
 def getSubCommitteeHistoryRows(subcommittees):
     subComHistData = []
     for sub in subcommittees: 
@@ -83,15 +77,11 @@ def getSubCommitteeHistoryRows(subcommittees):
 
 def getCommitteeHistoryRows(committee):
     commHistData = []
+    committeeHistFields = ["thomas_id", "parent_id", "type", "congress", "name"]
     for congress in committee["congresses"]:
-        histData = []
-        name = committee["names"][str(congress)]
-        histData.append(committee["thomas_id"])
-        histData.append(util.getIfSetAsStr(committee, "parent_id"))
-        histData.append(util.getIfSetAsStr(committee, "type"))
-        histData.append(congress)
-        histData.append(name)
-        commHistData.append(histData)
+        committee["congress"] = congress
+        committee["name"] = committee["names"][str(congress)]
+        commHistData.append(util.getFields(committee, committeeHistFields))
     return commHistData
 
 def getSubCommitteeRows(subcommittees, parentId, parentType):
@@ -112,17 +102,13 @@ def getCommitteeRow(committee):
 
 
 
-def getSubCommitteesIfSet(committee):
-    if "subcommittees" in committee: return committee["subcommittees"]
-    else: return []
-
 def getCombinedCommittee(code, current, historic):
     currentSub, historicSub = [], []
     data, isCurrent = None, False
 
     if code in current:
         isCurrent = True
-        currentSub = getSubCommitteesIfSet(current[code])
+        currentSub = util.getIfSet(current[code], "subcommittees", [])
         data = current[code]
         data["names"] = {CURRENT_CONGRESS: data["name"]}
         data["congresses"] = [int(CURRENT_CONGRESS)]
