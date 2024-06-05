@@ -16,6 +16,11 @@ def getIfSet(dct, key, defaultValue = None):
 def getIfSetAsStr(dct, key): 
     return getIfSet(dct, key, "")
 
+def getFields(item, fieldList):
+    row = []
+    for field in fieldList: row.append(getIfSet(item, field, ""))
+    return row
+
 def dictArrayToDict(dictArray, dictKeyToUse):
     newDict = dict()
     for aDict in dictArray: newDict[aDict[dictKeyToUse]] = aDict

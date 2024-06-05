@@ -18,50 +18,26 @@ def fetchCurrentCongress():
 def getMemberRow(member, isCurrent):
     mRow = []
     mId, mName, mBio = member["id"], member["name"], member["bio"]
-    mRow.append(mId["bioguide"])
-    mRow.append(util.getIfSetAsStr(mId, "thomas"))
-    mRow.append(util.getIfSetAsStr(mId, "lis"))
-    mRow.append(util.getIfSetAsStr(mId, "govtrack"))
-    mRow.append(util.getIfSetAsStr(mId, "opensecrets"))
-    mRow.append(util.getIfSetAsStr(mId, "votesmart"))
-    mRow.append(util.getIfSetAsStr(mId, "cspan"))
-    mRow.append(util.getIfSetAsStr(mId, "maplight"))
-    mRow.append(util.getIfSetAsStr(mId, "icpsr"))
-    mRow.append(util.getIfSetAsStr(mId, "wikidata"))
-    mRow.append(util.getIfSetAsStr(mId, "google_entity_id"))
 
-    mRow.append(util.getIfSetAsStr(mName, "official_full"))
-    mRow.append(util.getIfSetAsStr(mName, "first"))
-    mRow.append(util.getIfSetAsStr(mName, "last"))
-
-    mRow.append(util.getIfSetAsStr(mBio, "gender"))
-    mRow.append(util.getIfSetAsStr(mBio, "birthday"))
-
-    mRow.append(isCurrent)
+    mIdFields = ["bioguide", "thomas", "lis", "govtrack", "opensecrets", "votesmart", "cspan", 
+                "maplight", "icpsr", "wikidata", "google_entity_id"]
+    mNameFields = ["official_full", "first", "last"]
+    mBioFields = ["gender", "birthday"]
     
+    mRow.extend(util.getFields(mId, mIdFields))
+    mRow.extend(util.getFields(mName, mNameFields))
+    mRow.extend(util.getFields(mBio, mBioFields))
+    mRow.append(isCurrent)
     return mRow
 
 def getTermRows(terms, bioguideId):
     mTerms = []
+    termFields = ["type", "start", "end", "state", "district", "party", "class", "how",
+                   "state_rank", "url", "rss_url", "contact_form", "address", "office", "phone"]
     for term in terms:
         mTerm = []
         mTerm.append(bioguideId)
-        mTerm.append(util.getIfSetAsStr(term, "type"))
-        mTerm.append(util.getIfSetAsStr(term, "start"))
-        mTerm.append(util.getIfSetAsStr(term, "end"))
-        mTerm.append(util.getIfSetAsStr(term, "state"))
-        mTerm.append(util.getIfSetAsStr(term, "district"))
-        mTerm.append(util.getIfSetAsStr(term, "party"))
-        mTerm.append(util.getIfSetAsStr(term, "class"))
-        mTerm.append(util.getIfSetAsStr(term, "how"))
-        mTerm.append(util.getIfSetAsStr(term, "state_rank"))
-        mTerm.append(util.getIfSetAsStr(term, "url"))
-        mTerm.append(util.getIfSetAsStr(term, "rss_url"))
-        mTerm.append(util.getIfSetAsStr(term, "contact_form"))
-        mTerm.append(util.getIfSetAsStr(term, "address"))
-        mTerm.append(util.getIfSetAsStr(term, "office"))
-        mTerm.append(util.getIfSetAsStr(term, "phone"))
-
+        mTerm.extend(util.getFields(term, termFields))
         mTerms.append(mTerm)
     return mTerms
 
@@ -75,45 +51,26 @@ def getElectionRows(elections, bioguideId):
         mElections.append(mElection)
     return mElections
 
-
-
 def getSocialRow(social):
     sRow = []
     sId, sSocial = social["id"], social["social"]
 
-    sRow.append(sId["bioguide"])
-    sRow.append(util.getIfSetAsStr(sSocial, "twitter"))
-    sRow.append(util.getIfSetAsStr(sSocial, "twitter_id"))
-    sRow.append(util.getIfSetAsStr(sSocial, "facebook"))
-    sRow.append(util.getIfSetAsStr(sSocial, "facebook_id"))
-    sRow.append(util.getIfSetAsStr(sSocial, "youtube"))
-    sRow.append(util.getIfSetAsStr(sSocial, "youtube_id"))
-    sRow.append(util.getIfSetAsStr(sSocial, "instagram"))
-    sRow.append(util.getIfSetAsStr(sSocial, "instagram_id"))
+    sSocialFields = ["twitter", "twitter_id", "facebook", "facebook_id", 
+                     "youtube", "youtube_id", "instagram", "instagram_id"]
 
+    sRow.append(sId["bioguide"])
+    sRow.extend(util.getFields(sSocial, sSocialFields))
     return sRow
 
 
 
 def getOfficeRows(bioguideId, offices):
     mOffices = []
+    officeFields = ["id", "bioguideId", "address", "suite", "building", 
+                    "city", "state", "zip", "latitude", "longitude", "phone", "fax"]
     for office in offices:
-        mOffice = []
-
-        mOffice.append(util.getIfSetAsStr(office, "id"))
-        mOffice.append(bioguideId)
-        mOffice.append(util.getIfSetAsStr(office, "address"))
-        mOffice.append(util.getIfSetAsStr(office, "suite"))
-        mOffice.append(util.getIfSetAsStr(office, "building"))
-        mOffice.append(util.getIfSetAsStr(office, "city"))
-        mOffice.append(util.getIfSetAsStr(office, "state"))
-        mOffice.append(util.getIfSetAsStr(office, "zip"))
-        mOffice.append(util.getIfSetAsStr(office, "latitude"))
-        mOffice.append(util.getIfSetAsStr(office, "longitude"))
-        mOffice.append(util.getIfSetAsStr(office, "phone"))
-        mOffice.append(util.getIfSetAsStr(office, "fax"))
-
-        mOffices.append(mOffice)
+        office["bioguideId"] = bioguideId
+        mOffices.append(util.getFields(office, officeFields))
     return mOffices
 
 
@@ -148,25 +105,10 @@ def getSubCommitteeRows(subcommittees, parentId, parentType):
     return subComData
 
 def getCommitteeRow(committee):
-    cRow = []
-
-    cRow.append(committee["thomas_id"])
-    cRow.append(util.getIfSetAsStr(committee, "parent_id"))
-    cRow.append(util.getIfSetAsStr(committee, "type"))
-    cRow.append(util.getIfSetAsStr(committee, "name"))
-    cRow.append(util.getIfSetAsStr(committee, "wikipedia"))
-    cRow.append(util.getIfSetAsStr(committee, "jurisdiction"))
-    cRow.append(util.getIfSetAsStr(committee, "jurisdiction_source"))
-    cRow.append(util.getIfSetAsStr(committee, "url"))
-    cRow.append(util.getIfSetAsStr(committee, "rss_url"))
-    cRow.append(util.getIfSetAsStr(committee, "minority_url"))
-    cRow.append(util.getIfSetAsStr(committee, "minority_rss_url"))
-    cRow.append(util.getIfSetAsStr(committee, "youtube_id"))
-    cRow.append(util.getIfSetAsStr(committee, "address"))
-    cRow.append(util.getIfSetAsStr(committee, "phone"))
-    cRow.append(committee["isCurrent"])
-
-    return cRow
+    committeeFields = ["thomas_id", "parent_id", "type", "name", "wikipedia", "jurisdiction", 
+                       "jurisdiction_source", "url", "rss_url", "minority_url", "minority_rss_url", 
+                       "youtube_id", "address", "phone", "isCurrent"]
+    return util.getFields(committee, committeeFields)
 
 
 
@@ -213,12 +155,10 @@ def getAggregatedCommittees(current, historic):
 
 def getMembersipRows(members, committee):
     membershipData = []
-    for mem in members:
+    membershipFields = ["bioguide", "party", "title", "rank"]
+    for member in members:
         cMember = []
         cMember.append(committee)
-        cMember.append(util.getIfSetAsStr(mem, "bioguide"))
-        cMember.append(util.getIfSetAsStr(mem, "party"))
-        cMember.append(util.getIfSetAsStr(mem, "title"))
-        cMember.append(util.getIfSetAsStr(mem, "rank"))
+        cMember.extend(util.getFields(member, membershipFields))
         membershipData.append(cMember)
     return membershipData

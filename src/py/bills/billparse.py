@@ -208,26 +208,21 @@ def getBillObjectId(typ, number, congress, index=None):
     if index is not None: id_ += "-{}".format(index)
     return id_
 
-def getBillRow(bid, bill, tnc):
-    bioguide = bill["bioguideId"]
-    title = bill["title"]
-    policyArea = bill["policyArea"]
-    introduced = bill["introduced_at"]
-    updated = bill["updated_at"]
-    return (bid, *tnc, bioguide, title, policyArea, introduced, updated)
-
 def getRows(bid, items, tnc, fieldList = None):
     i, rows = 0, []
     for item in items: 
         rid = getBillObjectId(*tnc, i)
-        row = (rid, bid, *tnc, i)
-        if fieldList is None: row += (item,)
-        else: 
-            for field in fieldList:
-                row = row + (util.getIfSet(item, field, ""),)
+        row = [rid, bid, *tnc, i]
+        if fieldList is None: row.append(item)
+        else: row.extend(util.getFields(item, fieldList))
         rows.append(row)
         i += 1
     return rows
+
+def getBillRow(bid, bill, tnc):
+    row = [bid, *tnc]
+    row.extend(util.getFields(bill, ["bioguideId", "title", "policyArea", "introduced_at", "updated_at"]))
+    return row
 
 def getSubjectRows(bid, subjects, tnc):
     return getRows(bid, subjects, tnc)
