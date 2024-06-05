@@ -17,6 +17,7 @@ TITLE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "title",
 COSPONSOR_COLUMNS = ["id", "billId", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
 ACTION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "actionType", "text", "acted"]
 SUMMARY_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "text", "description", "date", "updated"]
+TEXT_VERSION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "versionType", "url", "format", "date"]
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
@@ -117,6 +118,10 @@ def getActionDict(type, text, actionDate):
 def getSummaryDict(text, description, date, updated = None):
     return {"text": text, "description": description, "date": date, "updated": updated}
 
+def getTextVersionDict(versionType, url, date):
+    format_ = util.getFileType(url)
+    print("{}: {}".format(format_, url))
+    return {"versionType": versionType, "url": url, "format": format_, "date": date}
 
 
 def getTitleFromXML(title):
@@ -134,6 +139,12 @@ def getCosponsorFromXML(cosponsor):
 def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
 
 def getSummaryFromXML(sum): return getSummaryDict(sum["text"], sum["actionDesc"], sum["actionDate"], sum["updateDate"])
+
+def getTextVersionFromXML(txt): 
+    url = txt["formats"]
+    url = url["item"]["url"] if url is not None else ""
+    return getTextVersionDict(txt["type"], url, txt["date"])
+    
 
 def getTitleFromJSON(title):
     type_ = util.getIfSet(title, "type")
@@ -166,10 +177,10 @@ def parseBillFDSYSXml(fileData):
     bill["cosponsors"] = [getCosponsorFromXML(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
     bill["actions"] =    [getActionFromXML(action) for action in ensureFieldIsList(bill, "actions")]
     bill["summaries"] =  [getSummaryFromXML(summary) for summary in ensureFieldIsList(bill, "summaries")]
-    bill["committees"] =        ensureFieldIsList(bill, "committees")
-    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
-    bill["laws"] =              ensureFieldIsList(bill, "laws")
-    bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
+    bill["committees"] =    ensureFieldIsList(bill, "committees")
+    bill["amendments"] =    ensureFieldIsList(bill, "amendments")
+    bill["laws"] =          ensureFieldIsList(bill, "laws")
+    bill["textVersions"] =  [getTextVersionFromXML(version) for version in ensureFieldIsList(bill, "textVersions")]
     bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
@@ -239,10 +250,14 @@ def getActionRows(bid, actions, tnc):
 def getSummaryRows(bid, summaries, tnc):
     return getRows(bid, summaries, tnc, ["text", "description", "date", "updated"])
 
+def getTextVersionRows(bid, textVersions, tnc):
+    return getRows(bid, textVersions, tnc, ["type", "url", "format", "date"])
+
 
 
 def splitBillsIntoTableRows(bills):
-    billData,subjectData,titleData,cosponData,actionData,summaryData = [],[],[],[],[],[]
+    billData,subjectData,titleData,cosponData = [],[],[],[]
+    actionData,summaryData,versionData = [],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -255,8 +270,10 @@ def splitBillsIntoTableRows(bills):
         cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], tnc))
         actionData.extend(getActionRows(bid, parsedBill["actions"], tnc))
         summaryData.extend(getSummaryRows(bid, parsedBill["summaries"], tnc))
+        versionData.extend(getTextVersionRows(bid, parsedBill["textVersions"], tnc))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
-            "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData}
+            "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData,
+            "BillTextVersions": versionData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
@@ -266,6 +283,7 @@ def getInsertThreads(bills):
     threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillActions", ACTION_COLUMNS, billToTables["BillActions"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSummaries", SUMMARY_COLUMNS, billToTables["BillSummaries"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillTextVersions", TEXT_VERSION_COLUMNS, billToTables["BillTextVersions"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, billToTables["BillCoSponsors"]))
     return threads
 

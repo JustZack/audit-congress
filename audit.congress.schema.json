@@ -347,8 +347,10 @@
 
                     "index": { "type": "INT", "null": "NO" },
 
-                    "versionType": { "type": "VARCHAR(250)", "null": "NO" },
-                    "text": { "type": "VARCHAR(250)", "null": "YES" },
+                    "versionType": { "type": "VARCHAR(50)", "null": "YES" },
+
+                    "url": { "type": "VARCHAR(250)", "null": "YES" },
+                    "format": { "type": "VARCHAR(10)", "null": "YES" },
 
                     "date": { "type": "DATE", "null": "NO" }
                 },
