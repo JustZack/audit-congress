@@ -116,30 +116,30 @@ def chunkList(array, chunkSize):
 
 def csvStr(itemArray): return ",".join(itemArray)
 
+def getCharPos(string, char):
+    if type(string) is not str or type(char) is not str: return -1
+    else: return string.rfind(char) + 1
+
+def getLastDotPos(string): return getCharPos(string, ".")
+
+def getLastSlashPos(string): return getCharPos(string, "/")
+
 def getPathDirectory(path):
-    lastSlash = path.rfind("/") + 1
+    lastSlash = getLastSlashPos(path)
     return path[0:lastSlash]
 
 def getPathFile(path):
-    lastSlash = path.rfind("/") + 1
+    lastSlash = getLastSlashPos(path)
     return path[lastSlash:]
 
-def pathIsDir(path):
-    if type(path) is not str: return False
-    lastSlash = path.rfind("/") + 1
-    lastDot = path.rfind(".") + 1
-    return lastSlash > lastDot
+def pathIsDir(path): return getLastSlashPos(path) > getLastDotPos(path)
 
-def pathIsFile(path):
-    if type(path) is not str: return False
-    lastSlash = path.rfind("/") + 1
-    lastDot = path.rfind(".") + 1
-    return lastDot > lastSlash
+def pathIsFile(path): return getLastDotPos(path) > getLastSlashPos(path)
 
 def getFileType(path):
     splitLocation = 0
-    if pathIsFile(path): splitLocation = path.rfind(".") + 1
-    elif pathIsDir(path): splitLocation = path.rfind("/") + 1
+    if pathIsFile(path): splitLocation = getLastDotPos(path)
+    elif pathIsDir(path): splitLocation = getLastSlashPos(path)
     return path[splitLocation:]
 
 def relativeToAbsPath(path): return os.path.abspath(path)

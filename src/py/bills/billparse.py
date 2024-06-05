@@ -119,9 +119,7 @@ def getSummaryDict(text, description, date, updated = None):
     return {"text": text, "description": description, "date": date, "updated": updated}
 
 def getTextVersionDict(versionType, url, date):
-    format_ = util.getFileType(url)
-    print("{}: {}".format(format_, url))
-    return {"versionType": versionType, "url": url, "format": format_, "date": date}
+    return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
 
 
 def getTitleFromXML(title):
