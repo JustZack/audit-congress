@@ -96,7 +96,7 @@ def saveTestBillFile(bill):
 
 
 def ensureFieldIsList(obj, field):
-    if (obj[field] is None): return []
+    if (obj is None or obj[field] is None): return []
     if type(obj[field]) is dict: return [obj[field]]
     return obj[field]
 
@@ -136,6 +136,10 @@ def getTextVersionDict(versionType, url, date):
 def getCommitteeDict(thomasId, action, date):
     return {"thomasId": thomasId, "action": action, "date": date}
 
+def getLawDict(type_, number): 
+    return {"type": type_, "number": number}
+
+
 
 def getTitleFromXML(title):
     type_ = util.getIfSet(title, "titleType")
@@ -158,15 +162,19 @@ def getTextVersionFromXML(txt):
     url = url["item"]["url"] if url is not None else ""
     return getTextVersionDict(txt["type"], url, txt["date"])
 
-def getCommitteeActionFromXML(thomasId, act): return getCommitteeDict(thomasId, act["name"], act["date"])
-
 def getCommitteeFromXML(com):
     commiteeItems = []
     thomasId = com["systemCode"]
-    activities = ensureFieldIsList(com["activities"], "item")
+    activities = ensureFieldIsList(util.getIfSet(com, "activities"), "item")
     if thomasId[4:] == "00": thomasId = thomasId[:4]
-    for act in activities: commiteeItems.append(getCommitteeActionFromXML(thomasId, act))
+    for act in activities: 
+        commiteeItems.append(getCommitteeDict(thomasId, act["name"], act["date"]))
     return commiteeItems
+
+def getLawsFromXML(law):
+    return getLawDict(law["type"], law["number"])
+
+
 
 def getTitleFromJSON(title):
     type_ = util.getIfSet(title, "type")
@@ -198,8 +206,8 @@ def parseBillFDSYSXml(fileData):
     bill["actions"] =    parseBillItem(bill, "actions", getActionFromXML)
     bill["summaries"] =  parseBillItem(bill, "summaries", getSummaryFromXML)
     bill["committees"] = parseBillItem(bill, "committees", getCommitteeFromXML)
-    bill["amendments"] =    ensureFieldIsList(bill, "amendments")
-    bill["laws"] =          ensureFieldIsList(bill, "laws")
+    bill["amendments"] = ensureFieldIsList(bill, "amendments")
+    bill["laws"] =       parseBillItem(bill, "laws", getLawsFromXML)
     bill["textVersions"] =  parseBillItem(bill, "textVersions", getTextVersionFromXML)
     bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")

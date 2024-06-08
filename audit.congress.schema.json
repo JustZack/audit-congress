@@ -380,6 +380,26 @@
                     "type_index": ["type"],
                     "billid_index": ["billId"]
                 }
+            },
+            {
+                "name": "BillLaws",
+                "columns": {
+                    "id": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "billId": { "type": "VARCHAR(50)", "null": "NO"},
+
+                    "type": { "type": "VARCHAR(50)", "null": "NO" },
+                    "number": { "type": "INT", "null": "NO" },
+                    "congress": { "type": "INT", "null": "NO" },
+
+                    "index": { "type": "INT", "null": "NO" },
+
+                    "lawType": { "type": "VARCHAR(50)", "null": "NO" },
+                    "lawNumber": { "type": "VARCHAR(250)", "null": "YES" }
+                },
+                "indexes": {
+                    "type_index": ["type"],
+                    "billid_index": ["billId"]
+                }
             }
         ]
 }
