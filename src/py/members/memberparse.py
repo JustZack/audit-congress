@@ -114,7 +114,7 @@ def getCombinedCommittee(code, current, historic):
         data["congresses"] = [int(CURRENT_CONGRESS)]
         
     if code in historic:
-        historicSub = getSubCommitteesIfSet(historic[code])
+        historicSub = util.getIfSet(historic[code], "subcommittees", [])
         if not isCurrent:
             data = historic[code]
         else: 
