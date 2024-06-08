@@ -18,6 +18,7 @@ COSPONSOR_COLUMNS = ["id", "billId", "type", "number", "congress", "bioguideId",
 ACTION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "actionType", "text", "acted"]
 SUMMARY_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "text", "description", "date", "updated"]
 TEXT_VERSION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "versionType", "url", "format", "date"]
+COMMITTEE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "thomasId", "action", "date"]
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
@@ -100,7 +101,12 @@ def ensureFieldIsList(obj, field):
     return obj[field]
 
 def parseBillItem(bill, fieldName, parseFunction): 
-    return map(parseFunction, ensureFieldIsList(bill, fieldName))
+    items = []
+    for item in ensureFieldIsList(bill, fieldName):
+        result = parseFunction(item)
+        if type(result) is list: items.extend(result)
+        else: items.append(result)
+    return items
 
 
 
@@ -127,6 +133,8 @@ def getSummaryDict(text, description, date, updated = None):
 def getTextVersionDict(versionType, url, date):
     return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
 
+def getCommitteeDict(thomasId, action, date):
+    return {"thomasId": thomasId, "action": action, "date": date}
 
 
 def getTitleFromXML(title):
@@ -150,7 +158,15 @@ def getTextVersionFromXML(txt):
     url = url["item"]["url"] if url is not None else ""
     return getTextVersionDict(txt["type"], url, txt["date"])
 
+def getCommitteeActionFromXML(thomasId, act): return getCommitteeDict(thomasId, act["name"], act["date"])
 
+def getCommitteeFromXML(com):
+    commiteeItems = []
+    thomasId = com["systemCode"]
+    activities = ensureFieldIsList(com["activities"], "item")
+    if thomasId[4:] == "00": thomasId = thomasId[:4]
+    for act in activities: commiteeItems.append(getCommitteeActionFromXML(thomasId, act))
+    return commiteeItems
 
 def getTitleFromJSON(title):
     type_ = util.getIfSet(title, "type")
@@ -181,7 +197,7 @@ def parseBillFDSYSXml(fileData):
     bill["cosponsors"] = parseBillItem(bill, "cosponsors", getCosponsorFromXML)
     bill["actions"] =    parseBillItem(bill, "actions", getActionFromXML)
     bill["summaries"] =  parseBillItem(bill, "summaries", getSummaryFromXML)
-    bill["committees"] =    ensureFieldIsList(bill, "committees")
+    bill["committees"] = parseBillItem(bill, "committees", getCommitteeFromXML)
     bill["amendments"] =    ensureFieldIsList(bill, "amendments")
     bill["laws"] =          ensureFieldIsList(bill, "laws")
     bill["textVersions"] =  parseBillItem(bill, "textVersions", getTextVersionFromXML)
