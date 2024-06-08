@@ -136,7 +136,7 @@ def getTextVersionDict(versionType, url, date):
     return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
 
 def getCommitteeDict(thomasId, action, date):
-    return {"thomasId": thomasId, "action": action, "date": date}
+    return {"thomasId": thomasId.upper(), "action": action, "date": date}
 
 def getLawDict(type_, number): 
     return {"type": type_, "number": number}
