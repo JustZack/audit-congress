@@ -23,6 +23,8 @@ COMMITTEE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "tho
 LAWS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "lawType", "lawNumber"]
 RELATED_BILLS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "reason", "identifier", "relatedType", "relatedNumber", "relatedCongress"]
 
+COMMITTEE_REPORT_TYPE_MAP = {"S": "S", "H": "HRPT"}
+
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
 DATA_JSON_FILE_NAME = "data.json"
@@ -143,7 +145,18 @@ def getLawDict(type_, number):
     return {"type": type_, "number": number}
 
 def getRelatedBillDict(reason, identifiedBy, type_, number, congress):
-    return {"reason": reason, "identifiedBy": identifiedBy, "type": type_, "number": number, "congress": congress}
+    id_ = getBillObjectId(type_, number, congress)
+    return {"reason": reason, "identifiedBy": identifiedBy, "id": id_, "type": type_, "number": number, "congress": congress}
+
+def getCommitteeReportDict(type_, number, congress):
+    return {"type": type_, "number": number, "congress": congress}
+
+
+    
+def getCommitteeReportsFromEither(repStr):
+    type_ = repStr.split(".")[0]
+    congressAndNumber = repStr.split(" ")[2].split("-")
+    return getCommitteeReportDict(COMMITTEE_REPORT_TYPE_MAP[type_], congressAndNumber[0], congressAndNumber[1])
 
 
 
@@ -190,6 +203,9 @@ def getRelatedBillFromXML(rel):
         relatedItems.append(getRelatedBillDict(relation["type"], relation["identifiedBy"], type_, number, congress))
     return relatedItems
 
+def getCommitteeReportsFromXML(rep):
+    return getCommitteeReportsFromEither(rep["citation"])
+
 
 
 def getTitleFromJSON(title):
@@ -223,6 +239,10 @@ def getRelatedBillFromJSON(rel):
     number = result[1]
     return getRelatedBillDict(rel["reason"], None, type_, number, congress)
 
+def getCommitteeReportsFromJSON(rep):
+    return getCommitteeReportsFromEither(rep)
+
+
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
@@ -240,7 +260,7 @@ def parseBillFDSYSXml(fileData):
     bill["laws"] =              parseBillItem(bill, "laws", getLawFromXML)
     bill["textVersions"] =      parseBillItem(bill, "textVersions", getTextVersionFromXML)
     bill["relatedBills"] =      parseBillItem(bill, "relatedBills", getRelatedBillFromXML)
-    bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
+    bill["committeeReports"] =  parseBillItem(bill, "committeeReports", getCommitteeReportsFromXML)
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
     
     return bill
@@ -264,7 +284,7 @@ def parseBillDataJson(fileData):
     bill["laws"] =              ensureFieldIsList(bill, "laws")
     bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
     bill["relatedBills"] =      parseBillItem(bill, "relatedBills", getRelatedBillFromJSON)
-    bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
+    bill["committeeReports"] =  parseBillItem(bill, "committeeReports", getCommitteeReportsFromJSON)
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
     return bill     
 
@@ -316,14 +336,16 @@ def getLawRows(bid, laws, tnc):
     return getRows(bid, laws, tnc, ["type", "number"])
 
 def getRelatedBillRows(bid, related, tnc):
-    return getRows(bid, related, tnc, ["reason", "identifiedBy", "type", "number", "congress"])
+    return getRows(bid, related, tnc, ["reason", "identifiedBy", "id", "type", "number", "congress"])
 
+def getCommitteeReportRows(bid, reports, tnc):
+    return getRows(bid, reports, tnc, ["type", "number", "congress"])
 
 
 def splitBillsIntoTableRows(bills):
     billData,subjectData,titleData,cosponData = [],[],[],[]
     actionData,summaryData,versionData,commData = [],[],[],[]
-    lawsData,relatedData = [],[]
+    lawsData,relatedData,comReptData = [],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -340,10 +362,11 @@ def splitBillsIntoTableRows(bills):
         commData.extend(getCommitteeRows(bid, parsedBill["committees"], tnc))
         lawsData.extend(getLawRows(bid, parsedBill["laws"], tnc))
         relatedData.extend(getRelatedBillRows(bid, parsedBill["relatedBills"], tnc))
+        comReptData.extend(getCommitteeReportRows(bid, parsedBill["committeeReports"], tnc))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
             "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData,
             "BillTextVersions": versionData, "BillCommittees": commData, "BillLaws": lawsData,
-            "BillRelatedBills": relatedData}
+            "BillRelatedBills": relatedData, "BillCommitteeReports": comReptData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
@@ -397,7 +420,6 @@ def readZippedFiles(zipFile):
         
         if bill is None: skippedFiles += 1
         else: bills.append(bill)
-
     #if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files") 
     return bills
 
