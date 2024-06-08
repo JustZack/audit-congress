@@ -19,6 +19,8 @@ ACTION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "action
 SUMMARY_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "text", "description", "date", "updated"]
 TEXT_VERSION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "versionType", "url", "format", "date"]
 COMMITTEE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "thomasId", "action", "date"]
+LAWS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "lawType", "lawNumber"]
+RELATED_BILLS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "reason", "identifier", "relatedType", "relatedNumber", "relatedCongress"]
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
@@ -139,6 +141,9 @@ def getCommitteeDict(thomasId, action, date):
 def getLawDict(type_, number): 
     return {"type": type_, "number": number}
 
+def getRelatedBillDict(reason, identifiedBy, type_, number, congress):
+    return {"reason": reason, "identifiedBy": identifiedBy, "type": type_, "number": number, "congress": congress}
+
 
 
 def getTitleFromXML(title):
@@ -166,13 +171,23 @@ def getCommitteeFromXML(com):
     commiteeItems = []
     thomasId = com["systemCode"]
     activities = ensureFieldIsList(util.getIfSet(com, "activities"), "item")
-    if thomasId[4:] == "00": thomasId = thomasId[:4]
+    if thomasId.endswith("00"): thomasId = thomasId[:4]
     for act in activities: 
         commiteeItems.append(getCommitteeDict(thomasId, act["name"], act["date"]))
     return commiteeItems
 
-def getLawsFromXML(law):
+def getLawFromXML(law):
     return getLawDict(law["type"], law["number"])
+
+def getRelatedBillFromXML(rel):
+    relatedItems = []
+    type_ = rel["type"].lower()
+    congress = rel["congress"]
+    number = rel["number"]
+    relations = ensureFieldIsList(util.getIfSet(rel, "relationshipDetails"), "item")
+    for relation in relations: 
+        relatedItems.append(getRelatedBillDict(relation["type"], relation["identifiedBy"], type_, number, congress))
+    return relatedItems
 
 
 
@@ -200,16 +215,16 @@ def parseBillFDSYSXml(fileData):
 
     bill["bill"]["bioguideId"] = getSponsorBioguideId(bill["bill"]["sponsor"], "bioguideId", "thomas_id")
     
-    bill["titles"] =     parseBillItem(bill, "titles", getTitleFromXML)
-    bill["subjects"] =   parseBillItem(bill, "subjects", lambda s: s["name"])
-    bill["cosponsors"] = parseBillItem(bill, "cosponsors", getCosponsorFromXML)
-    bill["actions"] =    parseBillItem(bill, "actions", getActionFromXML)
-    bill["summaries"] =  parseBillItem(bill, "summaries", getSummaryFromXML)
-    bill["committees"] = parseBillItem(bill, "committees", getCommitteeFromXML)
-    bill["amendments"] = ensureFieldIsList(bill, "amendments")
-    bill["laws"] =       parseBillItem(bill, "laws", getLawsFromXML)
-    bill["textVersions"] =  parseBillItem(bill, "textVersions", getTextVersionFromXML)
-    bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
+    bill["titles"] =            parseBillItem(bill, "titles", getTitleFromXML)
+    bill["subjects"] =          parseBillItem(bill, "subjects", lambda s: s["name"])
+    bill["cosponsors"] =        parseBillItem(bill, "cosponsors", getCosponsorFromXML)
+    bill["actions"] =           parseBillItem(bill, "actions", getActionFromXML)
+    bill["summaries"] =         parseBillItem(bill, "summaries", getSummaryFromXML)
+    bill["committees"] =        parseBillItem(bill, "committees", getCommitteeFromXML)
+    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
+    bill["laws"] =              parseBillItem(bill, "laws", getLawFromXML)
+    bill["textVersions"] =      parseBillItem(bill, "textVersions", getTextVersionFromXML)
+    bill["relatedBills"] =      parseBillItem(bill, "relatedBills", getRelatedBillFromXML)
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
     
@@ -279,11 +294,21 @@ def getSummaryRows(bid, summaries, tnc):
 def getTextVersionRows(bid, textVersions, tnc):
     return getRows(bid, textVersions, tnc, ["versionType", "url", "format", "date"])
 
+def getCommitteeRows(bid, committees, tnc):
+    return getRows(bid, committees, tnc, ["thomasId", "action", "date"])
+
+def getLawRows(bid, laws, tnc):
+    return getRows(bid, laws, tnc, ["type", "number"])
+
+def getRelatedBillRows(bid, related, tnc):
+    return getRows(bid, related, tnc, ["reason", "identifiedBy", "type", "number", "congress"])
+
 
 
 def splitBillsIntoTableRows(bills):
     billData,subjectData,titleData,cosponData = [],[],[],[]
-    actionData,summaryData,versionData = [],[],[]
+    actionData,summaryData,versionData,commData = [],[],[],[]
+    lawsData,relatedData = [],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
@@ -297,9 +322,13 @@ def splitBillsIntoTableRows(bills):
         actionData.extend(getActionRows(bid, parsedBill["actions"], tnc))
         summaryData.extend(getSummaryRows(bid, parsedBill["summaries"], tnc))
         versionData.extend(getTextVersionRows(bid, parsedBill["textVersions"], tnc))
+        commData.extend(getCommitteeRows(bid, parsedBill["committees"], tnc))
+        lawsData.extend(getLawRows(bid, parsedBill["laws"], tnc))
+        relatedData.extend(getRelatedBillRows(bid, parsedBill["relatedBills"], tnc))
     return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
             "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData,
-            "BillTextVersions": versionData}
+            "BillTextVersions": versionData, "BillCommittees": commData, "BillLaws": lawsData,
+            "BillRelatedBills": relatedData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
