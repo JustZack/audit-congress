@@ -99,12 +99,18 @@ def ensureFieldIsList(obj, field):
     if type(obj[field]) is dict: return [obj[field]]
     return obj[field]
 
+def parseBillItem(bill, fieldName, parseFunction): 
+    return map(parseFunction, ensureFieldIsList(bill, fieldName))
+
 
 
 def getSponsorBioguideId(sponsor, bioguideKey, thomasKey):
+    if type(sponsor) is list: sponsor = sponsor[0]
     if sponsor is not None:
         return sponsor[bioguideKey] if bioguideKey in sponsor else getMemberByThomasId(sponsor[thomasKey])
     else: return None
+
+
 
 def getTitleDict(type_, title, as_="", is_for_portion=""):
     return {"type": type_, "title": title, "as": as_, "is_for_portion": is_for_portion}   
@@ -120,6 +126,7 @@ def getSummaryDict(text, description, date, updated = None):
 
 def getTextVersionDict(versionType, url, date):
     return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
+
 
 
 def getTitleFromXML(title):
@@ -142,7 +149,8 @@ def getTextVersionFromXML(txt):
     url = txt["formats"]
     url = url["item"]["url"] if url is not None else ""
     return getTextVersionDict(txt["type"], url, txt["date"])
-    
+
+
 
 def getTitleFromJSON(title):
     type_ = util.getIfSet(title, "type")
@@ -166,22 +174,21 @@ def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
     bill = parseBillWithSchema(xmlData, "xml")
 
-    sponsor = bill["bill"]["sponsor"]
-    if type(sponsor) is list: sponsor = sponsor[0]
-    bill["bill"]["bioguideId"] = getSponsorBioguideId(sponsor, "bioguideId", "thomas_id")
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(bill["bill"]["sponsor"], "bioguideId", "thomas_id")
     
-    bill["titles"] =     [getTitleFromXML(title) for title in ensureFieldIsList(bill, "titles")]
-    bill["subjects"] =   [subject["name"] for subject in ensureFieldIsList(bill, "subjects")]
-    bill["cosponsors"] = [getCosponsorFromXML(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
-    bill["actions"] =    [getActionFromXML(action) for action in ensureFieldIsList(bill, "actions")]
-    bill["summaries"] =  [getSummaryFromXML(summary) for summary in ensureFieldIsList(bill, "summaries")]
+    bill["titles"] =     parseBillItem(bill, "titles", getTitleFromXML)
+    bill["subjects"] =   parseBillItem(bill, "subjects", lambda s: s["name"])
+    bill["cosponsors"] = parseBillItem(bill, "cosponsors", getCosponsorFromXML)
+    bill["actions"] =    parseBillItem(bill, "actions", getActionFromXML)
+    bill["summaries"] =  parseBillItem(bill, "summaries", getSummaryFromXML)
     bill["committees"] =    ensureFieldIsList(bill, "committees")
     bill["amendments"] =    ensureFieldIsList(bill, "amendments")
     bill["laws"] =          ensureFieldIsList(bill, "laws")
-    bill["textVersions"] =  [getTextVersionFromXML(version) for version in ensureFieldIsList(bill, "textVersions")]
+    bill["textVersions"] =  parseBillItem(bill, "textVersions", getTextVersionFromXML)
     bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
+    
     return bill
 
 #There can be data.xml's available too, but seemingly only when fdsysxml is too. Not implemented unless needed.
@@ -191,15 +198,13 @@ def parseBillDataJson(fileData):
     jsonData = util.getParsedJsonFile(fileData)
     bill = parseBillWithSchema(jsonData, "json")
     
-    sponsor = bill["bill"]["sponsor"]
-    if type(sponsor) is list: sponsor = sponsor[0]
-    bill["bill"]["bioguideId"] = getSponsorBioguideId(sponsor, "bioguide_id", "thomas_id")
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(bill["bill"]["sponsor"], "bioguide_id", "thomas_id")
     
-    bill["titles"] =        [getTitleFromJSON(title) for title in ensureFieldIsList(bill, "titles")]
+    bill["titles"] =        parseBillItem(bill, "titles", getTitleFromJSON)
     bill["subjects"] =      ensureFieldIsList(bill, "subjects")
-    bill["cosponsors"] =    [getCosponsorFromJSON(cosponsor) for cosponsor in ensureFieldIsList(bill, "cosponsors")]
-    bill["actions"] =       [getActionFromJSON(action) for action in ensureFieldIsList(bill, "actions")]
-    bill["summaries"] =     [getSummaryFromJSON(summary) for summary in ensureFieldIsList(bill, "summaries")]
+    bill["cosponsors"] =    parseBillItem(bill, "cosponsors", getCosponsorFromJSON)
+    bill["actions"] =       parseBillItem(bill, "actions", getActionFromJSON)
+    bill["summaries"] =     parseBillItem(bill, "summaries", getSummaryFromJSON)
     bill["committees"] =        ensureFieldIsList(bill, "committees")
     bill["amendments"] =        ensureFieldIsList(bill, "amendments")
     bill["laws"] =              ensureFieldIsList(bill, "laws")
@@ -207,7 +212,6 @@ def parseBillDataJson(fileData):
     bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
-
     return bill     
 
 
@@ -249,7 +253,7 @@ def getSummaryRows(bid, summaries, tnc):
     return getRows(bid, summaries, tnc, ["text", "description", "date", "updated"])
 
 def getTextVersionRows(bid, textVersions, tnc):
-    return getRows(bid, textVersions, tnc, ["type", "url", "format", "date"])
+    return getRows(bid, textVersions, tnc, ["versionType", "url", "format", "date"])
 
 
 
