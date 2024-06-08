@@ -154,7 +154,7 @@ def getCommitteeReportDict(type_, number, congress):
 
     
 def getCommitteeReportsFromEither(repStr):
-    type_ = repStr.split(".")[0]
+    type_ = repStr.split(".")[0].upper()
     CandN = repStr.split(" ")[2].split("-")
     return getCommitteeReportDict(COMMITTEE_REPORT_TYPE_MAP[type_], CandN[1], CandN[0])
 
