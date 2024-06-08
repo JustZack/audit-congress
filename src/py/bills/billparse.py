@@ -23,7 +23,7 @@ COMMITTEE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "tho
 LAWS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "lawType", "lawNumber"]
 RELATED_BILLS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "reason", "identifier", "relatedType", "relatedNumber", "relatedCongress"]
 
-COMMITTEE_REPORT_TYPE_MAP = {"S": "S", "H": "HRPT"}
+COMMITTEE_REPORT_TYPE_MAP = {"S": "SRPT", "H": "HRPT"}
 
 FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
 DATA_XML_FILE_NAME = "data.xml"
@@ -155,8 +155,8 @@ def getCommitteeReportDict(type_, number, congress):
     
 def getCommitteeReportsFromEither(repStr):
     type_ = repStr.split(".")[0]
-    congressAndNumber = repStr.split(" ")[2].split("-")
-    return getCommitteeReportDict(COMMITTEE_REPORT_TYPE_MAP[type_], congressAndNumber[0], congressAndNumber[1])
+    CandN = repStr.split(" ")[2].split("-")
+    return getCommitteeReportDict(COMMITTEE_REPORT_TYPE_MAP[type_], CandN[1], CandN[0])
 
 
 
@@ -190,8 +190,7 @@ def getCommitteeFromXML(com):
         commiteeItems.append(getCommitteeDict(thomasId, act["name"], act["date"]))
     return commiteeItems
 
-def getLawFromXML(law):
-    return getLawDict(law["type"], law["number"])
+def getLawFromXML(law): return getLawDict(law["type"], law["number"])
 
 def getRelatedBillFromXML(rel):
     relatedItems = []
@@ -203,8 +202,7 @@ def getRelatedBillFromXML(rel):
         relatedItems.append(getRelatedBillDict(relation["type"], relation["identifiedBy"], type_, number, congress))
     return relatedItems
 
-def getCommitteeReportsFromXML(rep):
-    return getCommitteeReportsFromEither(rep["citation"])
+def getCommitteeReportsFromXML(rep): return getCommitteeReportsFromEither(rep["citation"])
 
 
 
@@ -239,8 +237,7 @@ def getRelatedBillFromJSON(rel):
     number = result[1]
     return getRelatedBillDict(rel["reason"], None, type_, number, congress)
 
-def getCommitteeReportsFromJSON(rep):
-    return getCommitteeReportsFromEither(rep)
+def getCommitteeReportsFromJSON(rep): return getCommitteeReportsFromEither(rep)
 
 
 
