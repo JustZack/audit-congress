@@ -1,6 +1,7 @@
 from shared import util, zjthreads, db
 from datetime import datetime
 from zipfile import ZipFile
+import re
 
 #All folders that we care about in the bills folder
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", "sres"]
@@ -135,7 +136,7 @@ def getSummaryDict(text, description, date, updated = None):
 def getTextVersionDict(versionType, url, date):
     return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
 
-def getCommitteeDict(thomasId, action, date):
+def getCommitteeDict(thomasId, action, date = None):
     return {"thomasId": thomasId.upper(), "action": action, "date": date}
 
 def getLawDict(type_, number): 
@@ -207,6 +208,20 @@ def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["
 
 def getSummaryFromJSON(sum): return getSummaryDict(sum["text"], sum["as"], sum["date"])
 
+def getCommitteeFromJSON(com): 
+    commiteeItems = []
+    thomasId = com["committee_id"]
+    activities = ensureFieldIsList(com, "activity")
+    if thomasId.endswith("00"): thomasId = thomasId[:4]
+    for act in activities: commiteeItems.append(getCommitteeDict(thomasId, act))
+    return commiteeItems
+
+def getRelatedBillFromJSON(rel):
+    result = re.split(r'(\d+)', rel["bill_id"])
+    type_ = result[0]
+    congress = result[3]
+    number = result[1]
+    return getRelatedBillDict(rel["reason"], None, type_, number, congress)
 
 
 def parseBillFDSYSXml(fileData):
@@ -244,11 +259,11 @@ def parseBillDataJson(fileData):
     bill["cosponsors"] =    parseBillItem(bill, "cosponsors", getCosponsorFromJSON)
     bill["actions"] =       parseBillItem(bill, "actions", getActionFromJSON)
     bill["summaries"] =     parseBillItem(bill, "summaries", getSummaryFromJSON)
-    bill["committees"] =        ensureFieldIsList(bill, "committees")
-    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
-    bill["laws"] =              ensureFieldIsList(bill, "laws")
-    bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
-    bill["relatedBills"] =      ensureFieldIsList(bill, "relatedBills")
+    bill["committees"] =    parseBillItem(bill, "committees", getCommitteeFromJSON)
+    bill["amendments"] =    ensureFieldIsList(bill, "amendments")
+    bill["laws"] =          ensureFieldIsList(bill, "laws")
+    bill["textVersions"] =  ensureFieldIsList(bill, "textVersions")
+    bill["relatedBills"] =  parseBillItem(bill, "relatedBills", getRelatedBillFromJSON)
     bill["committeeReports"] =  ensureFieldIsList(bill, "committeeReports")
     bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
     return bill     

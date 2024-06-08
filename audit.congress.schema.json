@@ -374,7 +374,7 @@
                     "thomasId": { "type": "VARCHAR(50)", "null": "NO" },
                     "action": { "type": "VARCHAR(250)", "null": "YES" },
 
-                    "date": { "type": "DATE", "null": "NO" }
+                    "date": { "type": "DATE", "null": "YES" }
                 },
                 "indexes": {
                     "type_index": ["type"],
