@@ -11,17 +11,17 @@ namespace AuditCongress {
             $congress,
             $number,
 
-            $subjectIndex,
+            $index,
 
             $subject;
     
         public function getColumns() {
-            return ["id","billId","type","congress","number","subjectIndex","subject"];
+            return ["id","billId","type","congress","number","index","subject"];
         }
 
         public function getValues() {
             return [$this->id,$this->billId,$this->type,$this->congress,$this->number,
-                    $this->subjectIndex,$this->subject];
+                    $this->index,$this->subject];
         }
     }
 }

@@ -7,7 +7,19 @@ import xmltodict as xml2d
 
 from shared import logger, db, cache
 
-def getFieldIfExists(theDict, theField): return theDict[theField] if theField in theDict else ""
+
+
+def getIfSet(dct, key, defaultValue = None): 
+    if dct is not None and type(dct) is dict and key in dct: return dct[key]
+    else: return defaultValue
+
+def getIfSetAsStr(dct, key): 
+    return getIfSet(dct, key, "")
+
+def getFields(item, fieldList):
+    row = []
+    for field in fieldList: row.append(getIfSet(item, field, ""))
+    return row
 
 def dictArrayToDict(dictArray, dictKeyToUse):
     newDict = dict()
@@ -42,6 +54,9 @@ def saveAsCSV(path, data, headers=None):
 
         if writer == None: raise Exception("saveAsCSV: Expected data of type dict or list, found: {}".format(type(data)))
         writeCSVRows(writer, data)
+def saveAsJSON(path, data):
+    jsonData = json.dumps(data)
+    saveFile(path, jsonData)
 
 def writeCSVAsDict(file, data, headers):
     #Use headers if defined, else use the dict keys as header
@@ -101,18 +116,31 @@ def chunkList(array, chunkSize):
 
 def csvStr(itemArray): return ",".join(itemArray)
 
+def getCharPos(string, char):
+    if type(string) is not str or type(char) is not str: return -1
+    else: return string.rfind(char) + 1
+
+def getLastDotPos(string): return getCharPos(string, ".")
+
+def getLastSlashPos(string): return getCharPos(string, "/")
+
 def getPathDirectory(path):
-    lastSlash = path.rfind("/") + 1
+    lastSlash = getLastSlashPos(path)
     return path[0:lastSlash]
 
 def getPathFile(path):
-    lastSlash = path.rfind("/") + 1
+    lastSlash = getLastSlashPos(path)
     return path[lastSlash:]
 
-def pathIsFile(path):
-    lastSlash = path.rfind("/") + 1
-    lastDot = path.rfind(".") + 1
-    return lastDot > lastSlash
+def pathIsDir(path): return getLastSlashPos(path) > getLastDotPos(path)
+
+def pathIsFile(path): return getLastDotPos(path) > getLastSlashPos(path)
+
+def getFileType(path):
+    splitLocation = 0
+    if pathIsFile(path): splitLocation = getLastDotPos(path)
+    elif pathIsDir(path): splitLocation = getLastSlashPos(path)
+    return path[splitLocation:]
 
 def relativeToAbsPath(path): return os.path.abspath(path)
 

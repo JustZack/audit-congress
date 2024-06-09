@@ -1,0 +1,85 @@
+{
+    "example": {
+        "explanation": [
+            "Since file schema can vary, define where data can be found",
+            "with several possibilities (where applicable).",
+            "All fields should be arrays of arrays,",
+            "defining one or more places that data lives."
+        ],
+        "root": [["node that all other", "nodes are relative to"],
+                 ["another option for", "where the root node is"]],
+        "fields": {
+            "field1": {
+                "item-in-data-1": [
+                    ["option1-elem1", "option1-elem2", "option1-elem3"],
+                    ["option2-elem1", "option2-elem2"]
+                ]
+            }
+        }
+    },
+    "xml": {
+        "root": [["billStatus", "bill"]],
+        "fields": {
+            "bill": {
+                "congress": [["congress"]],
+                "type": [["type"],["billType"]],
+                "number": [["number"],["billNumber"]],
+                "sponsor": [["sponsors","item"]],
+                "introduced_at": [["introducedDate"]],
+                "updated_at": [["updateDate"]],
+                "originChamber": [["originChamber"]],
+                "policyArea": [["policyArea", "name"]],
+                "title": [["title"]]
+            },
+            "titles": [["titles", "item"]],
+            "subjects": [
+                ["subjects", "billSubjects", "legislativeSubjects", "item"],
+                ["subjects", "legislativeSubjects", "item"]
+            ],
+            "cosponsors": [["cosponsors", "item"]],
+            "actions": [["actions", "item"]],
+            "summaries": [
+                ["summaries", "summary"],
+                ["summaries", "billSummaries", "item"]
+            ],
+            "committees": [
+                ["committees", "item"],
+                ["committees", "billCommittees", "item"]
+            ],
+            "amendments": [["amendments", "amendment"]],
+            "laws": [["laws", "item"]],
+            "textVersions": [["textVersions", "item"]],
+            "relatedBills": [["relatedBills", "item"]],
+            "committeeReports": [["committeeReports", "committeeReport"]],
+            "cboCostEstimates": [["cboCostEstimates", "item"]]
+        }
+    },
+    "json": {
+        "root": null,
+        "fields": {
+            "bill": {
+                "congress": [["congress"]],
+                "type": [["bill_type"]],
+                "number": [["number"]],
+                "sponsor": [["sponsor"]],
+                "introduced_at": [["introduced_at"]],
+                "updated_at": [["updated_at"]],
+                "originChamber": null,
+                "policyArea": [["subjects_top_term"]],
+                "title": [["official_title"]]
+            },
+            "titles": [["titles"]],
+            "subjects": [["subjects"]],
+            "cosponsors": [["cosponsors"]],
+            "actions": [["actions"]],
+            "summaries": [["summary"]],
+            "committees": [["committees"]],
+            "amendments": [["amendments"]],
+            "laws": [["laws", "item"]],
+            "textVersions": null,
+            "relatedBills": [["related_bills"]],
+            "committeeReports": [["committee_reports"]],
+            "cboCostEstimates": null
+        }
+    }
+}

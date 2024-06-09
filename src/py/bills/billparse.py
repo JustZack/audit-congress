@@ -1,6 +1,7 @@
 from shared import util, zjthreads, db
 from datetime import datetime
 from zipfile import ZipFile
+import re
 
 #All folders that we care about in the bills folder
 BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", "sres"]
@@ -8,10 +9,27 @@ BILL_TYPE_FOLDERS = ["hr", "hconres", "hjres", "hres", "s", "sconres", "sjres", 
 MEMBERS_MAPPING_API_URL = "http://localhost/audit-congress/api.php?route=bioguideToThomas"
 MEMBERS_MAPPING = None
 
-BILL_COLUMNS = ["id", "type", "congress", "number", "bioguideId", "title", "introduced", "updated"]
-SUBJECT_COLUMNS = ["id", "billId", "type", "congress", "number", "subjectIndex", "subject"]
-TITLE_COLUMNS = ["id", "billId", "type", "congress", "number", "titleIndex", "title", "titleType", "titleAs", "isForPortion"]
-COSPONSOR_COLUMNS = ["id", "billId", "type", "congress", "number", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+BILL_DATA_SCHEMA = util.readJsonFile("bill.data.schema.json")
+BILL_DATA_SCHEMA_TYPES = BILL_DATA_SCHEMA.keys()
+
+BILL_COLUMNS = ["id", "type", "number", "congress", "bioguideId", "title", "policyArea", "introduced", "updated"]
+SUBJECT_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "subject"]
+TITLE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "title", "titleType", "titleAs", "isForPortion"]
+COSPONSOR_COLUMNS = ["id", "billId", "type", "number", "congress", "bioguideId", "sponsoredAt", "withdrawnAt", "isOriginal"]
+ACTION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "actionType", "text", "acted"]
+SUMMARY_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "text", "description", "date", "updated"]
+TEXT_VERSION_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "versionType", "url", "format", "date"]
+COMMITTEE_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "thomasId", "action", "date"]
+LAWS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "lawType", "lawNumber"]
+RELATED_BILLS_COLUMNS = ["id", "billId", "type", "number", "congress", "index", "reason", "identifier", "relatedType", "relatedNumber", "relatedCongress"]
+
+COMMITTEE_REPORT_TYPE_MAP = {"S": "SRPT", "H": "HRPT"}
+
+FDSYS_XML_FILE_NAME = "fdsys_billstatus.xml"
+DATA_XML_FILE_NAME = "data.xml"
+DATA_JSON_FILE_NAME = "data.json"
+
+WRITE_PARSED_BILL_FILES = False
 
 def fetchMemberMapping():
     global MEMBERS_MAPPING
@@ -27,228 +45,325 @@ def getMemberByThomasId(thomasId):
     try: return MEMBERS_MAPPING[thomasId]
     except Exception as e: return None
 
-def parseBillFDSYSXmlList(key, listKey, bill):
-    items = bill[key] if key in bill else None
-    if items is not None:
-        items = items[listKey] if listKey in items else []
-    else: items = []
+
+
+def getMatchingElement(obj, path):
+    tmpObj = obj
+    for element in path:
+        tmpObj = util.getIfSet(tmpObj, element)
+        if tmpObj is None: break
+    return tmpObj
+
+def getElementWithSchema(obj, optionalPaths):
+    for path in optionalPaths:
+        tmpObj = getMatchingElement(obj, path)
+        if tmpObj is not None: return tmpObj
+    return None
+
+def getDictOfFieldsWithSchema(rootElement, fieldValue):
+    data = dict()
+    for field in fieldValue.keys():
+        data[field] = getFieldWithSchema(rootElement, fieldValue[field])
+    return data
+
+def getFieldWithSchema(rootElement, fieldValue):
+    if type(fieldValue) is list: 
+        return getElementWithSchema(rootElement, fieldValue)
+    elif type(fieldValue) is dict:
+        return getDictOfFieldsWithSchema(rootElement, fieldValue)
+    else: return None
+
+def parseBillWithSchema(bill, schemaType):
+    if schemaType not in BILL_DATA_SCHEMA_TYPES:
+        raise Exception("bill.parse: invalid schema type provided: {}. use one of {}"
+                        .format(schemaType, BILL_DATA_SCHEMA_TYPES))
+    
+    schema = BILL_DATA_SCHEMA[schemaType]
+    root = getElementWithSchema(bill, schema["root"]) if schema["root"] is not None else bill
+    
+    data = dict()
+    fields = schema["fields"].keys()
+    for field in fields:
+        fieldValue = schema["fields"][field]
+        data[field] = getFieldWithSchema(root, fieldValue)
+    return data
+
+
+
+def saveTestBillFile(bill):
+    congress = bill["bill"]["congress"]
+    type_ = bill["bill"]["type"]
+    number = bill["bill"]["number"]
+    util.saveAsJSON("tests/{}/{}/{}.json".format(congress, type_, number), bill)
+    #print("{}-{}{}".format(congress, type_, number))
+    return
+
+
+
+def ensureFieldIsList(obj, field):
+    if (obj is None or obj[field] is None): return []
+    if type(obj[field]) is dict: return [obj[field]]
+    return obj[field]
+
+def parseBillItem(bill, fieldName, parseFunction): 
+    items = []
+    for item in ensureFieldIsList(bill, fieldName):
+        result = parseFunction(item)
+        if type(result) is list: items.extend(result)
+        else: items.append(result)
     return items
 
-def parseBillFDSYSXmlItemList(key, bill): return parseBillFDSYSXmlList(key, "item", bill)
+
+
+def getSponsorBioguideId(sponsor, bioguideKey, thomasKey):
+    if type(sponsor) is list: sponsor = sponsor[0]
+    if sponsor is not None:
+        return sponsor[bioguideKey] if bioguideKey in sponsor else getMemberByThomasId(sponsor[thomasKey])
+    else: return None
+
+
+
+def getTitleDict(type_, title, as_="", is_for_portion=""):
+    return {"type": type_, "title": title, "as": as_, "is_for_portion": is_for_portion}   
+
+def getCosponsorDict(id_, sponsoredAt, withdrawnAt, isOriginal=None):
+    return {"id": id_, "sponsoredAt": sponsoredAt, "withdrawnAt": withdrawnAt, "isOriginal": isOriginal}
+
+def getActionDict(type, text, actionDate):
+    return {"type": type, "text": text, "actionDate": actionDate}
+
+def getSummaryDict(text, description, date, updated = None):
+    return {"text": text, "description": description, "date": date, "updated": updated}
+
+def getTextVersionDict(versionType, url, date):
+    return {"versionType": versionType, "url": url, "format": util.getFileType(url), "date": date}
+
+def getCommitteeDict(thomasId, action, date = None):
+    return {"thomasId": thomasId.upper(), "action": action, "date": date}
+
+def getLawDict(type_, number): 
+    return {"type": type_, "number": number}
+
+def getRelatedBillDict(reason, identifiedBy, type_, number, congress):
+    id_ = getBillObjectId(type_, number, congress)
+    return {"reason": reason, "identifiedBy": identifiedBy, "id": id_, "type": type_, "number": number, "congress": congress}
+
+def getCommitteeReportDict(type_, number, congress):
+    return {"type": type_, "number": number, "congress": congress}
+
+
+    
+def getCommitteeReportsFromEither(repStr):
+    type_ = repStr.split(".")[0].upper()
+    CandN = repStr.split(" ")[2].split("-")
+    return getCommitteeReportDict(COMMITTEE_REPORT_TYPE_MAP[type_], CandN[1], CandN[0])
+
+
+
+def getTitleFromXML(title):
+    type_ = util.getIfSet(title, "titleType")
+    title = util.getIfSet(title, "title")
+    return getTitleDict(type_, title)
+
+def getCosponsorFromXML(cosponsor):
+    id_ = getSponsorBioguideId(cosponsor, "bioguideId", "thomas_id")
+    since = util.getIfSet(cosponsor, "sponsorshipDate")
+    withdrawn = util.getIfSet(cosponsor, "sponsorshipWithdrawnDate")
+    isOriginal = util.getIfSet(cosponsor, "isOriginalCosponsor")
+    return getCosponsorDict(id_, since, withdrawn, isOriginal)
+
+def getActionFromXML(act): return getActionDict(act["type"], act["text"], act["actionDate"])
+
+def getSummaryFromXML(sum): return getSummaryDict(sum["text"], sum["actionDesc"], sum["actionDate"], sum["updateDate"])
+
+def getTextVersionFromXML(txt): 
+    url = txt["formats"]
+    url = url["item"]["url"] if url is not None else ""
+    return getTextVersionDict(txt["type"], url, txt["date"])
+
+def getCommitteeFromXML(com):
+    commiteeItems = []
+    thomasId = com["systemCode"]
+    activities = ensureFieldIsList(util.getIfSet(com, "activities"), "item")
+    if thomasId.endswith("00"): thomasId = thomasId[:4]
+    for act in activities: 
+        commiteeItems.append(getCommitteeDict(thomasId, act["name"], act["date"]))
+    return commiteeItems
+
+def getLawFromXML(law): return getLawDict(law["type"], law["number"])
+
+def getRelatedBillFromXML(rel):
+    relatedItems = []
+    type_ = rel["type"].lower()
+    congress = rel["congress"]
+    number = rel["number"]
+    relations = ensureFieldIsList(util.getIfSet(rel, "relationshipDetails"), "item")
+    for relation in relations: 
+        relatedItems.append(getRelatedBillDict(relation["type"], relation["identifiedBy"], type_, number, congress))
+    return relatedItems
+
+def getCommitteeReportsFromXML(rep): return getCommitteeReportsFromEither(rep["citation"])
+
+
+
+def getTitleFromJSON(title):
+    type_ = util.getIfSet(title, "type")
+    title = util.getIfSet(title, "title")
+    as_ = util.getIfSet(title, "as")
+    return getTitleDict(type_, title, as_)
+
+def getCosponsorFromJSON(cosponsor):
+    id_ = getSponsorBioguideId(cosponsor, "bioguide_id", "thomas_id")
+    since = util.getIfSet(cosponsor, "sponsored_at")
+    withdrawn = util.getIfSet(cosponsor, "withdrawn_at")
+    return getCosponsorDict(id_, since, withdrawn)
+
+def getActionFromJSON(act): return getActionDict(act["type"], act["text"], act["acted_at"])
+
+def getSummaryFromJSON(sum): return getSummaryDict(sum["text"], sum["as"], sum["date"])
+
+def getCommitteeFromJSON(com): 
+    commiteeItems = []
+    thomasId = com["committee_id"]
+    activities = ensureFieldIsList(com, "activity")
+    if thomasId.endswith("00"): thomasId = thomasId[:4]
+    for act in activities: commiteeItems.append(getCommitteeDict(thomasId, act))
+    return commiteeItems
+
+def getRelatedBillFromJSON(rel):
+    result = re.split(r'(\d+)', rel["bill_id"])
+    type_ = result[0]
+    congress = result[3]
+    number = result[1]
+    return getRelatedBillDict(rel["reason"], None, type_, number, congress)
+
+def getCommitteeReportsFromJSON(rep): return getCommitteeReportsFromEither(rep)
+
+
 
 def parseBillFDSYSXml(fileData):
     xmlData = util.getParsedXmlFile(fileData)
+    bill = parseBillWithSchema(xmlData, "xml")
+
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(bill["bill"]["sponsor"], "bioguideId", "thomas_id")
     
-    bill = xmlData["billStatus"]["bill"] 
-
-    billData = dict()
-
-    typ = bill["type"] if "type" in bill.keys() else bill["billType"]
-    cong = bill["congress"]
-    num = bill["number"] if "number" in bill.keys() else bill["billNumber"]
-
-    actualBill = dict()
-    billData["bill"] = actualBill
-
-    actualBill["type"] = typ
-    actualBill["congress"] = cong
-    actualBill["number"] = num
-
-    sponsor = bill["sponsors"]
-    sponsor = sponsor["item"] if sponsor is not None else ""
-    if type(sponsor) is list: sponsor = sponsor[0]
-    if type(sponsor) is dict: sponsor = sponsor["bioguideId"]
-    actualBill["bioguideId"] = sponsor
-   
-    actualBill["introduced_at"] = bill["introducedDate"]
-    actualBill["updated_at"] = bill["updateDate"]
-
-    actualBill["originChamber"] = bill["originChamber"]
-
-    policyArea = bill["policyArea"] if "policyArea" in bill else None
-    actualBill["policyArea"] = policyArea["name"] if policyArea is not None else ""
-    actualBill["summaries"] = bill["summaries"] if "summaries" in bill else []
+    bill["titles"] =            parseBillItem(bill, "titles", getTitleFromXML)
+    bill["subjects"] =          parseBillItem(bill, "subjects", lambda s: s["name"])
+    bill["cosponsors"] =        parseBillItem(bill, "cosponsors", getCosponsorFromXML)
+    bill["actions"] =           parseBillItem(bill, "actions", getActionFromXML)
+    bill["summaries"] =         parseBillItem(bill, "summaries", getSummaryFromXML)
+    bill["committees"] =        parseBillItem(bill, "committees", getCommitteeFromXML)
+    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
+    bill["laws"] =              parseBillItem(bill, "laws", getLawFromXML)
+    bill["textVersions"] =      parseBillItem(bill, "textVersions", getTextVersionFromXML)
+    bill["relatedBills"] =      parseBillItem(bill, "relatedBills", getRelatedBillFromXML)
+    bill["committeeReports"] =  parseBillItem(bill, "committeeReports", getCommitteeReportsFromXML)
+    bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
     
-    subjects = bill["subjects"] if "subjects" in bill else None
-    ["subjects", "billSubjects", "legislativeSubjects", "item"]
-    if subjects is not None:
-        if "billSubjects" in subjects: subjects = subjects["billSubjects"]
-        subjects = subjects["legislativeSubjects"]
-        if subjects is not None: subjects = subjects["item"]
-        else: subjects = []
-        
-        if type(subjects) is dict: subjects = [subjects]
-    else: subjects = []
+    return bill
 
-    cosponsoredDat = parseBillFDSYSXmlItemList("cosponsors", bill)
-    cosponsored = []
-    if type(cosponsoredDat) is list:
-        for cospon in cosponsoredDat:
-            id = cospon["bioguideId"] if "bioguideId" in cospon else getMemberByThomasId(cospon["thomas_id"])
-            since = cospon["sponsorshipDate"]
-            withdrawn = cospon["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cospon else None
-            isOriginal = cospon["isOriginalCosponsor"] if "isOriginalCosponsor" in cospon else None
-            cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
-    elif type(cosponsoredDat) is dict:
-        id = cosponsoredDat["bioguideId"] if "bioguideId" in cosponsoredDat else getMemberByThomasId(cosponsoredDat["thomas_id"])
-        since = cosponsoredDat["sponsorshipDate"]
-        withdrawn = cosponsoredDat["sponsorshipWithdrawnDate"] if "sponsorshipWithdrawnDate" in cosponsoredDat else None
-        isOriginal = cosponsoredDat["isOriginalCosponsor"] if "isOriginalCosponsor" in cosponsoredDat else None
-        cosponsored.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
-
-
-    committees = bill["committees"] if "committees" in bill else None
-    ["billCommittees", "item"]
-    if committees is not None:
-        if "billCommittees" in committees: committees = committees["billCommittees"]
-        if committees is not None and "item" in committees: committees = committees["item"]
-        else: committees = []
-    else: committees = []
-
-    titles = parseBillFDSYSXmlItemList("titles", bill)
-    titles = [{"type": title["titleType"], "title": title["title"], "as": "", "is_for_portion": ""} for title in titles]
-    try: 
-        actualBill["title"] = bill["title"]
-    except Exception: 
-        if len(titles) > 0: 
-            actualBill["title"] = titles[0]["title"]
-
-    billData["bill"] = actualBill
-    billData["titles"] = titles
-    billData["subjects"] = [subject["name"] for subject in subjects]
-    billData["cosponsors"] = cosponsored
-    billData["committees"] = committees
-    billData["amendments"] = parseBillFDSYSXmlList("amendments", "amendment", bill)
-    billData["actions"] = parseBillFDSYSXmlItemList("actions", bill)
-    billData["laws"] = parseBillFDSYSXmlItemList("laws", bill)
-
-    return billData
-
-def parseBillDataXml(fileData):
-    raise Exception("data.xml is not implemented")
-
-    billData = dict()
-    xmlData = xmltodict.parse(fileData)
-    
-    actualBill = dict()
-    actualBill["id"] = jsonData["bill_id"]
-
-    billElem = xmlData.select("<bill>")
-    print(billElem)
-    actualBill["type"] = billElem["type"]
-    actualBill["congress"] = billElem["session"]
-    actualBill["number"] = billElem["number"]
-    return billData
-    sponsor = jsonData["sponsor"]
-    if (sponsor is not None):
-        if "bioguide_id" in sponsor:
-            actualBill["bioguideId"] = sponsor["bioguide_id"]
-        else:
-            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
-    else:
-        actualBill["bioguideId"] = None
-
-    actualBill["officialTitle"] = jsonData["official_title"]
-    actualBill["popularTitle"] = jsonData["popular_title"]
-
-    billData["bill"] = actualBill
-    billData["titles"] = jsonData["titles"]
-    billData["subjects"] = jsonData["subjects"]
-    billData["cosponsors"] = jsonData["cosponsors"]
-    billData["committees"] = jsonData["committees"]
-    billData["amendments"] = jsonData["amendments"]
-    billData["actions"] = jsonData["actions"]
-
-    return billData
+#There can be data.xml's available too, but seemingly only when fdsysxml is too. Not implemented unless needed.
+def parseBillDataXml(fileData): raise Exception("data.xml is not implemented")
 
 def parseBillDataJson(fileData):
-    billData = dict()
     jsonData = util.getParsedJsonFile(fileData)
-
-    actualBill = dict()
+    bill = parseBillWithSchema(jsonData, "json")
     
-    actualBill["type"] = jsonData["bill_type"]
-    actualBill["congress"] = jsonData["congress"]
-    actualBill["number"] = jsonData["number"]
-
-    sponsor = jsonData["sponsor"]
-    if (sponsor is not None):
-        if "bioguide_id" in sponsor:
-            actualBill["bioguideId"] = sponsor["bioguide_id"]
-        else:
-            actualBill["bioguideId"] = getMemberByThomasId(sponsor["thomas_id"])
-    else:
-        actualBill["bioguideId"] = None
-
-    actualBill["title"] = jsonData["official_title"]
-
-    actualBill["introduced_at"] = jsonData["introduced_at"]
-    actualBill["updated_at"] = jsonData["updated_at"]
-
-    cosponsors = []
-    for cospon in jsonData["cosponsors"]:
-        id = cospon["bioguide_id"] if "bioguide_id" in cospon else getMemberByThomasId(cospon["thomas_id"])
-        since = cospon["sponsored_at"]
-        withdrawn = cospon["withdrawn_at"] if "withdrawn_at" in cospon else None
-        isOriginal = None
-        cosponsors.append({"id": id, "sponsoredAt": since, "withdrawnAt": withdrawn, "isOriginal": isOriginal})
+    bill["bill"]["bioguideId"] = getSponsorBioguideId(bill["bill"]["sponsor"], "bioguide_id", "thomas_id")
     
-    billData["bill"] = actualBill
-    billData["titles"] = jsonData["titles"]
-    billData["subjects"] = jsonData["subjects"]
-    billData["cosponsors"] = cosponsors
-    billData["committees"] = jsonData["committees"]
-    billData["amendments"] = jsonData["amendments"]
-    billData["actions"] = jsonData["actions"]
-    billData["actions"] = jsonData["actions"]
-
-    return billData
+    bill["titles"] =            parseBillItem(bill, "titles", getTitleFromJSON)
+    bill["subjects"] =          ensureFieldIsList(bill, "subjects")
+    bill["cosponsors"] =        parseBillItem(bill, "cosponsors", getCosponsorFromJSON)
+    bill["actions"] =           parseBillItem(bill, "actions", getActionFromJSON)
+    bill["summaries"] =         parseBillItem(bill, "summaries", getSummaryFromJSON)
+    bill["committees"] =        parseBillItem(bill, "committees", getCommitteeFromJSON)
+    bill["amendments"] =        ensureFieldIsList(bill, "amendments")
+    bill["laws"] =              ensureFieldIsList(bill, "laws")
+    bill["textVersions"] =      ensureFieldIsList(bill, "textVersions")
+    bill["relatedBills"] =      parseBillItem(bill, "relatedBills", getRelatedBillFromJSON)
+    bill["committeeReports"] =  parseBillItem(bill, "committeeReports", getCommitteeReportsFromJSON)
+    bill["cboCostEstimates"] =  ensureFieldIsList(bill, "cboCostEstimates")
+    return bill     
 
 
 
 def getBillObjectId(typ, number, congress, index=None):
-    if index is None: return "{}{}-{}".format(typ, number, congress)
-    else: return "{}{}-{}-{}".format(typ, number, congress, index)
+    id_ = "{}{}-{}".format(typ, number, congress)
+    if index is not None: id_ += "-{}".format(index)
+    return id_
 
-def getSubjectRows(bid, subjects, t, n, c):
-    i, subjs = 0, []
-    for subject in subjects: 
-        sid = getBillObjectId(t, n, c, i)
-        subjs.append((sid, bid, t, n, c, i, subject))
+def getRows(bid, items, tnc, fieldList = None):
+    i, rows = 0, []
+    for item in items: 
+        rid = getBillObjectId(*tnc, i)
+        row = [rid, bid, *tnc, i]
+        if fieldList is None: row.append(item)
+        else: row.extend(util.getFields(item, fieldList))
+        rows.append(row)
         i += 1
-    return subjs
+    return rows
 
-def getTitleRows(bid, titles, t, n, c):
-    i, ttls = 0, []
-    for title in titles: 
-        tid = getBillObjectId(t, n, c, i)
-        portion = title["is_for_portion"] if "is_for_portion" in title.keys() else ""
-        ttls.append((tid, bid, t, n, c, i, title["title"], title["type"], title["as"], portion))
-        i += 1
-    return ttls
+def getBillRow(bid, bill, tnc):
+    row = [bid, *tnc]
+    row.extend(util.getFields(bill, ["bioguideId", "title", "policyArea", "introduced_at", "updated_at"]))
+    return row
 
-def getCoSponsorRows(bid, cosponsors, t, n, c):
-    i, cospons = 0, []
-    for cosponsor in cosponsors:
-        cid = getBillObjectId(t, n, c, i)
-        cospons.append((cid, bid, t, n, c, cosponsor["id"], cosponsor["sponsoredAt"], cosponsor["withdrawnAt"], cosponsor["isOriginal"]))
-        i += 1
-    return cospons
+def getSubjectRows(bid, subjects, tnc):
+    return getRows(bid, subjects, tnc)
+
+def getTitleRows(bid, titles, tnc):
+    return getRows(bid, titles, tnc, ["title", "type", "as", "is_for_portion"])
+
+def getCoSponsorRows(bid, cosponsors, tnc):
+    return getRows(bid, cosponsors, tnc, ["id", "sponsoredAt", "withdrawnAt", "isOriginal"])
+
+def getActionRows(bid, actions, tnc):
+    return getRows(bid, actions, tnc, ["type", "text", "actionDate"])
+
+def getSummaryRows(bid, summaries, tnc):
+    return getRows(bid, summaries, tnc, ["text", "description", "date", "updated"])
+
+def getTextVersionRows(bid, textVersions, tnc):
+    return getRows(bid, textVersions, tnc, ["versionType", "url", "format", "date"])
+
+def getCommitteeRows(bid, committees, tnc):
+    return getRows(bid, committees, tnc, ["thomasId", "action", "date"])
+
+def getLawRows(bid, laws, tnc):
+    return getRows(bid, laws, tnc, ["type", "number"])
+
+def getRelatedBillRows(bid, related, tnc):
+    return getRows(bid, related, tnc, ["reason", "identifiedBy", "id", "type", "number", "congress"])
+
+def getCommitteeReportRows(bid, reports, tnc):
+    return getRows(bid, reports, tnc, ["type", "number", "congress"])
+
 
 def splitBillsIntoTableRows(bills):
     billData,subjectData,titleData,cosponData = [],[],[],[]
+    actionData,summaryData,versionData,commData = [],[],[],[]
+    lawsData,relatedData,comReptData = [],[],[]
 
     for parsedBill in bills:
         bill = parsedBill["bill"]
-        tcn = (bill["type"].lower(),bill["congress"],bill["number"])
-        bioguide = bill["bioguideId"]
-        bid = getBillObjectId(*tcn)
-        
-        billData.append((bid, *tcn, bioguide, bill["title"], bill["introduced_at"], bill["updated_at"]))
-        subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], *tcn))
-        titleData.extend(getTitleRows(bid, parsedBill["titles"], *tcn))
-        cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], *tcn))
-    return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, "BillCoSponsors": cosponData}
+        tnc = (bill["type"].lower(),bill["number"],bill["congress"])
+        bid = getBillObjectId(*tnc)
+        #print("{}, {} {}".format(*tcn))
+        billData.append(getBillRow(bid, bill, tnc))
+        subjectData.extend(getSubjectRows(bid, parsedBill["subjects"], tnc))
+        titleData.extend(getTitleRows(bid, parsedBill["titles"], tnc))
+        cosponData.extend(getCoSponsorRows(bid, parsedBill["cosponsors"], tnc))
+        actionData.extend(getActionRows(bid, parsedBill["actions"], tnc))
+        summaryData.extend(getSummaryRows(bid, parsedBill["summaries"], tnc))
+        versionData.extend(getTextVersionRows(bid, parsedBill["textVersions"], tnc))
+        commData.extend(getCommitteeRows(bid, parsedBill["committees"], tnc))
+        lawsData.extend(getLawRows(bid, parsedBill["laws"], tnc))
+        relatedData.extend(getRelatedBillRows(bid, parsedBill["relatedBills"], tnc))
+        comReptData.extend(getCommitteeReportRows(bid, parsedBill["committeeReports"], tnc))
+    return {"Bills": billData, "BillSubjects": subjectData, "BillTitles": titleData, 
+            "BillActions": actionData, "BillSummaries": summaryData, "BillCoSponsors": cosponData,
+            "BillTextVersions": versionData, "BillCommittees": commData, "BillLaws": lawsData,
+            "BillRelatedBills": relatedData, "BillCommitteeReports": comReptData}
 
 def getInsertThreads(bills):
     billToTables = splitBillsIntoTableRows(bills)
@@ -256,22 +371,25 @@ def getInsertThreads(bills):
     threads.append(zjthreads.buildThread(db.insertRows, "Bills", BILL_COLUMNS, billToTables["Bills"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillSubjects", SUBJECT_COLUMNS, billToTables["BillSubjects"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillTitles", TITLE_COLUMNS, billToTables["BillTitles"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillActions", ACTION_COLUMNS, billToTables["BillActions"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillSummaries", SUMMARY_COLUMNS, billToTables["BillSummaries"]))
+    threads.append(zjthreads.buildThread(db.insertRows, "BillTextVersions", TEXT_VERSION_COLUMNS, billToTables["BillTextVersions"]))
     threads.append(zjthreads.buildThread(db.insertRows, "BillCoSponsors", COSPONSOR_COLUMNS, billToTables["BillCoSponsors"]))
     return threads
 
-def readBillFileFromZip(zipFile, name,path):
-    file = None
-    if "data.json" in path: file = name+"data.json"
-    elif "fdsys_billstatus.xml" in path: file = name+"fdsys_billstatus.xml"
-    #elif "data.xml" in folder: file = name+"data.xml"
+def readBillFileFromZip(zipFile, name, path):
+    file, bill = None, None
+    if FDSYS_XML_FILE_NAME in path: 
+        file = name+FDSYS_XML_FILE_NAME
+        bill = parseBillFDSYSXml(zipFile.read(file))
+    #elif DATA_XML_FILE_NAME in folder: 
+    #   file = name+DATA_XML_FILE_NAME
+    #   bill = parseBillDataXml(zipFile.read(file))
+    elif DATA_JSON_FILE_NAME in path: 
+        file = name+DATA_JSON_FILE_NAME
+        bill = parseBillDataJson(zipFile.read(file))
 
-    if file is None: return None
-
-    data, bill = zipFile.read(file), None
-    if "data.json" in file: bill = parseBillDataJson(data)
-    elif "fdsys_billstatus.xml" in file: bill = parseBillFDSYSXml(data)
-    #elif file.find("data.xml") >= 0: bill = parseBillDataXml(data)
-
+    if WRITE_PARSED_BILL_FILES: saveTestBillFile(bill)
     return bill
 
 def getBillItemsByFolder(fileList):
@@ -299,7 +417,6 @@ def readZippedFiles(zipFile):
         
         if bill is None: skippedFiles += 1
         else: bills.append(bill)
-
     #if skippedFiles > 0: print("Skipped",skippedFiles,"fdsys_billstatus.xml files") 
     return bills
 

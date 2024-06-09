@@ -11,7 +11,7 @@ namespace AuditCongress {
         }
 
         public function applyDefaultOrder() {
-            $this->setOrderBy(["billId", "subjectIndex"], true);
+            $this->setOrderBy(["billId", "index"], true);
         }
 
         public static function getByFilter($congress = null, $type = null, $number = null, $subject = null) {

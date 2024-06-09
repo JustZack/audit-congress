@@ -3,6 +3,8 @@ dist/
 cache/
 zip/
 csv/
+src/py/bills/tests/
+src/py/bills/examples/
 __pycache__/
 package-lock.json
 api.congress.1.key
