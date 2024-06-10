@@ -2,26 +2,13 @@
 
 namespace AuditCongress {
 
-    class BillSubjectRow extends \MySqlConnector\SqlRow {
-        public
-            $id,
-            $billId,
-
-            $type,
-            $congress,
-            $number,
-
-            $index,
-
-            $subject;
+    class BillSubjectRow extends AbstractBillItemIndexRow {
+        public $subject;
     
-        public function getColumns() {
-            return ["id","billId","type","congress","number","index","subject"];
-        }
+        public function getColumns() { return self::getTableColumns("BillSubjects"); }
 
         public function getValues() {
-            return [$this->id,$this->billId,$this->type,$this->congress,$this->number,
-                    $this->index,$this->subject];
+            return parent::mergeValues([$this->subject]);
         }
     }
 }

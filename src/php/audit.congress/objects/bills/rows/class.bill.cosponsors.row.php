@@ -2,15 +2,8 @@
 
 namespace AuditCongress {
 
-    class BillCosponsorRow extends \MySqlConnector\SqlRow {
+    class BillCosponsorRow extends AbstractBillItemRow {
         public
-            $id,
-            $billId,
-
-            $type,
-            $congress,
-            $number,
-
             $bioguideId,
 
             $sponsoredAt,
@@ -18,13 +11,10 @@ namespace AuditCongress {
 
             $isOriginal;
     
-        public function getColumns() {
-            return ["id","billId","type","congress","number","bioguideId","sponsoredAt","withdrawnAt","isOriginal"];
-        }
+        public function getColumns() { return self::getTableColumns("BillCoSponsors"); }
 
         public function getValues() {
-            return [$this->id,$this->billId,$this->type,$this->congress,$this->number,
-            $this->bioguideId,$this->sponsoredAt,$this->withdrawnAt,$this->isOriginal];
+            return parent::mergeValues([$this->bioguideId,$this->sponsoredAt,$this->withdrawnAt,$this->isOriginal]);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class MemberRow extends \MySqlConnector\SqlRow {
+    class MemberRow extends AuditCongressRow {
         public
             $bioguideId,
             $thomasId,
@@ -26,12 +26,7 @@ namespace AuditCongress {
             $imageAttribution,
             $isCurrent;
     
-        public function getColumns() {
-            return ["bioguideId","thomasId","lisId","govTrackId",
-            "openSecretsId","voteSmartId","cspanId","mapLightId","icpsrId",
-            "wikidataId","googleEntityId","official_full","first","last",
-            "gender","birthday","imageUrl","imageAttribution","isCurrent"];
-        }
+        public function getColumns() { return self::getTableColumns("Members"); }
 
         public function getValues() {
             return [$this->bioguideId,$this->thomasId,$this->lisId,$this->govTrackId,

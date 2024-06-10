@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
    
-    class MemberTermRow extends \MySqlConnector\SqlRow {
+    class MemberTermRow extends AuditCongressRow {
         public
             $bioguideId,
             $type,
@@ -22,11 +22,7 @@ namespace AuditCongress {
             $office,
             $phone;
 
-        public function getColumns() {
-            return ["bioguideId","type","start","end",
-            "state","district","party","class","how","state_rank",
-            "url","rss_url","contact_form","address","office","phone"];
-        }
+        public function getColumns() { return self::getTableColumns("MemberTerms"); }
     
         public function getValues() {
             return [$this->bioguideId,$this->type,$this->start,$this->end,

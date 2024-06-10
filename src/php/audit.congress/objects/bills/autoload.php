@@ -7,6 +7,9 @@ require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.titles.php"
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.subjects.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.cosponsors.php";
 
+require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\abstract.class.bill.row.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\abstract.class.bill.item.row.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\abstract.class.bill.item.index.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.titles.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.subjects.row.php";
