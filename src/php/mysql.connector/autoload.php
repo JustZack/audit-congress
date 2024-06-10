@@ -12,6 +12,8 @@ require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.result.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.row.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.schema.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.table.schema.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.schema.enforcer.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.database.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.table.php";

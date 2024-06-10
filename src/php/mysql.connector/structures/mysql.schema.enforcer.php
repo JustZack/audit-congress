@@ -3,7 +3,7 @@
 namespace MySqlConnector {
 
     class SchemaEnforcer {
-        public $schema = null;
+        private Schema $schema;
         private static $debug_log = false;
         private static $operations = array();
 
@@ -29,17 +29,10 @@ namespace MySqlConnector {
         public function enforceSchema() {
             $schemaTableNames = array();
             //First pass to iterate over tables that should exist in the schema
-            foreach ($this->schema["tables"] as $tableSchema) {
-                //Fetch the name, columns, and a Columns object for this table in the schema
-                list("name"=>$name, "columns"=>$schemaColumns) = $tableSchema;
-                //Indexes are not required, but fetch if they do exist
-                $schemaIndexes = array_key_exists("indexes", $tableSchema) ? $tableSchema["indexes"] : array();
-                //Add this table name as a known table
+            foreach ($this->schema->getTables() as $name=>$schemaObj) {
                 $schemaTableNames[strtolower($name)] = true;
-                //Create an object for this table
-                $table = new Table($name);
                 //Enforce the known schema onto this table
-                self::enforceTableSchema($table, $schemaColumns, $schemaIndexes);
+                self::enforceTableSchema($schemaObj);
             }
             //Second pass to drop all tables not listed in the schema
             self::dropUnknownTables($schemaTableNames);
@@ -48,23 +41,19 @@ namespace MySqlConnector {
 
 
         //For the given table $name, enforce the given $columns onto its schema
-        private static function enforceTableSchema($table, $schemaColumns, $schemaIndexes) {
-            //Get the schemas columns in the form of a \MySqlConnector\Columns object
-            $columnsExpected = self::getSchemaColumnsAsObject($schemaColumns);
-            //Get the schemas indexes in the form of a \MySqlConnector\Indexes object
-            $indexesExpected = self::getSchemaIndexesAsObject($schemaIndexes);
-
+        private static function enforceTableSchema(TableSchema $schema) {
+            //Create an object for this table
+            $table = new Table($schema->getName());
             //If the table doesnt exist, create the table
             if (!$table->exists()) {
-                $columnCreateSqlArr = $columnsExpected->getSqlCreateStrings();
+                $columnCreateSqlArr = $schema->getColumns()->getSqlCreateStrings();
                 $table->create($columnCreateSqlArr);
                 self::addDBOperation("Create Table $table->name");
             }
             //Otherwise enforce the schema for this table
-            else self::enforceTableStructure(AlterStructure::COLUMN, $table, $columnsExpected);
-
-            //Always enforce indexes
-            self::enforceTableStructure(AlterStructure::INDEX, $table, $indexesExpected);
+            else self::enforceTableStructure(AlterStructure::COLUMN, $table, $schema->getColumns());
+            //Always enforce indexes if present
+            self::enforceTableStructure(AlterStructure::INDEX, $table, $schema->getIndexes());
         }
         //Given the $schemaKnownTables, drop all tables outside of this list
         private static function dropUnknownTables($schemaKnownTables) {
@@ -79,32 +68,6 @@ namespace MySqlConnector {
                 }
         }
 
-
-
-        //Get the given $schemaColumns as a Columns object, which is then used to enforce schema
-        public static function getSchemaColumnsAsObject($schemaColumns) : Columns {
-            $columnsInDescribeFormat = array();
-            foreach ($schemaColumns as $name=>$data) {
-                $primary = isset($data["primary"]) ? "PRI" : "";
-                $extra = isset($data["extra"]) ? $data["extra"] : "";
-                $column = array($name, $data["type"], $data["null"], $primary, "", $extra);
-                array_push($columnsInDescribeFormat, $column);
-            }
-            return new Columns($columnsInDescribeFormat);
-        }
-        //Get the given $schemaIndexes as an Indexes object, which is then used to enforce schema
-        public static function getSchemaIndexesAsObject($schemaIndexes) : Indexes {
-            $IndexesInDescribeFormat = array();
-            foreach ($schemaIndexes as $name=>$indexes) {
-                for ($i = 0;$i < count($indexes);$i++) {
-                    $index = array(1 => 1, 2 => $name, 4 => $indexes[$i], 
-                                   5 => "A", 6 => 0, 10 => "BTREE", 13 => "YES");
-                    array_push($IndexesInDescribeFormat, $index);
-                }
-            }
-            return new Indexes($IndexesInDescribeFormat);
-        }
-        
 
 
         //Generically enforce table structures based on the $structure (COLUMNS, INDEX) provided
@@ -143,8 +106,8 @@ namespace MySqlConnector {
             if ($dbOperation !== null) {
                 //Determine what the other side of the => should have
                 $otherPart = "";
-                if ($obj instanceof Column) $otherPart = $obj->type();
-                else if ($obj instanceof Index) $otherPart = $obj->columns();
+                if ($structure == AlterStructure::COLUMN) $otherPart = $obj->type();
+                else if ($structure == AlterStructure::INDEX) $otherPart = $obj->columns();
                 //Actually add the db operation
                 $dbOperation = sprintf($dbOperation, $obj->name(), $otherPart, $table->name); 
                 self::addDBOperation($dbOperation);
