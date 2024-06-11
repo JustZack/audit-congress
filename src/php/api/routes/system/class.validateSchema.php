@@ -3,23 +3,16 @@
 namespace API {
     class ValidateSchema extends RouteGroup {
         public function __construct() {
-            parent::__construct("validateSchema", "\API\ValidateSchemaRoute");
+            parent::__construct("validateSchema", "\AuditCongress\Enviroment");
+            $this->addCustomRoute(new ValidateSchemaRoute());
         }
     }
-
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class ValidateSchemaRoute extends Route {
-        public function __construct($functionName, $parameters) {
-            parent::__construct("\MySqlConnector\SchemaEnforcer", $functionName, $parameters);
-        }
-    }
-
-    class ValidateSchemaSingle extends ValidateSchemaRoute {
+    class ValidateSchemaRoute extends Route {
         public function __construct() {
-            parent::__construct("", []);
+            parent::__construct("\AuditCongress\Enviroment", "getDatabaseSchema");
         }
         public function fetchResult() {
-            $schema = \AuditCongress\Enviroment::getDatabaseSchema();
+            $schema = $this->getCallableFunction()();
             $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();
             $operations = $enforcer::getDBOperationsList();

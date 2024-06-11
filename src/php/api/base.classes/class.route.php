@@ -1,7 +1,7 @@
 <?php
 
 namespace API {
-    abstract class Route extends ExceptionThrower {
+    class Route extends ExceptionThrower {
 
         protected 
             $parameters = null,
@@ -21,7 +21,7 @@ namespace API {
             return $result;
         }
 
-        //All API Routes fetch some sort of result - This is the most basic way they might
+        //All API Routes fetch some sort of result - This is the most direct way it could
         public function fetchResult() {
             $params = $this->fetchParameters();
             return ($this->getCallableFunction())(...$params);
@@ -29,7 +29,7 @@ namespace API {
         
         public function className() { return $this->className; }
         public function functionName() { return $this->functionName; }
-        public function getCallableFunction() { 
+        public function getCallableFunction() {
             return $this->className() . "::" . $this->functionName();
         }
 

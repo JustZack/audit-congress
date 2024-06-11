@@ -3,7 +3,10 @@
 namespace API {
     class Member extends RouteGroup {
         public function __construct() {
-            parent::__construct("members", "\API\MemberRoute");
+            parent::__construct("members", "\AuditCongress\Members");
+            $this->addRoute("getByBioguideId", ["id"]);
+            $this->addCustomRoute(new MemberByAnyName());
+            $this->addCustomRoute(new MemberByFilter());
         }
     }
 
@@ -24,13 +27,6 @@ namespace API {
             return \AuditCongress\Members::getByAnyName($name, $current);
         }
     }
-
-    class MemberByBioguideId extends MemberRoute {
-        public function __construct() {
-            parent::__construct("getByBioguideId", ["id"]);
-        }
-    }
-
     class MemberByFilter extends MemberRoute {
         public function __construct() {
             parent::__construct("getByFilter", []);

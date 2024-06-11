@@ -2,8 +2,10 @@
 
 namespace API {
     abstract class RouteGroup {
-        public $baseRoute;
-        public $routeBaseClass;
+        public 
+            $baseRoute,
+            $routeBaseClass,
+            $routes = array();
         public function __construct($baseRoute, $routeBaseClass) {
             $this->baseRoute = $baseRoute;
             $this->routeBaseClass = $routeBaseClass;
@@ -14,6 +16,15 @@ namespace API {
         }
 
         public function name() { return $this->baseRoute; }
+
+        public function addRoute($functionName, $parameters = [], $types = null) {
+            $theRoute = new Route($this->routeBaseClass, $functionName, $parameters, $types);
+            $this->addCustomRoute($theRoute);
+        }
+        public function addCustomRoute($theRoute) {
+            array_push($this->routes, $theRoute);
+        }
+        public function getRoutes() { return $this->routes; }
 
         //Fetch all route names used by this group
         public function fetchRouteClassNames() {
@@ -27,19 +38,19 @@ namespace API {
         public function canRunAny() {
             $currentRunnable = null;
             $currentRunnableParameters = -1;
-            $classNames = $this->fetchRouteClassNames();
-
-            foreach ($classNames as $class) {
-                $routeObj = new $class();
-                $nParams = count($routeObj->parameters());
-                if ($routeObj->canRun() && $nParams > $currentRunnableParameters) {
-                    $currentRunnable = $class;
-                    $currentRunnableObject = $routeObj;
-                    $currentRunnableParameters = $nParams;
+            $currentRunnableObject = null;
+            
+            $routes = $this->getRoutes();
+            foreach ($routes as $route) {
+                $paramCount = count($route->parameters());
+                if ($route->canRun() && $paramCount > $currentRunnableParameters) {
+                    $currentRunnable = $route->getCallableFunction();
+                    $currentRunnableObject = $route;
+                    $currentRunnableParameters = $paramCount;
                 }
             }
 
-            if ($currentRunnable == null) return false;
+            if ($currentRunnableObject == null) return false;
             else {
                 $this->runnableClassName = $currentRunnable;
                 $this->runnableObject = $currentRunnableObject;

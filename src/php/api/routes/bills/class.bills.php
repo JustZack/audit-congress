@@ -3,29 +3,15 @@
 namespace API {
     class Bills extends RouteGroup {
         public function __construct() {
-            parent::__construct("bills", "\API\BillsRoute");
+            parent::__construct("bills", "\AuditCongress\Bills");
+            $this->addRoute("getById", ["id"]);
+            $this->addRoute("getByBioguideId", ["bioguideId"]);
+            $this->addCustomRoute(new BillsByFilter());
         }
     }
-
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class BillsRoute extends Route { 
-        public function __construct($functionName, $parameters) {
-            parent::__construct("\AuditCongress\Bills", $functionName, $parameters);
-        }
-    }
-    class BillsById extends BillsRoute {
+    class BillsByFilter extends Route {
         public function __construct() {
-            parent::__construct("getById", ["id"]);
-        }
-    }
-    class BillsBySponsorId extends BillsRoute {
-        public function __construct() {
-            parent::__construct("getByBioguideId", ["bioguideId"]);
-        }
-    }
-    class BillsByFilter extends BillsRoute {
-        public function __construct() {
-            parent::__construct("getByFilter", []);
+            parent::__construct("\AuditCongress\Bills", "getByFilter", []);
         }
         //Note: No required parameters        
         public function fetchResult() {

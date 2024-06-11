@@ -3,34 +3,16 @@
 namespace API {
     class Cosponsors extends RouteGroup {
         public function __construct() {
-            parent::__construct("cosponsors", "\API\CosponsorsRoute");
+            parent::__construct("cosponsors", "\AuditCongress\BillCosponsors");
+            $this->addRoute("getById", ["id"]);
+            $this->addRoute("getByBioguideId", ["bioguideId"]);
+            $this->addRoute("getByBillId", ["billId"]);
+            $this->addCustomRoute(new CosponsorsByFilter());
         }
     }
-
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class CosponsorsRoute extends Route { 
-        public function __construct($functionName, $parameters) {
-            parent::__construct("\AuditCongress\BillCosponsors", $functionName, $parameters);
-        }
-    }
-    class CosponsorsById extends CosponsorsRoute {
+    class CosponsorsByFilter extends Route {
         public function __construct() {
-            parent::__construct("getById", ["id"]);
-        }
-    }
-    class CosponsorsByBioguideId extends CosponsorsRoute {
-        public function __construct() {
-            parent::__construct("getByBioguideId", ["bioguideId"]);
-        }
-    }
-    class CosponsorsByBillId extends CosponsorsRoute {
-        public function __construct() {
-            parent::__construct("getByBillId", ["billId"]);
-        }
-    }
-    class CosponsorsByFilter extends CosponsorsRoute {
-        public function __construct() {
-            parent::__construct("getByFilter", []);
+            parent::__construct("\AuditCongress\BillCosponsors", "getByFilter", []);
         }
         //Note: No required parameters        
         public function fetchResult() {
