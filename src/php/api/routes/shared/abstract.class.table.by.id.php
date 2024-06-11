@@ -1,23 +1,26 @@
 <?php
 
 namespace API {
-    class SubjectsById extends SubjectsRoute {
+    class RouteById extends GenericRoute {
 
         public static function parameters() { return ["id"]; }
         
         public static function fetchResult() {
             $id = Parameters::get("id");
-            return \AuditCongress\BillSubjects::getById($id);
+            return \AuditCongress\BillActions::getById($id);
         }
     }
+    class RouteByBillId extends GenericRoute {
 
-    class SubjectsByBillId extends SubjectsRoute {
+        public function __construct($functionToCall) {
+            
+        }
 
         public static function parameters() { return ["billId"]; }
         
         public static function fetchResult() {
             $id = Parameters::get("billId");
-            return \AuditCongress\BillSubjects::getByBillId($id);
+            return \AuditCongress\BillActions::getByBillId($id);
         }
     }
 }

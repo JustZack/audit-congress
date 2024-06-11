@@ -8,12 +8,14 @@ namespace API {
     }
 
     //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class BioguideToThomasRoute extends Route { }
-
+    abstract class BioguideToThomasRoute extends Route {
+        public function __construct($functionName, $parameters) {
+            parent::__construct("\AuditCongress\Members", $functionName, $parameters);
+        }
+    }
     class BioguideToThomasSingle extends BioguideToThomasRoute {
-        public static function fetchResult() {
-            return \AuditCongress\Members::getBioguideToThomasIdMapping();
-            
+        public function __construct() {
+            parent::__construct("getBioguideToThomasIdMapping", []);
         }
     }
 }

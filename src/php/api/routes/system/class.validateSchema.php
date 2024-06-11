@@ -8,10 +8,17 @@ namespace API {
     }
 
     //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class ValidateSchemaRoute extends Route { }
+    abstract class ValidateSchemaRoute extends Route {
+        public function __construct($functionName, $parameters) {
+            parent::__construct("\MySqlConnector\SchemaEnforcer", $functionName, $parameters);
+        }
+    }
 
     class ValidateSchemaSingle extends ValidateSchemaRoute {
-        public static function fetchResult() {
+        public function __construct() {
+            parent::__construct("", []);
+        }
+        public function fetchResult() {
             $schema = \AuditCongress\Enviroment::getDatabaseSchema();
             $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();

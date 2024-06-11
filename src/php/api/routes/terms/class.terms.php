@@ -8,7 +8,16 @@ namespace API {
     }
 
     //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class TermsRoute extends Route { }
+    abstract class TermsRoute extends Route {
+        public function __construct($functionName, $parameters) {
+            parent::__construct("\AuditCongress\MemberTerms", $functionName, $parameters);
+        }
+    }
+    class TermsByBioguideId extends TermsRoute {
+        public function __construct() {
+            parent::__construct("getByBioguideId", ["id"]);
+        }
+    }
 }
 
 ?>

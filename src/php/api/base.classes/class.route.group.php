@@ -20,7 +20,9 @@ namespace API {
             return \Util\Classes::thatExtend($this->routeBaseClass);
         }
 
-        public $runnableClassName = null;
+        public 
+            $runnableClassName = null,
+            $runnableObject = null;
         //Check if any of the routes known by this group can run with the given parameters
         public function canRunAny() {
             $currentRunnable = null;
@@ -28,22 +30,27 @@ namespace API {
             $classNames = $this->fetchRouteClassNames();
 
             foreach ($classNames as $class) {
-                $nParams = count(("$class::parameters")());
-                if (("$class::canRun")() && $nParams > $currentRunnableParameters) {
+                $routeObj = new $class();
+                $nParams = count($routeObj->parameters());
+                if ($routeObj->canRun() && $nParams > $currentRunnableParameters) {
                     $currentRunnable = $class;
+                    $currentRunnableObject = $routeObj;
                     $currentRunnableParameters = $nParams;
                 }
             }
 
             if ($currentRunnable == null) return false;
-            else $this->runnableClassName = $currentRunnable;
+            else {
+                $this->runnableClassName = $currentRunnable;
+                $this->runnableObject = $currentRunnableObject;
+            }
             return true;
         }
 
         //Run whichever API route matches the given parameters
         public function fetchResult() {
-            if ($this->runnableClassName == null && !$this->canRunAny()) return null;
-            return ("$this->runnableClassName::fetchResult")();
+            if ($this->runnableObject == null && !$this->canRunAny()) return null;
+            return $this->runnableObject->fetchResult();
         }
     }
 }

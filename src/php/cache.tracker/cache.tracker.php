@@ -90,7 +90,8 @@ namespace Cache {
         public function runUpdateScript($waitForComplete = true, $inProgressStatus = "updating", $completeStatus = "done") {
             $out = array();
             if ($waitForComplete) $this->timeoutSeconds = 0;
-            
+            //TODO: TEMPORARY FIX, NEED TO FIX THIS LATER
+            ini_set("max_execution_time", 60*5);
             //If the update script is already running, wait for it to update
             if ($this->isUpdating(true)) $this->waitForUpdate();
             //Otherwise only run if this tracker uses a script

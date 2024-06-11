@@ -8,8 +8,8 @@ namespace API {
         }
 
         public static function hasAll($parameters, $types=null) {
-            $paramSet = Parameters::getManyIfSet($parameters, $types);
-            foreach ($paramSet as $key=>$value) if ($value == null) return false;
+            $params = Parameters::getManyIfSet($parameters, $types);
+            foreach ($params as $param) if ($param == null) return false;
             return true;
         }
 
@@ -49,10 +49,8 @@ namespace API {
             
             $paramValues = array();
             for ($i = 0;$i < count($parameters);$i++) {
-                $name = $parameters[$i];
                 $type = $nTypes == 0 ? null : $types[$i];
-                $value = Parameters::getIfSet($name, $type);
-                $paramValues[$name] =  $value;
+                array_push($paramValues, Parameters::getIfSet($parameters[$i], $type));
             }
 
             return $paramValues;
