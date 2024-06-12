@@ -6,7 +6,7 @@ namespace API {
             parent::__construct("summaries", "\AuditCongress\BillSummaries");
             $this->addRoute("getById", ["id"]);
             $this->addRoute("getByBillId", ["billId"]);
-            $this->addCustomRoute(new SummariesByFilter);
+            $this->addCustomRoute(new SummariesByFilter());
         }
     }
     class SummariesByFilter extends Route {

@@ -15,6 +15,7 @@ require_once API_FOLDER."\\routes\member\class.member.php";
 require_once API_FOLDER."\\routes\\terms\class.terms.php";
 require_once API_FOLDER."\\routes\\actions\class.actions.php";
 require_once API_FOLDER."\\routes\\summaries\class.summaries.php";
+require_once API_FOLDER."\\routes\\texts\class.texts.php";
 require_once API_FOLDER."\\routes\\socials\class.socials.php";
 require_once API_FOLDER."\\routes\\offices\class.offices.php";
 require_once API_FOLDER."\\routes\\elections\class.elections.php";
