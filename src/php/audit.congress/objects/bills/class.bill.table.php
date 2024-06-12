@@ -23,6 +23,13 @@ namespace AuditCongress {
             return self::parseResult($items);
         }
     }
+    trait BillsGetByFilter {
+        public static function getByFilter($congress = null, $type = null, $number = null) {
+            self::enforceCache();
+            $items = self::getQueryClass()::getByFilter($congress, $type, $number);
+            return self::parseResult($items);
+        }
+    }
 }
 
 ?>
