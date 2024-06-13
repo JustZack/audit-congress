@@ -43,7 +43,7 @@ namespace MySqlConnector {
         public function getOrderBy() { return $this->orderBy; }
         //Set the order by string used by this object
         public function setOrderBy($newOrderByColumns, $isAsc = true) { 
-            $orderList = QueryBuilder::buildItemList($newOrderByColumns, false, "");
+            $orderList = QueryBuilder::buildItemList($newOrderByColumns, false, "`");
             $this->orderBy = "$orderList ".($isAsc?"ASC":"DESC");
         }
 
@@ -51,7 +51,7 @@ namespace MySqlConnector {
         public function getGroupBy() { return $this->groupBy; }
         //Set the group by string used by this object
         public function setGroupBy($newGroupByColumns) { 
-            $this->groupBy = QueryBuilder::buildItemList($newGroupByColumns, false, "");
+            $this->groupBy = QueryBuilder::buildItemList($newGroupByColumns, false, "`");
         }
 
         //Get the row limit provided to this object

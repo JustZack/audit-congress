@@ -3,12 +3,16 @@
 namespace API {
     class Session extends RouteGroup {
         public function __construct() {
-            parent::__construct("session", "\API\SessionRoute");
+            parent::__construct("session", "\AuditCongress\Sessions");
+            $this->addRoute("getByCongress", ["congress"]);
+            $this->addRoute("getByCongressAndNumber", ["congress", "number"]);
+            $this->addRoute("getByCongressAndChamber", ["congress", "chamber"]);
+            $this->addRoute("getByCongressNumberAndChamber", ["congress", "number", "chamber"]);
+            $this->addRoute("getByDate", ["date"]);
+            $this->addRoute("getCurrent", ["current"]);
+            $this->addRoute("getAll");
         }
     }
-
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class SessionRoute extends Route { }
 }
 
 ?>

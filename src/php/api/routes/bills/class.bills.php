@@ -3,12 +3,28 @@
 namespace API {
     class Bills extends RouteGroup {
         public function __construct() {
-            parent::__construct("bills", "\API\BillsRoute");
+            parent::__construct("bills", "\AuditCongress\Bills");
+            $this->addRoute("getById", ["id"]);
+            $this->addRoute("getByBioguideId", ["bioguideId"]);
+            $this->addCustomRoute(new BillsByFilter());
         }
     }
+    class BillsByFilter extends Route {
+        public function __construct() {
+            parent::__construct("\AuditCongress\Bills", "getByFilter", []);
+        }
+        //Note: No required parameters        
+        public function fetchResult() {
+            $congress = Parameters::getInt("congress");
+            $type = Parameters::get("type");
+            $number = Parameters::getInt("number");
+            $title = Parameters::get("title");
+            $sort = Parameters::getArray("sort");
 
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class BillsRoute extends Route { }
+            if ($sort == null) return $this->getCallableFunction()($congress, $type, $number, $title);
+            else               return $this->getCallableFunction()($congress, $type, $number, $title, $sort);
+        }
+    }
 }
 
 ?>

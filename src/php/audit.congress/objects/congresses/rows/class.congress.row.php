@@ -2,18 +2,15 @@
 
 namespace AuditCongress {
 
-    class CongressRow extends \MySqlConnector\SqlRow {
+    class CongressRow extends AuditCongressRow {
         public
             $number,
             $name,
             $startYear,
             $endYear;
+   
+        public function getColumns() { return self::getTableColumns("Congresses"); }
 
-        public function getColumns() {
-            return ["number","name",
-            "startYear","endYear"];
-        }
-    
         public function getValues() {
             return [$this->number,$this->name,
             $this->startYear,$this->endYear];

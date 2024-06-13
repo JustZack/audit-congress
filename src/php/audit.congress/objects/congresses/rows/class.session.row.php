@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class SessionRow extends \MySqlConnector\SqlRow {
+    class SessionRow extends AuditCongressRow {
         public
             $congress,
             $number,
@@ -11,10 +11,8 @@ namespace AuditCongress {
             $startDate,
             $endDate;
 
-        public function getColumns() {
-            return ["congress","number","chamber",
-                    "type","startDate","endDate"];
-        }
+        public function getColumns() { return self::getTableColumns("Sessions"); }
+
     
         public function getValues() {
             return [$this->congress,$this->number,$this->chamber,

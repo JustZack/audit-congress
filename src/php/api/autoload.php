@@ -11,44 +11,26 @@ require_once API_FOLDER."\base.classes\class.pagination.php";
 
 require_once API_FOLDER."\class.runner.php";
 
-require_once API_FOLDER."\\routes\member\class.member.php";
-require_once API_FOLDER."\\routes\member\class.member.by.bioguide.id.php";
-require_once API_FOLDER."\\routes\member\class.member.by.any.name.php";
-require_once API_FOLDER."\\routes\member\class.member.by.filter.php";
-
-require_once API_FOLDER."\\routes\\terms\class.terms.php";
-require_once API_FOLDER."\\routes\\terms\class.terms.by.bioguide.id.php";
-
-require_once API_FOLDER."\\routes\\socials\class.socials.php";
-require_once API_FOLDER."\\routes\\socials\class.socials.by.bioguide.id.php";
-
-require_once API_FOLDER."\\routes\\offices\class.offices.php";
-require_once API_FOLDER."\\routes\\offices\class.offices.by.id.php";
-
-require_once API_FOLDER."\\routes\\elections\class.elections.php";
-require_once API_FOLDER."\\routes\\elections\class.elections.by.id.php";
-
 require_once API_FOLDER."\\routes\\bills\class.bills.php";
-require_once API_FOLDER."\\routes\\bills\class.bills.by.id.php";
-require_once API_FOLDER."\\routes\\bills\class.bills.by.filter.php";
-
 require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.php";
-require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.id.php";
-require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.by.filter.php";
-
+require_once API_FOLDER."\\routes\\actions\class.actions.php";
+require_once API_FOLDER."\\routes\\committees\class.committees.php";
+require_once API_FOLDER."\\routes\\summaries\class.summaries.php";
 require_once API_FOLDER."\\routes\\titles\class.titles.php";
-require_once API_FOLDER."\\routes\\titles\class.titles.by.id.php";
-require_once API_FOLDER."\\routes\\titles\class.titles.by.filter.php";
-
 require_once API_FOLDER."\\routes\\subjects\class.subjects.php";
-require_once API_FOLDER."\\routes\\subjects\class.subjects.by.id.php";
-require_once API_FOLDER."\\routes\\subjects\class.subjects.by.filter.php";
+require_once API_FOLDER."\\routes\\texts\class.texts.php";
+require_once API_FOLDER."\\routes\\laws\class.laws.php";
+require_once API_FOLDER."\\routes\\related\class.related.php";
+require_once API_FOLDER."\\routes\\reports\class.reports.php";
+
+require_once API_FOLDER."\\routes\member\class.member.php";
+require_once API_FOLDER."\\routes\\terms\class.terms.php";
+require_once API_FOLDER."\\routes\\socials\class.socials.php";
+require_once API_FOLDER."\\routes\\offices\class.offices.php";
+require_once API_FOLDER."\\routes\\elections\class.elections.php";
 
 require_once API_FOLDER."\\routes\\congress\class.congress.php";
-require_once API_FOLDER."\\routes\\congress\class.congress.by.field.php";
-
 require_once API_FOLDER."\\routes\\session\class.session.php";
-require_once API_FOLDER."\\routes\\session\class.session.by.field.php";
 
 require_once API_FOLDER."\\routes\\system\class.validateSchema.php";
 require_once API_FOLDER."\\routes\\system\class.bioguideToThomas.php";

@@ -3,12 +3,10 @@
 namespace API {
     class Socials extends RouteGroup {
         public function __construct() {
-            parent::__construct("socials", "\API\SocialsRoute");
+            parent::__construct("socials", "\AuditCongress\MemberSocials");
+            $this->addRoute("getByBioguideId", ["id"]);
         }
     }
-
-    //Declare MemberRoute so that all MemberRoutes can be identified as one of its children
-    abstract class SocialsRoute extends Route { }
 }
 
 ?>

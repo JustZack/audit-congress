@@ -2,7 +2,7 @@
 
 namespace AuditCongress {
 
-    class MemberSocialsRow extends \MySqlConnector\SqlRow {
+    class MemberSocialsRow extends AuditCongressRow {
         public
             $bioguideId,
             $twitter,
@@ -14,11 +14,7 @@ namespace AuditCongress {
             $instagram,
             $instagramId;
 
-        public function getColumns() {
-            return ["bioguideId", "twitter", "twitterId", 
-            "facebook", "facebookId", "youtube", "youtubeId",
-            "instagram", "instagramId"];
-        }
+        public function getColumns() { return self::getTableColumns("MemberSocials"); }
     
         public function getValues() {
             return [$this->bioguideId, $this->twitter,

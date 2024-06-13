@@ -2,17 +2,13 @@
 
 namespace AuditCongress {
 
-    class MemberOfficesRow extends \MySqlConnector\SqlRow {
+    class MemberOfficesRow extends AuditCongressRow {
         public
             $bioguideId,$id,
             $address,$suite,$building,$city,$state,$zip,
             $latitude,$longitude,$phone,$fax;
 
-        public function getColumns() {
-            return ["bioguideId","id","address","suite",
-                    "building","city","state","zip","latitude",
-                    "longitude","phone","fax"];
-        }
+        public function getColumns() { return self::getTableColumns("MemberOffices"); }
 
         public function getValues() {
             return [$this->bioguideId,$this->id,$this->address,

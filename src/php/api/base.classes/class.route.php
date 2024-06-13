@@ -1,22 +1,47 @@
 <?php
 
 namespace API {
-    abstract class Route extends ExceptionThrower {
+    class Route extends ExceptionThrower {
+
+        protected 
+            $parameters = null,
+            $types = null,
+            $className = null,
+            $functionName = null;
+        
+        public function __construct($class, $function, $parameters = [], $types = null) {
+            $this->className = $class;
+            $this->functionName = $function;
+            $this->setParameters($parameters);
+            $this->setTypes($types);
+        }
         //All API Routes require specific parameters to run
-        public static function canRun() {
+        public function canRun() {
             $result = Parameters::hasAll(static::parameters(), static::types());
             return $result;
         }
-        //All API Routes fetch some sort of result
-        public abstract static function fetchResult();
+
+        //All API Routes fetch some sort of result - This is the most direct way it could
+        public function fetchResult() {
+            $params = $this->fetchParameters();
+            return ($this->getCallableFunction())(...$params);
+        }
         
+        public function className() { return $this->className; }
+        public function functionName() { return $this->functionName; }
+        public function getCallableFunction() {
+            return $this->className() . "::" . $this->functionName();
+        }
+
         //Fetch the required parameters for this route & the types
-        public static function parameters() { return []; }
-        public static function types() { return null; }
+        public function parameters() { return $this->parameters; }
+        public function setParameters($newParams) { $this->parameters = $newParams; }
+        public function types() { return $this->types; }
+        public function setTypes($newTypes) { $this->types = $newTypes; }
 
         //Fetch the parameters used by this function
-        public static function fetchParameters() {
-            return Parameters::getManyIfSet(static::parameters(), static::types());
+        public function fetchParameters() {
+            return Parameters::getManyIfSet(self::parameters(), self::types());
         }
 
         //General function to be sure a parameter is one of the given values (or null)
