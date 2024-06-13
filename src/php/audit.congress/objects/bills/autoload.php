@@ -12,6 +12,7 @@ require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.textversion
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.committees.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.laws.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.related.bills.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\\tables\class.bill.committee.reports.php";
 
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\abstract.class.bill.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\abstract.class.bill.item.row.php";
@@ -26,6 +27,7 @@ require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.textversion.r
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.committee.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.law.row.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.related.bill.row.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\\rows\class.bill.committee.report.row.php";
 
 
 require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bills.query.php";
@@ -38,5 +40,6 @@ require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bill.textversions
 require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bill.committees.query.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bill.laws.query.php";
 require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bill.related.bills.query.php";
+require_once AUDITCONGRESS_FOLDER."\objects\bills\querys\class.bill.committee.reports.query.php";
 
 ?>
