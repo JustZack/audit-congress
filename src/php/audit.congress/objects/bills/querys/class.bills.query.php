@@ -14,9 +14,9 @@ namespace AuditCongress {
             $this->setOrderBy(["updated"], false);
         }
 
-        public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = ["updated"]) {
+        public static function getByFilter($congress = null, $type = null, $number = null, $title = null, $sort = null) {
             $bills = self::getWithFilterPlusOne($congress, $type, $number, "title", $title);
-            $bills->setOrderBy($sort, false);
+            if ($sort != null) $bills->setOrderBy($sort, false);
             return $bills->selectFromDB()->fetchAllAssoc();
         }
     }
