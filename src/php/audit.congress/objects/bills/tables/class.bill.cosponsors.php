@@ -10,7 +10,7 @@ namespace AuditCongress {
             parent::__construct("BillCosponsors", "BillCosponsorsQuery", "BillCosponsorRow");
         }
 
-        public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {
+        public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = null) {
             self::enforceCache();
             $cosponsors = BillCosponsorsQuery::getByFilter($congress, $type, $number, $bioguideId, $sort);
             return self::parseResult($cosponsors);

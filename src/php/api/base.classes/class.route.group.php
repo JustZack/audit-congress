@@ -17,8 +17,8 @@ namespace API {
 
         public function name() { return $this->baseRoute; }
 
-        public function addRoute($functionName, $parameters = [], $types = null) {
-            $theRoute = new Route($this->routeBaseClass, $functionName, $parameters, $types);
+        public function addRoute($functionName, $requiredParams = [], $optionalParams = []) {
+            $theRoute = new Route($this->routeBaseClass, $functionName, $requiredParams, $optionalParams);
             $this->addCustomRoute($theRoute);
         }
         public function addCustomRoute($theRoute) {

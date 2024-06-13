@@ -26,6 +26,7 @@ namespace AuditCongress {
             $members->setEqualityOperator("like");
             $members->setSearchColumns(["first", "last", "isCurrent"]);
             $members->setSearchValues([$firstName, $lastName, $isCurrent]);
+            $members->applyPagination();
             return $members->selectFromDB()->fetchAllAssoc();
         }
         
@@ -42,6 +43,7 @@ namespace AuditCongress {
             }
 
             $members->setBooleanCondition("OR");
+            $members->applyPagination();
             $result = $members->selectFromDB()->fetchAllAssoc();
             
             if (is_bool($isCurrent)) {
@@ -73,9 +75,11 @@ namespace AuditCongress {
                 }
             }
 
-            $members->setGroupBy(["memberterms.bioguideId", "memberterms.type"]);
+            $members->setGroupBy(["bioguideId", "type"]);
             $members->setOrderBy(["bioguideId", "start"], false);
             $members->setJoin("members", ["memberterms.bioguideId"], ["members.bioguideId"]);
+            
+            $members->applyPagination();
 
             return $members->selectFromDB()->fetchAllAssoc();
         }
