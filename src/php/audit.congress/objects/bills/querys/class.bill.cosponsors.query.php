@@ -14,9 +14,9 @@ namespace AuditCongress {
             $this->setOrderBy(["sponsoredAt"], false);
         }
 
-        public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = ["sponsoredAt"]) {
+        public static function getByFilter($congress = null, $type = null, $number = null, $bioguideId = null, $sort = null) {
             $cosponsors = self::getWithFilterPlusOne($congress, $type, $number, "bioguideId", $bioguideId);
-            $cosponsors->setOrderBy($sort, false);
+            if ($sort != null) $cosponsors->setOrderBy($sort, false);
             return $cosponsors->selectFromDB()->fetchAllAssoc();
         }
     }
