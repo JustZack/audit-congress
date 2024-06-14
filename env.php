@@ -29,6 +29,16 @@ namespace AuditCongress {
             return self::$dbSchema;
         }
 
+        static function enforceDatabaseSchema() {
+            $schema = self::getDatabaseSchema();
+            $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
+            $enforcer->enforceSchema();
+            $operations = $enforcer::getDBOperationsList();
+            $result = array("valid" => true, "operations" => $operations);
+            return $result;
+        }
+
+
         private static ?\API\Schema $apiSchema = null;
         static function getAPISchema() {
             if (self::$apiSchema == null) {
