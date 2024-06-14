@@ -2,17 +2,17 @@
 
 namespace AuditCongress {
     class Environment {
-        static function getUrl() {
+        public static function getUrl() {
             $modeIsProd = false;
             if ($modeIsProd) return "http://localhost/audit-congress/";
             else return "http://localhost/audit-congress/";
         }
         
-        static function getConfig() {
+        public static function getConfig() {
             return \Util\File::readJSONFile(AUDITCONGRESS_CONFIG);
         }
 
-        static function getCacheSettings() {
+        public static function getCacheSettings() {
             return \Util\File::readJSONFile(AUDITCONGRESS_CACHE_SETTINGS);
         }
         
@@ -22,14 +22,14 @@ namespace AuditCongress {
         }
 
         private static ?\MySqlConnector\Schema $dbSchema = null;
-        static function getDatabaseSchema() {
+        public static function getDatabaseSchema() {
             if (self::$dbSchema == null) {
                 self::$dbSchema = self::readSchema(AUDITCONGRESS_DB_SCHEMA, "\MySqlConnector\Schema");
             }
             return self::$dbSchema;
         }
 
-        static function enforceDatabaseSchema() {
+        public static function enforceDatabaseSchema() {
             $schema = self::getDatabaseSchema();
             $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();
@@ -40,7 +40,7 @@ namespace AuditCongress {
 
 
         private static ?\API\Schema $apiSchema = null;
-        static function getAPISchema() {
+        public static function getAPISchema() {
             if (self::$apiSchema == null) {
                 self::$apiSchema = self::readSchema(AUDITCONGRESS_API_SCHEMA, "\API\Schema");
             }
