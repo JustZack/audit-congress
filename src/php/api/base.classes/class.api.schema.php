@@ -17,6 +17,8 @@ namespace API {
         public function listRoutes() { return array_keys($this->routes); }
 
         public function getRoute($routeName) : RouteGroupSchema { return $this->routes[$routeName]; }
+
+        public function hasRoute($routeName) { return array_key_exists($routeName, $this->routes); }
     }
 }
 

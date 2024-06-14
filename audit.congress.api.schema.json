@@ -3,6 +3,16 @@
     "version": ".5",
     "groups" : [
         {
+            "name": "bioguideToThomas",
+            "class": "\\AuditCongress\\Members",
+            "routes": [ {"function": "getBioguideToThomasIdMapping"} ]
+        },
+
+
+
+
+
+        {
             "name": "members",
             "class": "\\AuditCongress\\Members",
             "routes": [

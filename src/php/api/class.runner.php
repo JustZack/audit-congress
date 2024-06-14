@@ -3,6 +3,57 @@
 namespace API {
     class Runner {
         public static ?Pagination $pagination = null;
+        public ?Schema $schema = null;
+
+        public function __construct(Schema $apiSchema) {
+            $this->schema = $apiSchema;
+        }
+        
+        public function processRequest() {
+            $route = Parameters::getIfSet("route");
+            if ($route != null) $this->runRoute($route);
+            else                self::Error("", "No route provided.");
+        }
+
+        private function runRoute($route) {
+            //Get all classes that extend RouteGroups
+            if ($this->schema->hasRoute($route)) {
+                $groupSchema = $this->schema->getRoute($route);
+                self::runRouteGroup($groupSchema->getRouteGroup());
+            } else self::NotFound($route);
+        }
+
+        private static function runRouteGroup(RouteGroup $routeGroup) {
+            $result = null;
+            $route = $routeGroup->name();
+
+            try {
+                if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
+                if ($result === null) self::NotFound($route);
+                else self::Success($route, $routeGroup->runnableClassName, $result);    
+            } catch (\Cache\WaitingException $cacheException) {
+                self::Waiting($route, $routeGroup->runnableClassName, "Waiting for cache to finish compiling.");
+            } catch (\API\Exception $exception) {
+                self::Error($route, $exception->getMessage());
+            }
+        }
+
+
+
+        public static function getPagination() : Pagination {
+            if (self::$pagination == null) {
+                $page = Parameters::getIfSet("page", "int");
+                $pageSize = Parameters::getIfSet("pageSize", "int");
+                $offset = Parameters::getIfSet("offset", "int");
+                if ($offset != null) self::$pagination = Pagination::getFromOffset($offset, $pageSize);
+                else self::$pagination = Pagination::getFromPage($page, $pageSize);
+            } 
+            
+            return self::$pagination;
+        }
+
+
+
         //Actually print the response from the API
         private static function Return($route, $data) {
             $data["request"]["route"] = $route;
@@ -46,53 +97,6 @@ namespace API {
             if (strlen($route) > 0) $data["request"]["message"] = "Unknown route: $route";
             else $data["request"]["message"] = "No route provided";
             self::Return($route, $data);
-        }
-
-        private static function runRouteGroup(RouteGroup $routeGroup) {
-            $result = null;
-            $route = $routeGroup->name();
-
-            try {
-                if ($routeGroup->canRunAny()) $result = $routeGroup->fetchResult();
-               
-                if ($result === null) self::NotFound($route);
-                else self::Success($route, $routeGroup->runnableClassName, $result);
-            } catch (\Cache\WaitingException $cacheException) {
-                self::Waiting($route, $routeGroup->runnableClassName, "Waiting for cache to finish compiling.");
-            } catch (\API\Exception $exception) {
-                self::Error($route, $exception->getMessage());
-            }
-        }
-
-        private static function runRoute($route) {
-            //Get all classes that extend RouteGroups
-            $routeGroups = \Util\Classes::thatExtend("\API\RouteGroup");
-            foreach ($routeGroups as $group) {
-                $group = new $group();
-                if ($group->isRoute($route)) {
-                    self::runRouteGroup($group);
-                    return;
-                }
-            }
-            self::NotFound($route);
-        }
-
-        public static function getPagination() : Pagination {
-            if (self::$pagination == null) {
-                $page = Parameters::getIfSet("page", "int");
-                $pageSize = Parameters::getIfSet("pageSize", "int");
-                $offset = Parameters::getIfSet("offset", "int");
-                if ($offset != null) self::$pagination = Pagination::getFromOffset($offset, $pageSize);
-                else self::$pagination = Pagination::getFromPage($page, $pageSize);
-            } 
-            
-            return self::$pagination;
-        }
-
-        public static function processRequest() {
-            $route = Parameters::getIfSet("route");
-            if ($route != null) self::runRoute($route);
-            else                self::Error("", "No route provided.");
         }
     }
 }

@@ -13,6 +13,8 @@ namespace API {
                 $this->group->addRoute($route["function"], $required, $optional);
             }
         }
+
+        public function getRouteGroup() { return $this->group; }
     }
 }
 
