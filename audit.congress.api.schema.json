@@ -9,7 +9,7 @@
         },
         {
             "name": "validateSchema",
-            "class": "\\AuditCongress\\Enviroment",
+            "class": "\\AuditCongress\\Environment",
             "routes": [ {"function": "enforceDatabaseSchema"} ]
         },
 

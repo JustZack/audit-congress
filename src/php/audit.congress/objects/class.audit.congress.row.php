@@ -5,7 +5,7 @@ namespace AuditCongress {
     class AuditCongressRow extends \MySqlConnector\SqlRow {
 
         public static function getTableColumns($tableName) {
-            return \AuditCongress\Enviroment::getDatabaseSchema()->getTable($tableName)->getColumnNames();
+            return \AuditCongress\Environment::getDatabaseSchema()->getTable($tableName)->getColumnNames();
         }
 
         public function mergeColumns($otherColumns) {
