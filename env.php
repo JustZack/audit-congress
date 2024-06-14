@@ -34,8 +34,7 @@ namespace AuditCongress {
             $enforcer = new \MySqlConnector\SchemaEnforcer($schema);
             $enforcer->enforceSchema();
             $operations = $enforcer::getDBOperationsList();
-            $result = array("valid" => true, "operations" => $operations);
-            return $result;
+            return array("valid" => true, "operations" => $operations);
         }
 
 
