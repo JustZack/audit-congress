@@ -16,13 +16,25 @@ namespace AuditCongress {
             return \Util\File::readJSONFile(AUDITCONGRESS_CACHE_SETTINGS);
         }
         
-        private static ?\MySqlConnector\Schema $schema = null;
+        private static function readSchema($pathToSchema, $schemaClass) {
+            $json = \Util\File::readJSONFile($pathToSchema);
+            return new $schemaClass($json);
+        }
+
+        private static ?\MySqlConnector\Schema $dbSchema = null;
         static function getDatabaseSchema() {
-            if (self::$schema == null) {
-                $json = \Util\File::readJSONFile(AUDITCONGRESS_DB_SCHEMA);
-                self::$schema = new \MySqlConnector\Schema($json);
+            if (self::$dbSchema == null) {
+                self::$dbSchema = self::readSchema(AUDITCONGRESS_DB_SCHEMA, "\MySqlConnector\Schema");
             }
-            return self::$schema;
+            return self::$dbSchema;
+        }
+
+        private static ?\API\Schema $apiSchema = null;
+        static function getAPISchema() {
+            if (self::$apiSchema == null) {
+                self::$apiSchema = self::readSchema(AUDITCONGRESS_API_SCHEMA, "\API\Schema");
+            }
+            return self::$apiSchema;
         }
     }
 }

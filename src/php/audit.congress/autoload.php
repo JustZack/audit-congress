@@ -2,7 +2,8 @@
 
 define("AUDITCONGRESS_FOLDER", __DIR__);
 define("ROOTFOLDER", __DIR__."\\..\\..\\..\\");
-define("AUDITCONGRESS_DB_SCHEMA", ROOTFOLDER."audit.congress.schema.json");
+define("AUDITCONGRESS_DB_SCHEMA", ROOTFOLDER."audit.congress.db.schema.json");
+define("AUDITCONGRESS_API_SCHEMA", ROOTFOLDER."audit.congress.api.schema.json");
 define("AUDITCONGRESS_CACHE_SETTINGS", ROOTFOLDER."audit.congress.cache.settings.json");
 define("AUDITCONGRESS_CONFIG", ROOTFOLDER."config.json");
 

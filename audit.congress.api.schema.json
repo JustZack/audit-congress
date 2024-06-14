@@ -1,0 +1,224 @@
+{
+    "name": "Audit Congress API Schema",
+    "version": ".5",
+    "groups" : [
+        {
+            "name": "members",
+            "class": "\\AuditCongress\\Members",
+            "routes": [
+                { "function": "getByBioguideId", "required": {"id": "string"} },
+                { 
+                    "function": "getByAnyName", 
+                    "required": {"name": "string"}, "optional": {"current": "bool"} 
+                },
+                {
+                    "function": "getByFilter",
+                    "optional": { 
+                        "state": "string", "type": "string", "party": "string",
+                        "gender": "string", "current": "bool"
+                    }
+                } 
+            ]
+        },
+        {
+            "name": "elections",
+            "class": "\\AuditCongress\\MemberElections",
+            "routes": [
+                { "function": "getByBioguideId", "required": {"id": "string"} },
+                { "function": "getByFecId", "required": {"fecid": "string"} }
+            ]
+        },
+        {
+            "name": "socials",
+            "class": "\\AuditCongress\\MemberSocials",
+            "routes": [
+                { "function": "getByBioguideId", "required": {"id": "string"} }
+            ]
+        },
+        {
+            "name": "terms",
+            "class": "\\AuditCongress\\MemberTerms",
+            "routes": [
+                { "function": "getByBioguideId", "required": {"id": "string"} }
+            ]
+        },
+        {
+            "name": "offices",
+            "class": "\\AuditCongress\\MemberOffices",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBioguideId", "required": {"bioguideId": "string"} }
+            ]
+        },
+
+
+
+
+        {
+            "name": "congress",
+            "class": "\\AuditCongress\\Congresses",
+            "routes": [
+                { "function": "getByNumber", "required": {"number": "int"} },
+                { "function": "getByYear", "required": {"year": "string"} },
+                { "function": "getCurrent", "required": {"current": "string"} },
+                { "function": "getAll" }
+            ]
+        },
+        {
+            "name": "session",
+            "class": "\\AuditCongress\\Sessions",
+            "routes": [
+                { "function": "getByCongress", "required": {"congress": "int"} },
+                { 
+                    "function": "getByCongressAndNumber", 
+                    "required": {"congress": "int", "number": "int"} 
+                },
+                { 
+                    "function": "getByCongressAndChamber", 
+                    "required": {"congress": "int", "chamber": "string"} 
+                },
+                { 
+                    "function": "getByCongressNumberAndChamber", 
+                    "required": {"congress": "int", "number": "int", "chamber": "string"}
+                },
+                { "function": "getByDate", "required": {"date": "string"} },
+                { "function": "getCurrent", "required": {"current": "string"} },
+                { "function": "getAll" }
+            ]
+        },
+
+
+
+
+
+        {
+            "name": "bills",
+            "class": "\\AuditCongress\\Bills",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBioguideId", "required": {"bioguideId": "string"} },
+                { 
+                    "function": "getByFilter",
+                    "optional": {
+                        "congress": "int", "type": "string", "number": "int", 
+                        "title": "string", "sort": "array"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "subjects",
+            "class": "\\AuditCongress\\BillSubjects",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                {
+                    "function": "getByFilter",
+                    "optional": { 
+                        "congress": "int", "type": "string", "number": "int",
+                        "subject": "string"
+                    }
+                }   
+            ]
+        },
+        {
+            "name": "titles",
+            "class": "\\AuditCongress\\BillTitles",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} }
+            ]
+        },
+        {
+            "name": "cosponsors",
+            "class": "\\AuditCongress\\BillCosponsors",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                { "function": "getByBioguideId", "required": {"bioguideId": "string"} },
+                { 
+                    "function": "getByFilter",
+                    "optional": {
+                        "congress": "int", "type": "string", "number": "int", 
+                        "bioguideId": "string", "sort": "array"
+                    }
+                }   
+            ]
+        },
+        {
+            "name": "actions",
+            "class": "\\AuditCongress\\BillActions",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} }
+            ]
+        },
+        {
+            "name": "summaries",
+            "class": "\\AuditCongress\\BillSummaries",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                {
+                    "function": "getByFilter",
+                    "optional": { 
+                        "congress": "int", "type": "string", "number": "int",
+                        "text": "string"
+                    }
+                }   
+            ]
+        },
+        {
+            "name": "texts",
+            "class": "\\AuditCongress\\BillTextVersions",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} }
+            ]
+        },
+        {
+            "name": "committees",
+            "class": "\\AuditCongress\\BillCommittees",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} }
+            ]
+        },
+        {
+            "name": "laws",
+            "class": "\\AuditCongress\\BillLaws",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                {
+                    "function": "getByFilter",
+                    "optional": { "congress": "int", "type": "string", "number": "int" }
+                }   
+            ]
+        },
+        {
+            "name": "related",
+            "class": "\\AuditCongress\\BillRelatedBills",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                {
+                    "function": "getByFilter",
+                    "optional": { "congress": "int", "type": "string", "number": "int" }
+                }   
+            ]
+        },
+        {
+            "name": "reports",
+            "class": "\\AuditCongress\\BillCommitteeReports",
+            "routes": [
+                { "function": "getById", "required": {"id": "string"} },
+                { "function": "getByBillId", "required": {"billId": "string"} },
+                {
+                    "function": "getByFilter",
+                    "optional": { "congress": "int", "type": "string", "number": "int" }
+                }   
+            ]
+        }
+    ]
+}

@@ -8,6 +8,8 @@ require_once API_FOLDER."\base.classes\class.parameters.php";
 require_once API_FOLDER."\base.classes\class.route.group.php";
 require_once API_FOLDER."\base.classes\class.route.php";
 require_once API_FOLDER."\base.classes\class.pagination.php";
+require_once API_FOLDER."\base.classes\class.api.route.group.schema.php";
+require_once API_FOLDER."\base.classes\class.api.schema.php";
 
 require_once API_FOLDER."\class.runner.php";
 
