@@ -18,8 +18,8 @@ namespace API {
         private function runRoute($route) {
             //Get all classes that extend RouteGroups
             if ($this->schema->hasRoute($route)) {
-                $groupSchema = $this->schema->getRoute($route);
-                self::runRouteGroup($groupSchema->getRouteGroup());
+                $group = $this->schema->getRoute($route);
+                self::runRouteGroup($group);
             } else self::NotFound($route);
         }
 
