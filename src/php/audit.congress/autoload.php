@@ -7,6 +7,8 @@ define("AUDITCONGRESS_API_SCHEMA", ROOTFOLDER."audit.congress.api.schema.json");
 define("AUDITCONGRESS_CACHE_SETTINGS", ROOTFOLDER."audit.congress.cache.settings.json");
 define("AUDITCONGRESS_CONFIG", ROOTFOLDER."config.json");
 
+require_once ROOTFOLDER."\\env.php";
+
 require_once AUDITCONGRESS_FOLDER."\..\util\autoload.php";
 
 require_once AUDITCONGRESS_FOLDER."\..\mysql.connector\autoload.php";

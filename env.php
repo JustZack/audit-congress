@@ -1,7 +1,7 @@
 <?php
 
 namespace AuditCongress {
-    class Enviroment {
+    class Environment {
         static function getUrl() {
             $modeIsProd = false;
             if ($modeIsProd) return "http://localhost/audit-congress/";
