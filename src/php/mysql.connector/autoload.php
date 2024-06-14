@@ -23,7 +23,5 @@ require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.indexes.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\abstract.sql.object.php";
 
-require_once ROOTFOLDER."\\env.php";
-
 ?>
 

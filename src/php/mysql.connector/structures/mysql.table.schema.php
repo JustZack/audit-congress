@@ -3,21 +3,16 @@
 namespace MySqlConnector {
 
     //Contains the expected column & index schema
-    class TableSchema {
-        private 
-            $rawSchema,
-            $name;
+    class TableSchema extends \Util\Schema {
         private Columns $columns;
         private Indexes $indexes;
 
         public function __construct($rawSchema) {
-            $this->rawSchema = $rawSchema;
-            $this->name = $this->rawSchema["name"];
-            if (array_key_exists("columns", $this->rawSchema))
-                $this->setColumns($this->rawSchema["columns"]);
+            parent::__construct($rawSchema);
+            $raw = $this->raw();
+            if (array_key_exists("columns", $raw)) $this->setColumns($raw["columns"]);
             else $this->columns = new Columns([]);
-            if (array_key_exists("indexes", $this->rawSchema))
-                $this->setIndexes($this->rawSchema["indexes"]);
+            if (array_key_exists("indexes", $raw)) $this->setIndexes($raw["indexes"]);
             else $this->indexes = new Indexes([]);
         }
         //Given the raw column schema, build a Columns object
@@ -43,8 +38,6 @@ namespace MySqlConnector {
             }
             $this->indexes = new Indexes($IndexesInDescribeFormat);
         }
-
-        public function getName() { return $this->name; }
 
         public function getColumns() : Columns { return $this->columns; }
 

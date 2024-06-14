@@ -1,7 +1,7 @@
 <?php
 
 namespace API {
-    abstract class RouteGroup {
+    class RouteGroup {
         public 
             $baseRoute,
             $routeBaseClass,

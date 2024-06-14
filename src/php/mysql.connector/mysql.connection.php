@@ -14,7 +14,7 @@ namespace MySqlConnector {
         
         public static function getConfig() {
             if (Connection::$config == false) 
-                Connection::$config = \AuditCongress\Enviroment::getConfig();
+                Connection::$config = \AuditCongress\Environment::getConfig();
             return Connection::$config;            
         }
 
