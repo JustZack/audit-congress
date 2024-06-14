@@ -2,36 +2,14 @@
 
 define("API_FOLDER", __DIR__);
 
-require_once API_FOLDER."\base.classes\class.api.exception.php";
-require_once API_FOLDER."\base.classes\class.api.exception.thrower.php";
-require_once API_FOLDER."\base.classes\class.parameters.php";
-require_once API_FOLDER."\base.classes\class.route.group.php";
-require_once API_FOLDER."\base.classes\class.route.php";
-require_once API_FOLDER."\base.classes\class.pagination.php";
-require_once API_FOLDER."\base.classes\class.api.route.group.schema.php";
-require_once API_FOLDER."\base.classes\class.api.schema.php";
-
+require_once API_FOLDER."\class.api.exception.php";
+require_once API_FOLDER."\class.api.exception.thrower.php";
+require_once API_FOLDER."\class.parameters.php";
+require_once API_FOLDER."\class.route.group.php";
+require_once API_FOLDER."\class.route.php";
+require_once API_FOLDER."\class.pagination.php";
+require_once API_FOLDER."\class.api.route.group.schema.php";
+require_once API_FOLDER."\class.api.schema.php";
 require_once API_FOLDER."\class.runner.php";
-
-require_once API_FOLDER."\\routes\\bills\class.bills.php";
-require_once API_FOLDER."\\routes\\cosponsors\class.cosponsors.php";
-require_once API_FOLDER."\\routes\\actions\class.actions.php";
-require_once API_FOLDER."\\routes\\committees\class.committees.php";
-require_once API_FOLDER."\\routes\\summaries\class.summaries.php";
-require_once API_FOLDER."\\routes\\titles\class.titles.php";
-require_once API_FOLDER."\\routes\\subjects\class.subjects.php";
-require_once API_FOLDER."\\routes\\texts\class.texts.php";
-require_once API_FOLDER."\\routes\\laws\class.laws.php";
-require_once API_FOLDER."\\routes\\related\class.related.php";
-require_once API_FOLDER."\\routes\\reports\class.reports.php";
-
-require_once API_FOLDER."\\routes\member\class.member.php";
-require_once API_FOLDER."\\routes\\terms\class.terms.php";
-require_once API_FOLDER."\\routes\\socials\class.socials.php";
-require_once API_FOLDER."\\routes\\offices\class.offices.php";
-require_once API_FOLDER."\\routes\\elections\class.elections.php";
-
-require_once API_FOLDER."\\routes\\congress\class.congress.php";
-require_once API_FOLDER."\\routes\\session\class.session.php";
 
 ?>
