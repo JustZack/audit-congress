@@ -11,6 +11,11 @@ require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.options.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.builder.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.result.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.operators.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.parameterized.interfaces.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.group.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.insert.group.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.row.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.schema.php";
@@ -21,10 +26,7 @@ require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.table.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.compareable.set.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.columns.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.indexes.php";
-require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.operators.php";
-require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.item.interface.php";
-require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.php";
-require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.group.php";
+
 
 require_once MYSQLCONNECTOR_FOLDER."\\abstract.sql.object.php";
 
