@@ -5,6 +5,7 @@ define("MYSQLCONNECTOR_FOLDER", __DIR__);
 
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.connection.php";
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.exception.php";
+require_once MYSQLCONNECTOR_FOLDER."\\mysql.exception.thrower.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.options.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.builder.php";
@@ -20,6 +21,10 @@ require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.table.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.compareable.set.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.columns.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.indexes.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.operators.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.item.interface.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.php";
+require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.condition.group.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\abstract.sql.object.php";
 
