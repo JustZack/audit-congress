@@ -38,8 +38,7 @@ namespace MySqlConnector {
             if ($this->operator == ComparisonOperators::BETWEEN) {
                 $sql = sprintf($sql, "? AND ?");
             } else if ($this->operator == ComparisonOperators::IN) {
-                $parameters = array_fill(0, count($this->value), "?");
-                $sql = sprintf($sql, "(".implode(",",$parameters).")");
+                $sql = sprintf($sql, QueryBuilder::buildPreparableList(count($this->value)));
             } else $sql = sprintf($sql, "?");
             return $sql;
         }

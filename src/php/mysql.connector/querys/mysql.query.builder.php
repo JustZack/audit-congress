@@ -15,13 +15,18 @@ namespace MySqlConnector {
             return in_array($conditional, self::$allowedConditions);
         }
 
+        public static function buildListOfString($numItems, $string, $withParens) {
+            $items = array_fill(0, $numItems, $string);
+            return sprintf($withParens ? "(%s)" : "%s", implode(",",$items));
+        }
+
+        public static function buildPreparableList($numItems) {
+            return self::buildListOfString($numItems, "?", true);
+        }
+
         //Build a formattable list with $numItems, like '(%s, %s, %s...)'
         public static function buildFormattableList($numItems, $withParens = true, $quoteChar = "'") {
-            $itemFormat = "$quoteChar%s$quoteChar";
-            $sql = $withParens ? "(" : "";
-            for ($i = 0;$i < $numItems;$i++) $sql .= $i < $numItems - 1 ? "$itemFormat, " : $itemFormat;
-            $sql .= $withParens ? ")" : "";
-            return $sql;
+            return self::buildListOfString($numItems, "$quoteChar%s$quoteChar", $withParens);
         }
 
         //Escape any special MySql chars in the given set of strings
