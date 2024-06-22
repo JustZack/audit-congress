@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    class ConditionGroup extends ExceptionThrower implements IInvalidOperatorThrower, IParameterizedItem, IConditionGroup {
+    class ConditionGroup extends ExceptionThrower implements IInvalidOperatorThrower, IConditionGroup {
         private 
             $conditions = array(),
             $operators = array(),
