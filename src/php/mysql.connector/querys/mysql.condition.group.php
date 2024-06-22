@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    class ConditionGroup extends ExceptionThrower implements ConditionItem {
+    class ConditionGroup extends ExceptionThrower implements IInvalidOperatorThrower, IParameterizedItem, IConditionGroup {
         private 
             $conditions = array(),
             $operators = array(),
@@ -45,7 +45,6 @@ namespace MySqlConnector {
 
         public function addCondition(Condition $c, $logicalOperator = null) {
             $this->addItem($c, $logicalOperator);
-
         }
 
         public function addConditionGroup(ConditionGroup $cg, $logicalOperator = null) {

@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    class InsertGroup extends ExceptionThrower implements ParameterizedItem {
+    class InsertGroup extends ExceptionThrower implements IParameterizedItem {
         private 
             $columns = array(),
             $values = array();

@@ -1,11 +1,25 @@
 <?php
 
 namespace MySqlConnector {
-    interface ConditionItem extends ParameterizedItem{
-        public static function throwIfInvalidOperator($op);
+
+    abstract class ConditionGroupUser implements IConditionGroup {
+        protected ?ConditionGroup $group = null;
+        public function addCondition(Condition $c, $logicalOperator = null) {
+            $this->group->addCondition($c, $logicalOperator);
+        }
+        public function addConditionGroup(ConditionGroup $cg, $logicalOperator = null) {
+            $this->group->addConditionGroup($cg, $logicalOperator);
+        }
     }
 
-    interface ParameterizedItem {
+    interface IConditionGroup {
+        public function addCondition(Condition $c, $logicalOperator = null);
+        public function addConditionGroup(ConditionGroup $cg, $logicalOperator = null);
+    }
+    interface IInvalidOperatorThrower {
+        public static function throwIfInvalidOperator($op);
+    }
+    interface IParameterizedItem {
         public function getQueryString($withValues = false);
         public function getOrderedParameters();
     }

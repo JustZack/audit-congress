@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    class Condition extends ExceptionThrower implements ConditionItem {
+    class Condition extends ExceptionThrower implements IInvalidOperatorThrower, IParameterizedItem {
         private 
             $column,
             $operator,
