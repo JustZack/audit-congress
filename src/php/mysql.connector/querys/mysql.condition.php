@@ -5,14 +5,16 @@ namespace MySqlConnector {
         private 
             $column,
             $operator,
-            $value;
-        public function __construct($column, $operator, $value) {
+            $value,
+            $valueIsColumn;
+        public function __construct($column, $operator, $value, $valueIsColumnName = false) {
             self::throwIfInvalidOperator($operator);
             self::throwIfOperatorDoesntMatchValue($operator, $value);
 
             $this->column = $column;
             $this->operator = $operator;
             $this->value = $value;
+            $this->valueIsColumn = $valueIsColumnName;
         }
 
         public static function throwIfInvalidOperator($op) {
@@ -33,18 +35,46 @@ namespace MySqlConnector {
             }
         }
 
-        public function getParameterizedString() {
+        public function getQueryString($withValues = false) {
             $sql = sprintf("%s %s %s", $this->column, $this->operator, "%s");
+            $valueString = "";
             if ($this->operator == ComparisonOperators::BETWEEN) {
-                $sql = sprintf($sql, "? AND ?");
+                $valueString = $this->betweenValueConditionString();
             } else if ($this->operator == ComparisonOperators::IN) {
-                $sql = sprintf($sql, QueryBuilder::buildPreparableList(count($this->value)));
-            } else $sql = sprintf($sql, "?");
-            return $sql;
+                $valueString = $this->inValueConditionString();
+            } else {
+                $valueString = $this->singleValueConditionString();
+            }
+            return sprintf($sql, $valueString);
+        }
+
+        private function betweenValueConditionString() {
+            $sql = "%s AND %s";
+            if ($this->valueIsColumn)
+                return sprintf($sql, $this->value[0], $this->value[1]);
+            else 
+                return sprintf($sql, "?", "?");                    
+        }
+
+        private function inValueConditionString() {
+            $sql = "%s";
+            if ($this->valueIsColumn)
+                return sprintf($sql, QueryBuilder::buildItemList($this->value));
+            else 
+                return sprintf($sql, QueryBuilder::buildPreparableList(count($this->value)));
+        }
+
+        private function singleValueConditionString() {
+            $sql = "%s";
+            if ($this->valueIsColumn)
+                return sprintf($sql, "`".$this->value."`");
+            else 
+                return sprintf($sql, "?");
         }
 
         public function getOrderedParameters() {
-            return $this->value;
+            if ($this->valueIsColumn) return [];
+            else return $this->value;
         }
     }
 }

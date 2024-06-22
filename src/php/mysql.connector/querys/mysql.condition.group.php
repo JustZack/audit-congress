@@ -17,11 +17,11 @@ namespace MySqlConnector {
                 self::throw("$op is not known to \MySqlConnector::LogicalOperators.");
         }
 
-        public function getParameterizedString() {
+        public function getQueryString($withValues = false) {
             $sql = "(";
             for ($i = 0;$i < count($this->conditions);$i++) {
                 $condition = $this->conditions[$i];
-                $sql .= $condition->getParameterizedString();
+                $sql .= $condition->getQueryString($withValues);
                 //If this isn't the last condition, an operator comes next
                 if ($i < count($this->conditions)-1) {
                     $operator = $this->operators[$i];
@@ -41,10 +41,6 @@ namespace MySqlConnector {
                 else array_push($parameters, $value);
             }
             return $parameters;
-        }
-
-        public function add($column, $operator, $value, $logicalOperator = null) {
-            $this->addCondition(new Condition($column, $operator, $value), $logicalOperator);
         }
 
         public function addCondition(Condition $c, $logicalOperator = null) {

@@ -6,7 +6,7 @@ namespace MySqlConnector {
     }
 
     interface ParameterizedItem {
-        public function getParameterizedString();
+        public function getQueryString($withValues = false);
         public function getOrderedParameters();
     }
 }

@@ -17,7 +17,7 @@ namespace MySqlConnector {
                 throw new SqlException("InsertGroup: Must provide same number of columns and values.");
         }
 
-        public function getParameterizedString() {
+        public function getQueryString($withValues = false) {
             return QueryBuilder::buildPreparableList(count($this->columns));
         }
 
