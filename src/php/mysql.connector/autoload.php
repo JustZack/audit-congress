@@ -18,6 +18,7 @@ require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.group.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.insert.group.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.join.clause.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.where.clause.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\query.wrapper.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.row.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.schema.php";
@@ -30,7 +31,6 @@ require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.columns.php";
 require_once MYSQLCONNECTOR_FOLDER."\\structures\mysql.indexes.php";
 
 
-require_once MYSQLCONNECTOR_FOLDER."\\abstract.sql.object.php";
 
 ?>
 

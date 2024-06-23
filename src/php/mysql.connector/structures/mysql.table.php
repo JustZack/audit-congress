@@ -97,8 +97,8 @@ namespace MySqlConnector {
             return Query::getResult($sql);
         }
 
-        public function selectObject(SqlObject $SQLObject) {
-            $o = $SQLObject;
+        public function selectObject(QueryWrapper $query) {
+            $o = $query;
             return $this->select($o->getSelectColumns(), $o->whereCondition(), 
             $o->getJoin(), $o->getGroupBy(), $o->getOrderBy(), $o->getLimit(), $o->getOffset());
         }

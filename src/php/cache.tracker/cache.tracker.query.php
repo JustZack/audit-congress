@@ -1,7 +1,7 @@
 <?php
 
 namespace Cache {
-    class TrackerQuery extends \MySqlConnector\SqlObject {
+    class TrackerQuery extends \MySqlConnector\QueryWrapper {
         public static $tableName = null;
         public function __construct() {
             parent::__construct(self::$tableName);

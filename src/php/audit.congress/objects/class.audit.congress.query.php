@@ -1,7 +1,7 @@
 <?php
 
 namespace AuditCongress {
-    abstract class AuditCongressQuery extends \MySqlConnector\SqlObject {
+    abstract class AuditCongressQuery extends \MySqlConnector\QueryWrapper {
         protected static function runAdvancedQuery($sql) : \MySqlConnector\Result {
             return \MySqlConnector\Query::getResult($sql);
         }

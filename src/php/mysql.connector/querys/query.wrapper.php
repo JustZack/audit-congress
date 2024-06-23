@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    abstract class SqlObject extends QueryOptions {
+    abstract class QueryWrapper extends QueryOptions {
         protected Table $table;
         private 
             $booleanConditon = "AND", 
@@ -27,23 +27,21 @@ namespace MySqlConnector {
 
         public function updateInDb() { return $this->table->update($this->getAsRow(), $this->whereCondition()); }
 
-        public static function throwSqlObjectError($message) { throw new SqlException("SqlObject: $message"); }
 
-
-
+        
         //Set the boolean operator to use in the WHERE condition
         public function setBooleanCondition($condition) {
             $condition = strtolower($condition);
             if (QueryBuilder::isAllowedConditional($condition))
                 $this->booleanConditon = $condition;
-            else self::throwSqlObjectError("Tried using an unsupported condition '$condition'");
+            else self::throw("Tried using an unsupported condition '$condition'");
         }
 
         public function setBooleanConditions($conditionsArray) {
             foreach ($conditionsArray as $conditional) {
                 $conditional = strtolower($conditional);
                 if (!QueryBuilder::isAllowedConditional($conditional))
-                    self::throwSqlObjectError("Tried using an unsupported condition '$conditional'");
+                    self::throw("Tried using an unsupported condition '$conditional'");
             }
             $this->conditionList = $conditionsArray;
         }
@@ -63,14 +61,14 @@ namespace MySqlConnector {
             $operator = strtolower($operator);
             if (QueryBuilder::isAllowedOperator($operator))
                 $this->equalityOperator = $operator;
-            else self::throwSqlObjectError("Tried using an unsupported operator '$operator'");
+            else self::throw("Tried using an unsupported operator '$operator'");
         }
 
         public function setEqualityOperators($operatorsArray) {
             foreach ($operatorsArray as $operator) {
                 $operator = strtolower($operator);
                 if (!QueryBuilder::isAllowedOperator($operator))
-                    self::throwSqlObjectError("Tried using an unsupported operator '$operator'");
+                    self::throw("Tried using an unsupported operator '$operator'");
             }
             $this->operatorList = $operatorsArray;
         }
@@ -90,7 +88,7 @@ namespace MySqlConnector {
             $sColumns = $this->getSearchColumns();
             $sValues = $this->getSearchValues();
             if (!QueryBuilder::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
-                self::throwSqlObjectError("Column/Value set length mismatch");
+                self::throw("Column/Value set length mismatch");
             else 
                 $condition = QueryBuilder::buildWhereCondition($sColumns, $sValues,
                                     $this->getEqualityOperators(), $this->getBooleanConditions());
@@ -106,7 +104,7 @@ namespace MySqlConnector {
                 array_push($this->searchColumns, $column);
                 array_push($this->operatorList, $equalityOperator);
                 array_push($this->searchValues, $value);
-            } else self::throwSqlObjectError("Tried using an unsupported operator '$equalityOperator'");
+            } else self::throw("Tried using an unsupported operator '$equalityOperator'");
         }
     }
 }

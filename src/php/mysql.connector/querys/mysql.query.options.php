@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    abstract class QueryOptions {
+    abstract class QueryOptions extends ExceptionThrower {
         protected
             $selectColumns = array("*"),
             $searchColumns = array(), 
