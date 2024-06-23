@@ -13,6 +13,7 @@ require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.result.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.operators.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.parameterized.interfaces.php";
+require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.group.user.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.condition.group.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.insert.group.php";
