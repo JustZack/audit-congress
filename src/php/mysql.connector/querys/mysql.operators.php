@@ -7,7 +7,7 @@ namespace MySqlConnector {
             return in_array(strtoupper($operator), static::operators());
         }
     }    
-    abstract class ComparisonOperators extends Operators {
+    abstract class Comparison extends Operators {
         public const
             LIKE = "LIKE",
             BETWEEN = "BETWEEN",
@@ -24,7 +24,7 @@ namespace MySqlConnector {
         }
     }
 
-    abstract class LogicalOperators extends Operators {
+    abstract class Logical extends Operators {
         const
             AND = "AND",
             OR = "OR",

@@ -13,6 +13,7 @@ namespace MySqlConnector {
             $this->table = new Table($tableName);
             $this->setEqualityOperator($equalityOperator);
             $this->setBooleanCondition($booleanOperator);
+            parent::__construct();
         }
 
         public function getAsRow() { return SqlRow::fromColsAndVals($this->getColumns(), $this->getValues()); }

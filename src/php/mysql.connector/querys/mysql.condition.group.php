@@ -7,14 +7,14 @@ namespace MySqlConnector {
             $operators = array(),
             $defaultOperator = "";
         
-        public function __construct($defaultOperator = LogicalOperators::AND) {
+        public function __construct($defaultOperator = Logical::AND) {
             $this->throwIfInvalidOperator($defaultOperator);
             $this->defaultOperator = $defaultOperator;
         }
 
         public static function throwIfInvalidOperator($op) {
-            if (!LogicalOperators::isOne($op))
-                self::throw("$op is not known to \MySqlConnector::LogicalOperators.");
+            if (!Logical::isOne($op))
+                self::throw("$op is not known to \MySqlConnector::Logical.");
         }
 
         public function getQueryString($withValues = false) {

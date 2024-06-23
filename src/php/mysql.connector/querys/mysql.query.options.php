@@ -14,6 +14,13 @@ namespace MySqlConnector {
             $limit = null,
             $offset = null;
 
+        protected WhereClause $where;
+        protected $joins = array(); //Array of JoinClause
+
+        public function __construct() {
+            $this->where = new WhereClause();
+        }
+
         //Get the columns used when selecting this object
         public function getSelectColumns() { return $this->selectColumns; }
         //Set the columns used when selecting  this object
@@ -28,6 +35,18 @@ namespace MySqlConnector {
         public function getSearchValues() { return $this->searchValues; }
         //Set the values used by this object
         public function setSearchValues(array $newValues) { return $this->searchValues = $newValues; }
+
+        public function addSearch($column, $operator, $value, $logicalOperator = Logical::AND) {
+            return $this->addSearchCondition(new Condition($column, $operator, $value), $logicalOperator);
+        }
+
+        public function addSearchCondition(Condition $c, $logicalOperator = Logical::AND) {
+            return $this->where->addCondition($c, $logicalOperator);
+        }
+
+        public function addSearchConditionGroup(ConditionGroup $cg, $logicalOperator = Logical::AND) {
+            return $this->where->addConditionGroup($cg, $logicalOperator);
+        }
 
         //Get the columns provided to this object
         public function getColumns() { return $this->columns; }

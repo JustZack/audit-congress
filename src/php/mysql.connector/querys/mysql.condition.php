@@ -21,14 +21,14 @@ namespace MySqlConnector {
         }
 
         public static function throwIfInvalidOperator($op) {
-            if (!ComparisonOperators::isOne($op))
-                self::throw("$op is not known to \MySqlConnector::ComparisonOperators.");
+            if (!Comparison::isOne($op))
+                self::throw("$op is not known to \MySqlConnector::Comparison.");
         }
 
         private static function throwIfOperatorDoesntMatchValue($op, $val) {
             $valIsArray = is_array($val);
-            $opIsBetween = $op == ComparisonOperators::BETWEEN;
-            $opIsIn = $op == ComparisonOperators::IN;
+            $opIsBetween = $op == Comparison::BETWEEN;
+            $opIsIn = $op == Comparison::IN;
             if ($opIsBetween && (!$valIsArray || ($valIsArray && count($val) != 2))) {
                 self::throw("$op expects exactly two values. Found $val");
             } else if ($opIsIn && !$valIsArray) {
@@ -41,9 +41,9 @@ namespace MySqlConnector {
         public function getQueryString($withValues = false) {
             $sql = sprintf("%s %s %s", $this->column, $this->operator, "%s");
             $valueString = "";
-            if ($this->operator == ComparisonOperators::BETWEEN) {
+            if ($this->operator == Comparison::BETWEEN) {
                 $valueString = $this->betweenValueConditionString();
-            } else if ($this->operator == ComparisonOperators::IN) {
+            } else if ($this->operator == Comparison::IN) {
                 $valueString = $this->inValueConditionString();
             } else {
                 $valueString = $this->singleValueConditionString();
@@ -89,7 +89,7 @@ namespace MySqlConnector {
         public static function getValueType($value) {
             if (is_string($value)) return "s";
             else if (is_float($value)) return "f";
-            else if (is_int($value)) return "i";
+            else if (is_int($value) || is_bool($value)) return "i";
             else self::throw("Unrecognized Type for Value: `$value`. Expected string, float, or int.");
         }
         public function getOrderedTypes() {
