@@ -23,10 +23,11 @@ namespace MySqlConnector {
 
         public function addCondition(Condition $c, $logicalOperator = null) {
             $this->group->addCondition($c, $logicalOperator);
+            return $this;
         }
         public function addConditionGroup(ConditionGroup $cg, $logicalOperator = null) {
-            if ($this->group->hasAny()) $this->group->addConditionGroup($cg, $logicalOperator);
-            else $this->group = $cg;
+            $this->group->addConditionGroup($cg, $logicalOperator);
+            return $this;
         }
 
         public abstract function getQueryString($withValues = false);

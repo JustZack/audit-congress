@@ -50,11 +50,11 @@ namespace MySqlConnector {
         }
 
         public function addCondition(Condition $c, $logicalOperator = null) {
-            $this->addItem($c, $logicalOperator);
+            return $this->addItem($c, $logicalOperator);
         }
 
         public function addConditionGroup(ConditionGroup $cg, $logicalOperator = null) {
-            $this->addItem($cg, $logicalOperator);
+            return $this->addItem($cg, $logicalOperator);
         }
         
         private function addItem($con, $logicalOperator = null) {
@@ -65,6 +65,7 @@ namespace MySqlConnector {
                 array_push($this->operators, $op);
             }
             array_push($this->conditions, $con);
+            return $this;
         }
 
         public function hasAny() {
