@@ -48,6 +48,12 @@ namespace MySqlConnector {
             return $this->where->addConditionGroup($cg, $logicalOperator);
         }
 
+        public function addJoin($onTable, ConditionGroup $cg) {
+            array_push($this->joins, new JoinClause($onTable, $cg));
+        }
+
+        public function getJoins() { return $this->joins; }
+
         //Get the columns provided to this object
         public function getColumns() { return $this->columns; }
         //Set the columns used by this object (for setting or updating values)

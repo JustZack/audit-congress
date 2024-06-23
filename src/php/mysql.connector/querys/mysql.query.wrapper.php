@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    abstract class QueryWrapper extends QueryOptions {
+    abstract class QueryWrapper extends QueryOptions implements IParameterizedItem {
         protected Table $table;
         private 
             $booleanConditon = "AND", 
@@ -28,7 +28,26 @@ namespace MySqlConnector {
 
         public function updateInDb() { return $this->table->update($this->getAsRow(), $this->whereCondition()); }
 
-
+        public function getQueryString($withValues = false) {
+            $sql = "";
+            foreach ($this->getJoins() as $join) 
+                $sql .= $join->getQueryString();
+            $sql .= $this->where->getQueryString();
+            return $sql;
+        }
+        public function getOrderedParameters() {
+            $params = array();
+            foreach ($this->getJoins() as $join) 
+                $params = array_merge($params, $join->getOrderedParameters());
+            $params = array_merge($params, $this->where->getOrderedParameters());
+            return $params;
+        }
+        public function getOrderedTypes() {
+            $types = "";
+            foreach ($this->getJoins() as $join) $types .= $join->getOrderedTypes();
+            $types .= $this->where->getOrderedTypes();
+            return $types;
+        }
         
         //Set the boolean operator to use in the WHERE condition
         public function setBooleanCondition($condition) {
@@ -88,11 +107,17 @@ namespace MySqlConnector {
             
             $sColumns = $this->getSearchColumns();
             $sValues = $this->getSearchValues();
+            $sOps = $this->getEqualityOperators();
+            $sConds = $this->getBooleanConditions();
             if (!QueryBuilder::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
                 self::throw("Column/Value set length mismatch");
-            else 
+            else {
                 $condition = QueryBuilder::buildWhereCondition($sColumns, $sValues,
                                     $this->getEqualityOperators(), $this->getBooleanConditions());
+                #var_dump($this->where->getQueryString());
+                #var_dump($this->where->getOrderedParameters());
+                #var_dump($this->where->getOrderedTypes());
+            }
             return $condition;
         }
 

@@ -39,7 +39,7 @@ namespace MySqlConnector {
         }
 
         public function getQueryString($withValues = false) {
-            $sql = sprintf("%s %s %s", $this->column, $this->operator, "%s");
+            $sql = sprintf("`%s` %s %s", $this->column, $this->operator, "%s");
             $valueString = "";
             if ($this->operator == Comparison::BETWEEN) {
                 $valueString = $this->betweenValueConditionString();
