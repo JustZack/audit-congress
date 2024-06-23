@@ -2,7 +2,7 @@
 
 namespace MySqlConnector {
 
-    class Table {
+    class Table extends ExceptionThrower {
         private 
             $tableExists = null,
             $tableColumns = null,
@@ -137,7 +137,7 @@ namespace MySqlConnector {
 
             $numCols = count($columns); $numValues = count($values);
             if ($numCols != $numValues) 
-                throw new SqlException("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
+                self::throw("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
 
             $colsAndValues = array();
             $values = QueryBuilder::escapeStrings($values);
@@ -177,7 +177,7 @@ namespace MySqlConnector {
                     $sql .= "MODIFY COLUMN %s %s"; 
                     $sql = sprintf($sql, $column->name(), $column->type());
                     break;
-                default: throw new SqlException("Unknown or unsupported column alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
+                default: self::throw("Unknown or unsupported column alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
             }
             $this->tableColumns == null;
             return Query::runActionQuery($sql);
@@ -198,7 +198,7 @@ namespace MySqlConnector {
                     $this->alterIndex(AlterType::DROP, $index);
                     $this->alterIndex(AlterType::ADD, $index);
                     return;
-                default: throw new SqlException("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
+                default: self::throw("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
             }
             $this->tableIndexes == null;
             return Query::runActionQuery($sql);
@@ -208,7 +208,7 @@ namespace MySqlConnector {
             switch ($structure) {
                 case AlterStructure::COLUMN: $this->alterColumn($type, $withObject); break;
                 case AlterStructure::INDEX: $this->alterIndex($type, $withObject); break;
-                default: throw new SqlException("Unknown or unsupported alter structure '$structure' for table $this->name. Use COLUMN or INDEX.");
+                default: self::throw("Unknown or unsupported alter structure '$structure' for table $this->name. Use COLUMN or INDEX.");
             }
         }
 

@@ -14,7 +14,7 @@ namespace MySqlConnector {
 
         public static function throwIfMismatch($columns, $values) {
             if (count($columns) != count($values))
-                throw new SqlException("InsertGroup: Must provide same number of columns and values.");
+                self::throw("Must provide same number of columns and values.");
         }
 
         public function getQueryString($withValues = false) {

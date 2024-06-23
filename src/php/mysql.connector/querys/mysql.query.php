@@ -2,7 +2,7 @@
 
 namespace MySqlConnector {
 
-    class Query {
+    class Query extends ExceptionThrower {
         public static $totalQueries = 0;
         public 
             $params = array(), 
@@ -39,7 +39,7 @@ namespace MySqlConnector {
 
         //Throw the SQL error if the result failed
         private static function throwIfError($result) {
-            if ($result->failure()) throw new SqlException("Query Exception: ".Connection::lastError());
+            if ($result->failure()) self::throw(Connection::lastError());
             return $result;   
         }
 

@@ -6,7 +6,7 @@ namespace MySqlConnector {
             Connection::close();
         }
     }
-    class Connection {
+    class Connection extends ExceptionThrower {
         private static ConnectionDeconstructor $destructor;
         private static $config = false;
         private static $connection = false;
@@ -36,7 +36,7 @@ namespace MySqlConnector {
         public static function open($url, $user, $password, $database = null) {           
             Connection::$connection = new \mysqli($url, $user, $password);
             if (Connection::$connection->connect_errno) {
-                throw new SqlException("Failed to connect to ".$url." with information provided in config.");
+                self::throw("Failed to connect to ".$url." with information provided in config.");
             } else if (isset($database)) {
                 Connection::useDatabase($database);
             }

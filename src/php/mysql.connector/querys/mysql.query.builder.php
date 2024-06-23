@@ -2,7 +2,7 @@
 
 namespace MySqlConnector {
 
-    class QueryBuilder {
+    class QueryBuilder extends ExceptionThrower {
         
         static $allowedOperators = array("=", "like", "<", "<=", ">=", ">");
         static $allowedConditions = array("and", "or");
@@ -137,7 +137,7 @@ namespace MySqlConnector {
         public static function buildInsert($table, $columns, $values) {
             $sql = "INSERT INTO `$table` %s VALUES %s";
             if (!self::sameNumberOfColumnsAndValues($columns, $values))
-                throw new SqlException("QueryBuilder Build Insert: columns and values length mismatch");
+                self::throw("buildInsert: columns and values length mismatch");
             $colList = self::buildItemList($columns, true, "`");
             $valList = self::buildItemList($values, true, "'");
             $sql = sprintf($sql, $colList, $valList);

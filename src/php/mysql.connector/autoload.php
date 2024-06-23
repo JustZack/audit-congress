@@ -3,9 +3,9 @@
 
 define("MYSQLCONNECTOR_FOLDER", __DIR__);
 
-require_once MYSQLCONNECTOR_FOLDER."\\mysql.connection.php";
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.exception.php";
 require_once MYSQLCONNECTOR_FOLDER."\\mysql.exception.thrower.php";
+require_once MYSQLCONNECTOR_FOLDER."\\mysql.connection.php";
 
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.options.php";
 require_once MYSQLCONNECTOR_FOLDER."\\querys\mysql.query.builder.php";
