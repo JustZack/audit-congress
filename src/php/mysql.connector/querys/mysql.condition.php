@@ -95,6 +95,10 @@ namespace MySqlConnector {
         public function getOrderedTypes() {
             return $this->type;
         }
+
+        public function hasAnyParameters() {
+            return !$this->valueIsColumn;
+        }
     }
 }
 

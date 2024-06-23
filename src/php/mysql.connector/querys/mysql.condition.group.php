@@ -68,8 +68,13 @@ namespace MySqlConnector {
             return $this;
         }
 
-        public function hasAny() {
+        public function hasAnyConditions() {
             return count($this->conditions) > 0;
+        }
+
+        public function hasAnyParameters() {
+            foreach ($this->conditions as $c) if ($c->hasAnyParameters()) return true;
+            return false;
         }
     }
 }

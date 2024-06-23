@@ -29,6 +29,10 @@ namespace MySqlConnector {
             return Condition::getValueTypes($this->values);
         }
 
+        public function hasAnyParameters() {
+            return count($this->values) > 0;
+        }
+
         public function add($column, $value) {
             array_push($this->columns, $column);
             array_push($this->values, $value);

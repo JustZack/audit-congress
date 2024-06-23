@@ -9,13 +9,7 @@ namespace MySqlConnector {
         }
 
         public function getQueryString($withValues = false) {
-            $sql = "";
-            if ($this->hasAnyConditions()) {
-                $sql = "JOIN %s ON %s";
-                $sql = sprintf($sql, $this->table, $this->group->getQueryString());
-            }
-            return $sql;
-
+            return $this->buildQueryString($withValues, "JOIN %s ON %s", $this->table);
         }
     }
 }

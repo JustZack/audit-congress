@@ -42,6 +42,12 @@ namespace MySqlConnector {
             $params = array_merge($params, $this->where->getOrderedParameters());
             return $params;
         }
+
+        public function hasAnyParameters() {
+            foreach ($this->getJoins() as $join) if ($join->hasAnyConditions()) return true;
+            return $this->where->hasAnyConditions();
+        }
+
         public function getOrderedTypes() {
             $types = "";
             foreach ($this->getJoins() as $join) $types .= $join->getOrderedTypes();

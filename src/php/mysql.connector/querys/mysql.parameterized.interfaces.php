@@ -6,6 +6,7 @@ namespace MySqlConnector {
     }
     interface IParameterizedItem {
         public function getQueryString($withValues = false);
+        public function hasAnyParameters();
         public function getOrderedParameters();
         public function getOrderedTypes();
     }
@@ -31,6 +32,14 @@ namespace MySqlConnector {
         }
 
         public abstract function getQueryString($withValues = false);
+        protected function buildQueryString($withValues = false, $sqlFormat, ...$sqlValues) {
+            $sql = "";
+            if ($this->hasAnyConditions()) {
+                $sqlValues[] = $this->group->getQueryString($withValues);
+                $sql = sprintf($sqlFormat, ...$sqlValues);
+            }
+            return $sql;
+        }
         public function getOrderedParameters() {
             return $this->group->getOrderedParameters();
         }
@@ -38,7 +47,10 @@ namespace MySqlConnector {
             return $this->group->getOrderedTypes();
         }
         public function hasAnyConditions() {
-            return $this->group->hasAny();
+            return $this->group->hasAnyConditions();
+        }
+        public function hasAnyParameters() {
+            return $this->group->hasAnyParameters();
         }
     }
 }

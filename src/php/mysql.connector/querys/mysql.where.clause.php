@@ -7,12 +7,7 @@ namespace MySqlConnector {
         }
 
         public function getQueryString($withValues = false) {
-            $sql = "";
-            if ($this->hasAnyConditions()) {
-                $sql = "WHERE %s";
-                $sql = sprintf($sql, $this->group->getQueryString());
-            }
-            return $sql;
+            return $this->buildQueryString($withValues, "WHERE %s");
         }
     }
 }
