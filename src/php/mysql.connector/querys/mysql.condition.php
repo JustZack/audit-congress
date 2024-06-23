@@ -6,7 +6,9 @@ namespace MySqlConnector {
             $column,
             $operator,
             $value,
+            $type,
             $valueIsColumn;
+
         public function __construct($column, $operator, $value, $valueIsColumnName = false) {
             self::throwIfInvalidOperator($operator);
             self::throwIfOperatorDoesntMatchValue($operator, $value);
@@ -14,6 +16,7 @@ namespace MySqlConnector {
             $this->column = $column;
             $this->operator = $operator;
             $this->value = $value;
+            $this->type = self::getValueTypes($this->value);
             $this->valueIsColumn = $valueIsColumnName;
         }
 
@@ -75,6 +78,22 @@ namespace MySqlConnector {
         public function getOrderedParameters() {
             if ($this->valueIsColumn) return [];
             else return $this->value;
+        }
+
+        public static function getValueTypes($value) {
+            $typeStr = "";
+            if (is_array($value)) foreach ($value as $val) $typeStr .= self::getValueType($val);
+            else $typeStr = self::getValueType($value);
+            return $typeStr;
+        }
+        public static function getValueType($value) {
+            if (is_string($value)) return "s";
+            else if (is_float($value)) return "f";
+            else if (is_int($value)) return "i";
+            else self::throw("Unrecognized Type for Value: `$value`. Expected string, float, or int.");
+        }
+        public function getOrderedTypes() {
+            return $this->type;
         }
     }
 }

@@ -43,6 +43,12 @@ namespace MySqlConnector {
             return $parameters;
         }
 
+        public function getOrderedTypes() {
+            $types = "";
+            foreach ($this->conditions as $c) $types .= $c->getOrderedTypes();
+            return $types;
+        }
+
         public function addCondition(Condition $c, $logicalOperator = null) {
             $this->addItem($c, $logicalOperator);
         }
@@ -59,6 +65,10 @@ namespace MySqlConnector {
                 array_push($this->operators, $op);
             }
             array_push($this->conditions, $con);
+        }
+
+        public function hasAny() {
+            return count($this->conditions) > 0;
         }
     }
 }

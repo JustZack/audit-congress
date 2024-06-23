@@ -25,6 +25,10 @@ namespace MySqlConnector {
             return $this->values;
         }
 
+        public function getOrderedTypes() {
+            return Condition::getValueTypes($this->values);
+        }
+
         public function add($column, $value) {
             array_push($this->columns, $column);
             array_push($this->values, $value);
