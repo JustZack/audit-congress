@@ -2,16 +2,22 @@
 
 namespace MySqlConnector {
     class Result {
-        private $mysqli_result, $sql_formated;
+        private $mysqli_result;
+        private Query $query;
         
-        public function __construct($mysqli_result, $sql_formated) {
-            $this->mysqli_result = $mysqli_result;
-            $this->sql_formated = $sql_formated;
+        public function __construct(Query $query) {
+            $this->query = $query;
+            $statement = $query->prepare();
+            $statement->execute();
+            $this->mysqli_result = $statement->get_result();
+            if ($this->mysqli_result == false && 
+            ($statement->affected_rows > -1 || $statement->num_rows > -1))
+                $this->mysqli_result = true;
+            $statement->close();
         }
 
-
-        public function getSql() {
-            return $this->sql_formated;
+        public function getQuery() {
+            return $this->query;
         }
 
         //True if the query was a success
