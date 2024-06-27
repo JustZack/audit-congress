@@ -7,13 +7,13 @@ namespace MySqlConnector {
         
         public function __construct(Query $query) {
             $this->query = $query;
-            $statement = $query->prepare();
-            $statement->execute();
-            $this->mysqli_result = $statement->get_result();
-            if ($this->mysqli_result == false && 
-            ($statement->affected_rows > -1 || $statement->num_rows > -1))
+            $st = $query->prepare();
+            $st->execute();
+            $this->mysqli_result = $st->get_result();
+
+            if ($this->mysqli_result == false && ($st->affected_rows > -1 || $st->num_rows > -1))
                 $this->mysqli_result = true;
-            $statement->close();
+            $st->close();
         }
 
         public function getQuery() {

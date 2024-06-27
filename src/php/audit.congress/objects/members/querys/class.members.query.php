@@ -2,6 +2,11 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
+    use MySqlConnector\Logical;
+    use MySqlConnector\Condition;
+    use MySqlConnector\ConditionGroup;
+
     class MembersQuery extends AuditCongressQuery {
         use GetByBioguideIdQuery;
         
@@ -87,7 +92,7 @@ namespace AuditCongress {
         //Update a members image url with the provided url and attribution
         public static function updateMemberImage($bioguideId, $imageUrl, $imageAttribution) {
             $members = new MembersQuery();
-            $members->addSearchValue("bioguideId", "=", $bioguideId);
+            $members->addSearchCondition(new Condition("bioguideId", Comparison::EQUALS, $bioguideId));
             $members->setColumns(["imageUrl", "imageAttribution"]);
             $members->setValues([$imageUrl, $imageAttribution]);
             return $members->updateInDb();

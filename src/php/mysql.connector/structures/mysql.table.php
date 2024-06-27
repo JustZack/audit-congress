@@ -128,27 +128,13 @@ namespace MySqlConnector {
         }
         
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
-        public function update(SqlRow $row, $whereCondition) {
+        public function update(UpdateGroup $update, WhereClause $where) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
-            $sql = "UPDATE `$this->name` SET %s WHERE %s";
-
-            $columns = $row->getColumns();
-            $values = $row->getValues();
-
-            $numCols = count($columns); $numValues = count($values);
-            if ($numCols != $numValues) 
-                self::throw("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
-
-            $colsAndValues = array();
-            $values = QueryBuilder::escapeStrings($values);
-            for ($i = 0;$i < $numCols;$i++) 
-                array_push($colsAndValues, "`".$columns[$i]."` = '".$values[$i]."'");
-
-            
-            $colsAndValuesList = QueryBuilder::buildSetList($colsAndValues);
-
-            $sql = sprintf($sql, $colsAndValuesList, $whereCondition);
-            return Query::runActionQuery($sql);
+            $sql = "UPDATE `$this->name` SET %s %s";
+            $sql = sprintf($sql, $update->getQueryString(), $where->getQueryString());
+            $values = array_merge($update->getOrderedParameters(), $where->getOrderedParameters());
+            $types = $update->getOrderedTypes() . $where->getOrderedTypes();
+            return Query::runActionQuery($sql, $values, $types);
         }
         //Delete a row where $whereCondition is satisfied
         public function delete($whereCondition) {

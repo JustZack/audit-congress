@@ -40,10 +40,9 @@ namespace MySqlConnector {
         public function prepare() : \mysqli_stmt {
             $connection = Connection::getConnection();
             $statement = $connection->prepare($this->sql);
-            
             if (!$statement) self::throw("Could not prepare sql: " . $this->sql);
             if ($this->isPreparable())
-                if (!$statement->bind_param($this->types, $this->params)) 
+                if (!$statement->bind_param($this->types, ...$this->params))
                     self::throw("Error preparing statement: " . $statement->error);
             return $statement;
         }

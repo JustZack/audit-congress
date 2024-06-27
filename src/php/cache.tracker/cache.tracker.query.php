@@ -1,6 +1,10 @@
 <?php
 
 namespace Cache {
+
+    use MySqlConnector\Comparison;
+    use MySqlConnector\Condition;
+
     class TrackerQuery extends \MySqlConnector\QueryWrapper {
         public static $tableName = null;
         public function __construct() {
@@ -54,8 +58,7 @@ namespace Cache {
             list("columns" => $colsToSet, "values" => $valsToSet) = $setItems;
             
             $cache = new TrackerQuery();
-            $cache->setSearchColumns(["source"]);
-            $cache->setSearchValues([$cacheName]);
+            $cache->addSearchCondition(new Condition("source", Comparison::EQUALS, $cacheName));
             $cache->setColumns($colsToSet);
             $cache->setValues($valsToSet);
             return $cache->updateInDb();

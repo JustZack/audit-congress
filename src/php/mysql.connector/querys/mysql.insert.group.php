@@ -2,14 +2,14 @@
 
 namespace MySqlConnector {
     class InsertGroup extends ExceptionThrower implements IParameterizedItem {
-        private 
+        protected 
             $columns = array(),
             $values = array();
         
-        public function __construct($columns, $values) {
-            self::throwIfMismatch($columns, $values);
-            $this->columns = $columns;
-            $this->values = $values;
+        public function __construct(SqlRow $row) {
+            $this->columns = $row->getColumns();
+            $this->values = $row->getValues();
+            self::throwIfMismatch($this->columns, $this->values);
         }
 
         public static function throwIfMismatch($columns, $values) {
@@ -32,6 +32,8 @@ namespace MySqlConnector {
         public function hasAnyParameters() {
             return count($this->values) > 0;
         }
+
+        public function columns() { return $this->columns; }
 
         public function add($column, $value) {
             array_push($this->columns, $column);
