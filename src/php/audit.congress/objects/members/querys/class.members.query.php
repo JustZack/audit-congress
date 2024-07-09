@@ -42,12 +42,21 @@ namespace AuditCongress {
             //$searchColumns = ["isCurrent"]; $searchValues = [$isCurrent];
             
             $members = new MembersQuery();
+            $nameCondition = new ConditionGroup(Logical::OR);
             foreach ($nameParts as $part) {
                 $members->addSearchValue("first", "like", $part);
                 $members->addSearchValue("last", "like", $part);
+                $nameCondition->addCondition(new Condition("first", Comparison::LIKE, $part));
+                $nameCondition->addCondition(new Condition("last", Comparison::LIKE, $part));
             }
 
             $members->setBooleanCondition("OR");
+            $members->addSearchConditionGroup($nameCondition);
+            
+            if (is_bool($isCurrent)) {
+                $members->addSearch("isCurrent", Comparison::EQUALS, $isCurrent);
+            }
+
             $members->applyPagination();
             $result = $members->selectFromDB()->fetchAllAssoc();
             
@@ -65,25 +74,48 @@ namespace AuditCongress {
             $members = new MemberTermsQuery();
             $members->setSelectColumns(["members.*", "memberterms.state", "memberterms.start", "memberterms.end", "memberterms.type", "memberterms.party"]);
 
-            if ($state != null) $members->addSearchValue("state", "like", $state);
-            if ($type != null) $members->addSearchValue("type", "like", $type);
-            if ($party != null) $members->addSearchValue("party", "like", $party);
-            if ($gender != null) $members->addSearchValue("gender", "like", $gender);
+            if ($state != null) {
+                $members->addSearchValue("state", "like", $state);
+                $members->addSearch("state", Comparison::LIKE, $state);
+            }
+            if ($type != null) {
+                $members->addSearchValue("type", "like", $type);
+                $members->addSearch("type", Comparison::LIKE, $type);
+            } 
+            if ($party != null) {
+                $members->addSearchValue("party", "like", $party);
+                $members->addSearch("party", Comparison::LIKE, $party);
+            }
+            if ($gender != null) {
+                $members->addSearchValue("gender", "like", $gender);
+                $members->addSearch("gender", Comparison::LIKE, $gender);
+            }
             if (is_bool($isCurrent)) {
                 $todaysDate = date("Y-m-d");
                 $members->addSearchValue("isCurrent", "like", $isCurrent);
+                $members->addSearch("isCurrent", Comparison::LIKE, $isCurrent);
                 if ($isCurrent === false) {
                     $members->addSearchValue("end", "<=", $todaysDate);
+                    $members->addSearch("end", Comparison::LESS_THAN_EQUALS, $todaysDate);
                 } else {
                     $members->addSearchValue("start", "<=", $todaysDate);
                     $members->addSearchValue("end", ">=", $todaysDate);
+                    $members->addSearch("start", Comparison::LESS_THAN_EQUALS, $todaysDate);
+                    $members->addSearch("end", Comparison::GREATER_THAN_EQUALS, $todaysDate);
                 }
             }
 
             $members->setGroupBy(["bioguideId", "type"]);
             $members->setOrderBy(["bioguideId", "start"], false);
             $members->setJoin("members", ["memberterms.bioguideId"], ["members.bioguideId"]);
-            
+            $joinGroup = new ConditionGroup();
+            $joinGroup->addCondition(new Condition("memberterms.bioguideId", Comparison::EQUALS, "members.bioguideId", true));
+            $members->addJoin("members", $joinGroup);
+
+            #var_dump($members->getQueryString());
+            #var_dump($members->getOrderedParameters());
+            #var_dump($members->getOrderedTypes());
+
             $members->applyPagination();
 
             return $members->selectFromDB()->fetchAllAssoc();

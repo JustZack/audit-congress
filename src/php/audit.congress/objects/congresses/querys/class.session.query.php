@@ -3,6 +3,8 @@
 namespace AuditCongress {
 
     class SessionQuery extends AuditCongressQuery {
+        use TruncateRowsQuery, InsertQueueingQuery;
+
         public function __construct() {
             parent::__construct("Sessions");
         }

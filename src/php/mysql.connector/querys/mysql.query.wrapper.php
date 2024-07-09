@@ -24,7 +24,13 @@ namespace MySqlConnector {
 
         public function deleteFromDb() { return $this->table->delete($this->whereCondition()); }
 
-        public function insertIntoDB() { return $this->table->insert($this->getAsRow()); }
+
+        public function truncate() { $this->table->truncate(); }
+
+        public function queueInsert(SqlRow $row) { $this->table->queueInsert(new InsertGroup($row)); }
+        public function commitInsert() { return $this->table->commitInsert(); }
+
+        public function insertIntoDB() { return $this->table->insert(new InsertGroup($this->getAsRow())); }
 
         public function updateInDb() { return $this->table->update(new UpdateGroup($this->getAsRow()), $this->where); }
 

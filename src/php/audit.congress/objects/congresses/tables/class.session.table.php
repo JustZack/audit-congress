@@ -4,7 +4,7 @@ namespace AuditCongress {
 
     class Sessions extends CongressTable {
         
-        use \Util\GetInstance;
+        use \Util\GetInstance, TruncateRows, InsertQueueing;
 
         private function __construct() {
             parent::__construct("Sessions", "SessionQuery", "SessionRow");

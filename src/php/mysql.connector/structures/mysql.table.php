@@ -7,7 +7,10 @@ namespace MySqlConnector {
             $tableExists = null,
             $tableColumns = null,
             $tableIndexes = null,
-            $insertQueue = null;
+            $insertQueueSql = null,
+            $insertParams = null,
+            $insertTypes = null,
+            $startingInsert = null;
         private ?Columns $columns = null;
         public $name;
         
@@ -105,25 +108,34 @@ namespace MySqlConnector {
 
 
         //Insert a row with the provided $columns and $values
-        public function insert(SqlRow $row) {
-            $sql = QueryBuilder::buildInsert($this->name, $row->getColumns(), $row->getValues());
-            
-            return Query::runActionQuery($sql);
+        public function insert(InsertGroup $insert) {
+            $sql = $insert->asInsertStatement($this->name);
+            return Query::runActionQuery($sql, $insert->getOrderedParameters(), $insert->getOrderedTypes());
         }
         //Queue an insert to be run
-        public function queueInsert(SqlRow $row) {
-            $values = $row->getValues();
-            if ($this->insertQueue == null)
-                $this->insertQueue = QueryBuilder::buildInsert($this->name, $row->getColumns(), $values);
-            else 
-                $this->insertQueue .= ",".QueryBuilder::buildItemList($values, true, "'");
+        public function queueInsert(InsertGroup $insert) {
+            if ($this->insertQueueSql == null) {
+                $this->startingInsert = $insert;
+                $this->insertQueueSql = $insert->asInsertStatement($this->name);
+                $this->insertParams = array();
+                $this->insertTypes = "";
+            } else if (!$this->startingInsert->sameColumnsAs($insert)) {
+                self::throw("Insert Queue Failure: Must provide identical column names for each insert group.");
+            } else {
+                $this->insertQueueSql .= ",".$insert->getQueryString();
+            }
+            $this->insertParams = array_merge($this->insertParams, $insert->getOrderedParameters());
+            $this->insertTypes .= $insert->getOrderedTypes();
         }
         //Commit queued inserts
         public function commitInsert() {
-            if ($this->insertQueue == null) return false;
-            $result = Query::runActionQuery($this->insertQueue);
+            if ($this->insertQueueSql == null) return false;
+            $result = Query::runActionQuery($this->insertQueueSql, $this->insertParams, $this->insertTypes);
 
-            $this->insertQueue = null;
+            $this->startingInsert = null;
+            $this->insertQueueSql = null;
+            $this->insertParams = null;
+            $this->insertTypes = null;
             return $result;
         }
         

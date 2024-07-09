@@ -21,6 +21,12 @@ namespace MySqlConnector {
             return QueryBuilder::buildPreparableList(count($this->columns));
         }
 
+        public function asInsertStatement($table) {
+            $sql = "INSERT INTO `$table` %s VALUES %s";
+            $colList = QueryBuilder::buildItemList(self::columns(), true, "`");
+            return sprintf($sql, $colList, self::getQueryString());
+        }
+
         public function getOrderedParameters() {
             return $this->values;
         }
@@ -35,10 +41,15 @@ namespace MySqlConnector {
 
         public function columns() { return $this->columns; }
 
+        public function sameColumnsAs(InsertGroup $other) {
+            return $this->columns() == $other->columns();
+        }
+
         public function add($column, $value) {
             array_push($this->columns, $column);
             array_push($this->values, $value);
         }
+
     }
 }
 

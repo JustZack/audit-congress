@@ -87,7 +87,7 @@ namespace MySqlConnector {
             return $typeStr;
         }
         public static function getValueType($value) {
-            if (is_string($value)) return "s";
+            if (is_string($value) || is_null($value)) return "s";
             else if (is_float($value)) return "f";
             else if (is_int($value) || is_bool($value)) return "i";
             else self::throw("Unrecognized Type for Value: `$value`. Expected string, float, or int.");

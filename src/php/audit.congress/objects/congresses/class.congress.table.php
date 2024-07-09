@@ -12,18 +12,15 @@ namespace AuditCongress {
         public function updateCache() { 
             $this->cacheTracker->setRunning(true, "updating");
 
-            $sessionsInstance = Sessions::getInstance();
-            $congressInstance = Congresses::getInstance();
-
             $congresses = new \CongressGov\Congresses();
 
-            $congressInstance->clearRows();
-            $sessionsInstance->clearRows();
+            Congresses::truncateRows();
+            Sessions::truncateRows();
 
             $this->insertCongresses($congresses->congresses);
 
-            $congressInstance->commitInsert();
-            $sessionsInstance->commitInsert();
+            Congresses::commitInsert();
+            Sessions::commitInsert();
             
             $this->cacheIsValid = true;
 
@@ -36,7 +33,7 @@ namespace AuditCongress {
                 $congress = new CongressRow($congress);
                 $current = $congress->number;
                 $this->insertSessions($current, $sessions);
-                Congresses::getInstance()->queueInsert($congress);
+                Congresses::queueInsert($congress);
             }
         }
 
@@ -44,7 +41,7 @@ namespace AuditCongress {
             foreach ($sessions as $session) {                
                 $session["congress"] = $congress;
                 $session = new SessionRow($session);
-                Sessions::getInstance()->queueInsert($session);
+                Sessions::queueInsert($session);
             }
         }
     }
