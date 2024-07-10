@@ -41,6 +41,8 @@ namespace AuditCongress {
             foreach ($sessions as $session) {                
                 $session["congress"] = $congress;
                 $session = new SessionRow($session);
+                //Sentinel value helps find the current sessions
+                if ($session->endDate == null) $session->endDate = "0000-00-00";
                 Sessions::queueInsert($session);
             }
         }

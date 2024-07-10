@@ -57,11 +57,11 @@ namespace MySqlConnector {
             return $this->tableIndexes;
         }
         //Count the number of rows in this table
-        public function count($whereCondition = null) {
+        public function count(WhereClause $where = null) {
             $sql = "SELECT COUNT(*) FROM `$this->name`";
-            if ($whereCondition != null) { 
-                $sql .= " WHERE %s";
-                $results = Query::runQuery($sql, [$whereCondition]);
+            if ($where != null) {
+                $sql .= " ".$where->getQueryString();
+                $results = Query::runQuery($sql, $where->getOrderedParameters(), $where->getOrderedTypes());
             } else {
                 $results = Query::runQuery($sql);
             }
@@ -84,26 +84,35 @@ namespace MySqlConnector {
 
 
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
-        public function select($selectColumns, $whereCondition = null, $join = null, $groupBy = null, $orderBy = null, $limit = null, $offset = null) : Result {
-            $sql = "SELECT %s FROM `$this->name`";
+        public function select($selectColumns, WhereClause $whereCondition = null, $joins = null, $groupBy = null, $orderBy = null, $limit = null, $offset = null) : Result {
+            $sql = "SELECT %s FROM `$this->name`"; $params = []; $types = ""; $parameterizedParts = [];
             
             $colList = QueryBuilder::buildItemList($selectColumns, false, "");
             $sql = sprintf($sql, $colList);
+            
+            if (is_array($joins)) $parameterizedParts = $joins;
+            if ($whereCondition != null) $parameterizedParts[] = $whereCondition;
 
-            if ($join != null)           $sql .= sprintf(" JOIN %s", $join);
-            if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
-            if ($groupBy != null)        $sql .= sprintf(" GROUP BY %s", $groupBy);
-            if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
-            if ($limit != null)          $sql .= sprintf(" LIMIT %s", $limit);
-            if ($offset != null)         $sql .= sprintf(" OFFSET %s", $offset);
+            if (count($parameterizedParts) > 0) {
+                foreach ($parameterizedParts as $item) {
+                    array_push($params, ...$item->getOrderedParameters());
+                    $types .= $item->getOrderedTypes();
+                    $sql .= sprintf(" %s", $item->getQueryString());
+                }
+            }
+
+            if ($groupBy != null)   $sql .= sprintf(" GROUP BY %s", $groupBy);
+            if ($orderBy != null)   $sql .= sprintf(" ORDER BY %s", $orderBy);
+            if ($limit != null)     $sql .= sprintf(" LIMIT %s", $limit);
+            if ($offset != null)    $sql .= sprintf(" OFFSET %s", $offset);
           
-            return Query::getResult($sql);
+            return Query::getResult($sql, $params, $types);
         }
 
         public function selectObject(QueryWrapper $query) {
             $o = $query;
-            return $this->select($o->getSelectColumns(), $o->whereCondition(), 
-            $o->getJoin(), $o->getGroupBy(), $o->getOrderBy(), $o->getLimit(), $o->getOffset());
+            return $this->select($o->getSelectColumns(), $o->whereClause(), 
+            $o->getJoins(), $o->getGroupBy(), $o->getOrderBy(), $o->getLimit(), $o->getOffset());
         }
 
 
@@ -149,9 +158,9 @@ namespace MySqlConnector {
             return Query::runActionQuery($sql, $values, $types);
         }
         //Delete a row where $whereCondition is satisfied
-        public function delete($whereCondition) {
-            $sql = "DELETE FROM `$this->name` WHERE %s";
-            return Query::runActionQuery($sql, [$whereCondition]);
+        public function delete(WhereClause $where) {
+            $sql = "DELETE FROM `$this->name` " . $where->getQueryString();
+            return Query::runActionQuery($sql, $where->getOrderedParameters(), $where->getOrderedTypes());
         }
 
         //Truncate (drop) all rows in this table

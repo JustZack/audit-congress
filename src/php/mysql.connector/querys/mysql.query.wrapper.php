@@ -18,11 +18,11 @@ namespace MySqlConnector {
 
         public function getAsRow() { return SqlRow::fromColsAndVals($this->getColumns(), $this->getValues()); }
 
-        public function countInDB() { return $this->table->count($this->whereCondition()); }
+        public function countInDB() { return $this->table->count($this->whereClause()); }
 
         public function selectFromDB() { return $this->table->selectObject($this); }
 
-        public function deleteFromDb() { return $this->table->delete($this->whereCondition()); }
+        public function deleteFromDb() { return $this->table->delete($this->whereClause()); }
 
 
         public function truncate() { $this->table->truncate(); }
@@ -114,24 +114,7 @@ namespace MySqlConnector {
 
 
         //Return a condtion for this sql object with the set boolean operator and '=' or 'like'
-        public function whereCondition() {
-            $condition = "";
-            
-            $sColumns = $this->getSearchColumns();
-            $sValues = $this->getSearchValues();
-            $sOps = $this->getEqualityOperators();
-            $sConds = $this->getBooleanConditions();
-            if (!QueryBuilder::sameNumberOfColumnsAndValues($sColumns, $sValues)) 
-                self::throw("Column/Value set length mismatch");
-            else {
-                $condition = QueryBuilder::buildWhereCondition($sColumns, $sValues,
-                                    $this->getEqualityOperators(), $this->getBooleanConditions());
-                #var_dump($this->where->getQueryString());
-                #var_dump($this->where->getOrderedParameters());
-                #var_dump($this->where->getOrderedTypes());
-            }
-            return $condition;
-        }
+        public function whereClause() : WhereClause { return $this->where; }
 
 
         

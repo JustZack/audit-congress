@@ -2,6 +2,7 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
     use MySqlConnector\InsertGroup;
     use MySqlConnector\SqlRow;
 
@@ -13,7 +14,7 @@ namespace AuditCongress {
         protected static function getWithSearchSelect($column, $equalityOperator, $value) {
             //Anything that implements this is meant to override the constructor.
             $theQuery = new static();
-            $theQuery->addSearchValue($column, $equalityOperator, $value);
+            $theQuery->addSearch($column, $equalityOperator, $value);
             return $theQuery;
         }
 
@@ -23,13 +24,13 @@ namespace AuditCongress {
             $pagination = \API\Runner::getPagination();
             $this->setLimit($pagination->pageSize());
             $this->setOffset($pagination->offset());
+            $this->applyDefaultOrder();
         }
     }
 
     trait GetByBioguideIdQuery {
         public static function getByBioguideId($bioguideId) {
-            $query = self::getWithSearchSelect("bioguideId", "=", $bioguideId);
-            $query->applyDefaultOrder();
+            $query = self::getWithSearchSelect("bioguideId", Comparison::EQUALS, $bioguideId);
             $query->applyPagination();
             return $query->selectFromDB()->fetchAllAssoc();
         }
@@ -37,8 +38,7 @@ namespace AuditCongress {
 
     trait GetByIdQuery {
         public static function getById($id) {
-            $query = self::getWithSearchSelect("id", "=", $id);
-            $query->applyDefaultOrder();
+            $query = self::getWithSearchSelect("id", Comparison::EQUALS, $id);
             $query->applyPagination();
             return $query->selectFromDB()->fetchAllAssoc();
         }
