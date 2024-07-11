@@ -12,6 +12,10 @@ namespace MySqlConnector {
         public function __construct($column, $operator, $value, $notBindable = false) {
             self::throwIfInvalidOperator($operator);
             self::throwIfOperatorDoesntMatchValue($operator, $value);
+            
+            //Not sure if all LIKE conditions should be surrounded by %.
+            //They can be passed via url to specify the start/end of value.
+            //if ($operator == Comparison::LIKE) $value = "%$value%";
 
             $this->column = $column;
             $this->operator = $operator;

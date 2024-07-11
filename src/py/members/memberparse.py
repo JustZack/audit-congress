@@ -8,7 +8,7 @@ def fetchCurrentCongress():
     global CURRENT_CONGRESS
     resp = util.getParsedJson(CURRENT_CONGRESS_API_URL)
     if "congress" in resp:
-        CURRENT_CONGRESS =  resp["congress"]["number"]
+        CURRENT_CONGRESS =  str(resp["congress"]["number"])
         return True
     else:
         return False
@@ -111,7 +111,7 @@ def getCombinedCommittee(code, current, historic):
         currentSub = util.getIfSet(current[code], "subcommittees", [])
         data = current[code]
         data["names"] = {CURRENT_CONGRESS: data["name"]}
-        data["congresses"] = [int(CURRENT_CONGRESS)]
+        data["congresses"] = [CURRENT_CONGRESS]
         
     if code in historic:
         historicSub = util.getIfSet(historic[code], "subcommittees", [])
