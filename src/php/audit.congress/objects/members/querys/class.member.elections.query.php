@@ -2,6 +2,8 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
+
     class MemberElectionsQuery extends AuditCongressQuery {
         use GetByBioguideIdQuery;
 
@@ -15,8 +17,7 @@ namespace AuditCongress {
 
         public static function getByFecId($fecId) {
             $terms = new MemberElectionsQuery();
-            $terms->setSearchColumns(["fecId"]);
-            $terms->setSearchValues([$fecId]);
+            $terms->addSearch("fecId", Comparison::EQUALS, $fecId);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
     }
