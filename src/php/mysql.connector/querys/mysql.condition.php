@@ -7,9 +7,9 @@ namespace MySqlConnector {
             $operator,
             $value,
             $type,
-            $valueIsColumn;
+            $notBindable;
 
-        public function __construct($column, $operator, $value, $valueIsColumnName = false) {
+        public function __construct($column, $operator, $value, $notBindable = false) {
             self::throwIfInvalidOperator($operator);
             self::throwIfOperatorDoesntMatchValue($operator, $value);
 
@@ -17,7 +17,7 @@ namespace MySqlConnector {
             $this->operator = $operator;
             $this->value = $value;
             $this->type = self::getValueTypes($this->value);
-            $this->valueIsColumn = $valueIsColumnName;
+            $this->notBindable = $notBindable;
         }
 
         public static function throwIfInvalidOperator($op) {
@@ -39,7 +39,10 @@ namespace MySqlConnector {
         }
 
         public function getQueryString($withValues = false) {
-            $sql = sprintf("`%s` %s %s", $this->column, $this->operator, "%s");
+            $colPart = $this->column;
+            if (!$this->notBindable) $colPart = "`$colPart`";
+            $sql = sprintf("%s %s %s", $colPart, $this->operator, "%s");
+
             $valueString = "";
             if ($this->operator == Comparison::BETWEEN) {
                 $valueString = $this->betweenValueConditionString();
@@ -53,7 +56,7 @@ namespace MySqlConnector {
 
         private function betweenValueConditionString() {
             $sql = "%s AND %s";
-            if ($this->valueIsColumn)
+            if ($this->notBindable)
                 return sprintf($sql, $this->value[0], $this->value[1]);
             else 
                 return sprintf($sql, "?", "?");                    
@@ -61,7 +64,7 @@ namespace MySqlConnector {
 
         private function inValueConditionString() {
             $sql = "%s";
-            if ($this->valueIsColumn)
+            if ($this->notBindable)
                 return sprintf($sql, QueryBuilder::buildItemList($this->value));
             else 
                 return sprintf($sql, QueryBuilder::buildPreparableList(count($this->value)));
@@ -69,14 +72,14 @@ namespace MySqlConnector {
 
         private function singleValueConditionString() {
             $sql = "%s";
-            if ($this->valueIsColumn)
-                return sprintf($sql, "`".$this->value."`");
+            if ($this->notBindable)
+                return sprintf($sql, $this->value);
             else 
                 return sprintf($sql, "?");
         }
 
         public function getOrderedParameters() {
-            if ($this->valueIsColumn) return [];
+            if ($this->notBindable) return [];
             else return $this->value;
         }
 
@@ -93,11 +96,12 @@ namespace MySqlConnector {
             else self::throw("Unrecognized Type for Value: `$value`. Expected string, float, or int.");
         }
         public function getOrderedTypes() {
-            return $this->type;
+            if ($this->notBindable) return "";
+            else return $this->type;
         }
 
         public function hasAnyParameters() {
-            return !$this->valueIsColumn;
+            return !$this->notBindable;
         }
     }
 }

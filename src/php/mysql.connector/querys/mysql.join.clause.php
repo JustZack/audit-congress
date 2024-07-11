@@ -9,7 +9,7 @@ namespace MySqlConnector {
         }
 
         public function getQueryString($withValues = false) {
-            return $this->buildQueryString($withValues, "JOIN %s ON %s", $this->table);
+            return $this->buildQueryString($withValues, "JOIN `%s` ON %s", $this->table);
         }
     }
 }
