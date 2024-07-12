@@ -22,8 +22,10 @@ namespace MySqlConnector {
 
         //Format the query with the given parameters (but only if no types are available)
         private function parseQuery() {
-            if ($this->types != null && strlen($this->types) > 0) return;
-            else if ($this->params != null && count($this->params) > 0) 
+            //Only format the query with params when types have not been passed.
+            //Types are required to bind parameters via prepared statements.
+            if (!($this->types != null && strlen($this->types) > 0)
+            && $this->params != null && count($this->params) > 0) 
                 $this->sql = sprintf($this->sql, ...$this->params);
         }
         //Tell the connection to use the given database
@@ -43,9 +45,8 @@ namespace MySqlConnector {
             $statement = $connection->prepare($this->sql);
 
             if (!$statement) self::throw("Could not prepare sql: " . $this->sql);
-            if ($this->isPreparable())
-                if (!$statement->bind_param($this->types, ...$this->params))
-                    self::throw("Error preparing statement: " . $statement->error);
+            if ($this->isPreparable() && !$statement->bind_param($this->types, ...$this->params))
+                self::throw("Error preparing statement: " . $statement->error);
             return $statement;
         }
 
