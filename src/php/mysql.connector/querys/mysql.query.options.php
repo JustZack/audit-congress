@@ -87,14 +87,6 @@ namespace MySqlConnector {
         public function getOffset() { return $this->offset; }
 
         public function setOffset($newOffset) { $this->offset = $newOffset; }
-
-        public function getJoin() { return $this->join; }
-
-        public function setJoin($onTable, $onTableColumns, $thisTableColumns) {
-            $format = "%s ON %s";
-            $joinCondition = QueryBuilder::buildOnCondition($onTableColumns, $thisTableColumns, "=", "AND");
-            $this->join = sprintf($format, $onTable, $joinCondition);
-        }
     }
 }
 
