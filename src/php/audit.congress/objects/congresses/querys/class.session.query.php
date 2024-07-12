@@ -2,7 +2,11 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
+
     class SessionQuery extends AuditCongressQuery {
+        use TruncateRowsQuery, InsertQueueingQuery;
+
         public function __construct() {
             parent::__construct("Sessions");
         }
@@ -13,76 +17,71 @@ namespace AuditCongress {
 
         public static function getByCongress($congress) {
             $congresses = new SessionQuery();
-            $congresses->setSearchColumns(["congress"]);
-            $congresses->setSearchValues([$congress]);
+            $congresses->addSearch("congress", Comparison::EQUALS, $congress);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByChamber($chamber) {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["like"]);
-            $congresses->setSearchColumns(["chamber"]);
-            $congresses->setSearchValues([$chamber]);
+            $congresses->addSearch("chamber", Comparison::LIKE, $chamber);
+            $congresses->applyPagination();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByNumber($session) {
             $congresses = new SessionQuery();
-            $congresses->setSearchColumns(["number"]);
-            $congresses->setSearchValues([$session]);
+            $congresses->addSearch("number", Comparison::EQUALS, $session);
+            $congresses->applyPagination();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByNumberAndChamber($session, $chamber) {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["like", "="]);
-            $congresses->setSearchColumns(["chamber", "number"]);
-            $congresses->setSearchValues([$chamber, $session]);
+            $congresses->addSearch("chamber", Comparison::LIKE, $chamber);
+            $congresses->addSearch("number", Comparison::EQUALS, $session);
+            $congresses->applyPagination();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByCongressAndNumber($congress, $number) {
             $congresses = new SessionQuery();
-            $congresses->setSearchColumns(["congress", "number"]);
-            $congresses->setSearchValues([$congress, $number]);
+            $congresses->addSearch("congress", Comparison::EQUALS, $congress);
+            $congresses->addSearch("number", Comparison::EQUALS, $number);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByCongressAndChamber($congress, $chamber) {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["=", "like"]);
-            $congresses->setSearchColumns(["congress", "chamber"]);
-            $congresses->setSearchValues([$congress, $chamber]);
+            $congresses->addSearch("chamber", Comparison::LIKE, $chamber);
+            $congresses->addSearch("congress", Comparison::EQUALS, $congress);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByCongressNumberAndChamber($congress, $number, $chamber) {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["=", "=", "like"]);
-            $congresses->setSearchColumns(["congress", "number", "chamber"]);
-            $congresses->setSearchValues([$congress, $number, $chamber]);
+            $congresses->addSearch("congress", Comparison::EQUALS, $congress);
+            $congresses->addSearch("number", Comparison::EQUALS, $number);
+            $congresses->addSearch("chamber", Comparison::LIKE, $chamber);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByDate($date) {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["<=", ">="]);
-            $congresses->setSearchColumns(["startDate", "endDate"]);
-            $congresses->setSearchValues([$date, $date]);
+            $congresses->addSearch("startDate", Comparison::LESS_THAN_EQUALS, $date);
+            $congresses->addSearch("endDate", Comparison::GREATER_THAN_EQUALS, $date);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getCurrent() {
             $congresses = new SessionQuery();
-            $congresses->setEqualityOperators(["<=", "like"]);
-            $congresses->setSearchColumns(["startDate", "endDate"]);
-            $congresses->setSearchValues([date("Y-m-d"), "0000-00-00"]);
+            $congresses->addSearch("endDate", Comparison::EQUALS, "0000-00-00");
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getAll() {
             $congresses = new SessionQuery();
             $congresses->setOrderBy(["congress", "number"], false);
+            $congresses->applyPagination();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
     }

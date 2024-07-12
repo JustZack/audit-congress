@@ -2,6 +2,7 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\InsertGroup;
     use MySqlConnector\SqlRow;
     use MySqlConnector\Table;
 
@@ -32,21 +33,6 @@ namespace AuditCongress {
             return $this->table; 
         }
 
-        protected function clearRows() {
-            //Clear out all data associated with this table
-            $this->getTable()->truncate();
-        }
-
-        public function queueInsert(SqlRow $row) {
-            $this->getTable()->queueInsert($row);
-        }
-        public function commitInsert() {
-            $this->getTable()->commitInsert();
-        }
-        public function insertRow(SqlRow $row) {
-            $this->getTable()->insert($row);
-        }
-
         //All Tables are singletons. Use \Util\GetInstance on each class.
         public static abstract function getInstance();
 
@@ -74,6 +60,19 @@ namespace AuditCongress {
             self::enforceCache();
             $items = self::getQueryClass()::getByBioguideId($bioguideId);
             return self::parseResult($items);
+        }
+    }
+    trait TruncateRows {
+        public static function truncateRows() {
+            self::getQueryClass()::truncateRows();
+        }
+    }
+    trait InsertQueueing {
+        public static function queueInsert(SqlRow $row) {
+            self::getQueryClass()::queueRowInsert($row);
+        }
+        public static function commitInsert() {
+            return self::getQueryClass()::commitRowInsert();
         }
     }
 }

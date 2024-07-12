@@ -1,7 +1,11 @@
 <?php
 
 namespace Cache {
-    class TrackerQuery extends \MySqlConnector\SqlObject {
+
+    use MySqlConnector\Comparison;
+    use MySqlConnector\Condition;
+
+    class TrackerQuery extends \MySqlConnector\QueryWrapper {
         public static $tableName = null;
         public function __construct() {
             parent::__construct(self::$tableName);
@@ -10,8 +14,7 @@ namespace Cache {
         public static function getCacheStatus($cacheName) {
             $cache = new TrackerQuery();
             $cache->setSelectColumns(["*"]);
-            $cache->setSearchColumns(["source"]);
-            $cache->setSearchValues([$cacheName]);
+            $cache->addSearch("source", Comparison::EQUALS, $cacheName);
             $result = $cache->selectFromDB()->fetchAllAssoc();
             if (count($result) > 0) return $result[0];
             else                    return null;
@@ -54,10 +57,9 @@ namespace Cache {
             list("columns" => $colsToSet, "values" => $valsToSet) = $setItems;
             
             $cache = new TrackerQuery();
-            $cache->setSearchColumns(["source"]);
-            $cache->setSearchValues([$cacheName]);
             $cache->setColumns($colsToSet);
             $cache->setValues($valsToSet);
+            $cache->addSearch("source", Comparison::EQUALS, $cacheName);
             return $cache->updateInDb();
         }
     }

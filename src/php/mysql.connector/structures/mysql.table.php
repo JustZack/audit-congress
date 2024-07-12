@@ -2,12 +2,15 @@
 
 namespace MySqlConnector {
 
-    class Table {
+    class Table extends ExceptionThrower {
         private 
             $tableExists = null,
             $tableColumns = null,
             $tableIndexes = null,
-            $insertQueue = null;
+            $insertQueueSql = null,
+            $insertParams = null,
+            $insertTypes = null,
+            $startingInsert = null;
         private ?Columns $columns = null;
         public $name;
         
@@ -54,11 +57,11 @@ namespace MySqlConnector {
             return $this->tableIndexes;
         }
         //Count the number of rows in this table
-        public function count($whereCondition = null) {
+        public function count(WhereClause $where = null) {
             $sql = "SELECT COUNT(*) FROM `$this->name`";
-            if ($whereCondition != null) { 
-                $sql .= " WHERE %s";
-                $results = Query::runQuery($sql, [$whereCondition]);
+            if ($where != null) {
+                $sql .= " ".$where->getQueryString();
+                $results = Query::runQuery($sql, $where->getOrderedParameters(), $where->getOrderedTypes());
             } else {
                 $results = Query::runQuery($sql);
             }
@@ -81,79 +84,83 @@ namespace MySqlConnector {
 
 
         //Select columns $selectColumns, where $whereCondition is satisfied, ordered by $orderBy
-        public function select($selectColumns, $whereCondition = null, $join = null, $groupBy = null, $orderBy = null, $limit = null, $offset = null) : Result {
-            $sql = "SELECT %s FROM `$this->name`";
+        public function select($selectColumns, WhereClause $whereCondition = null, $joins = null, $groupBy = null, $orderBy = null, $limit = null, $offset = null) : Result {
+            $sql = "SELECT %s FROM `$this->name`"; $params = []; $types = ""; $parameterizedParts = [];
             
             $colList = QueryBuilder::buildItemList($selectColumns, false, "");
             $sql = sprintf($sql, $colList);
+            
+            if (is_array($joins)) $parameterizedParts = $joins;
+            if ($whereCondition != null) $parameterizedParts[] = $whereCondition;
 
-            if ($join != null)           $sql .= sprintf(" JOIN %s", $join);
-            if ($whereCondition != null) $sql .= sprintf(" WHERE %s", $whereCondition);
-            if ($groupBy != null)        $sql .= sprintf(" GROUP BY %s", $groupBy);
-            if ($orderBy != null)        $sql .= sprintf(" ORDER BY %s", $orderBy);
-            if ($limit != null)          $sql .= sprintf(" LIMIT %s", $limit);
-            if ($offset != null)         $sql .= sprintf(" OFFSET %s", $offset);
+            if (count($parameterizedParts) > 0) {
+                foreach ($parameterizedParts as $item) {
+                    array_push($params, ...$item->getOrderedParameters());
+                    $types .= $item->getOrderedTypes();
+                    $sql .= sprintf(" %s", $item->getQueryString());
+                }
+            }
+
+            if ($groupBy != null)   $sql .= sprintf(" GROUP BY %s", $groupBy);
+            if ($orderBy != null)   $sql .= sprintf(" ORDER BY %s", $orderBy);
+            if ($limit != null)     $sql .= sprintf(" LIMIT %s", $limit);
+            if ($offset != null)    $sql .= sprintf(" OFFSET %s", $offset);
           
-            return Query::getResult($sql);
+            return Query::getResult($sql, $params, $types);
         }
 
-        public function selectObject(SqlObject $SQLObject) {
-            $o = $SQLObject;
-            return $this->select($o->getSelectColumns(), $o->whereCondition(), 
-            $o->getJoin(), $o->getGroupBy(), $o->getOrderBy(), $o->getLimit(), $o->getOffset());
+        public function selectObject(QueryWrapper $query) {
+            $o = $query;
+            return $this->select($o->getSelectColumns(), $o->whereClause(), 
+            $o->getJoins(), $o->getGroupBy(), $o->getOrderBy(), $o->getLimit(), $o->getOffset());
         }
 
 
         //Insert a row with the provided $columns and $values
-        public function insert(SqlRow $row) {
-            $sql = QueryBuilder::buildInsert($this->name, $row->getColumns(), $row->getValues());
-            
-            return Query::runActionQuery($sql);
+        public function insert(InsertGroup $insert) {
+            $sql = $insert->asInsertStatement($this->name);
+            return Query::runActionQuery($sql, $insert->getOrderedParameters(), $insert->getOrderedTypes());
         }
         //Queue an insert to be run
-        public function queueInsert(SqlRow $row) {
-            $values = $row->getValues();
-            if ($this->insertQueue == null)
-                $this->insertQueue = QueryBuilder::buildInsert($this->name, $row->getColumns(), $values);
-            else 
-                $this->insertQueue .= ",".QueryBuilder::buildItemList($values, true, "'");
+        public function queueInsert(InsertGroup $insert) {
+            if ($this->insertQueueSql == null) {
+                $this->startingInsert = $insert;
+                $this->insertQueueSql = $insert->asInsertStatement($this->name);
+                $this->insertParams = array();
+                $this->insertTypes = "";
+            } else if (!$this->startingInsert->sameColumnsAs($insert)) {
+                self::throw("Insert Queue Failure: Must provide identical column names for each insert group.");
+            } else {
+                $this->insertQueueSql .= ",".$insert->getQueryString();
+            }
+            $this->insertParams = array_merge($this->insertParams, $insert->getOrderedParameters());
+            $this->insertTypes .= $insert->getOrderedTypes();
         }
         //Commit queued inserts
         public function commitInsert() {
-            if ($this->insertQueue == null) return false;
-            $result = Query::runActionQuery($this->insertQueue);
+            if ($this->insertQueueSql == null) return false;
+            $result = Query::runActionQuery($this->insertQueueSql, $this->insertParams, $this->insertTypes);
 
-            $this->insertQueue = null;
+            $this->startingInsert = null;
+            $this->insertQueueSql = null;
+            $this->insertParams = null;
+            $this->insertTypes = null;
             return $result;
         }
         
         //Update a row with the provided $columns and $values, where $whereCondition is satisfied 
-        public function update(SqlRow $row, $whereCondition) {
+        public function update(UpdateGroup $update, WhereClause $where) {
             //UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
-            $sql = "UPDATE `$this->name` SET %s WHERE %s";
-
-            $columns = $row->getColumns();
-            $values = $row->getValues();
-
-            $numCols = count($columns); $numValues = count($values);
-            if ($numCols != $numValues) 
-                throw new SqlException("$this->name UPDATE: Column count ($numCols) doesnt match value count ($numValues)");
-
-            $colsAndValues = array();
-            $values = QueryBuilder::escapeStrings($values);
-            for ($i = 0;$i < $numCols;$i++) 
-                array_push($colsAndValues, "`".$columns[$i]."` = '".$values[$i]."'");
-
-            
-            $colsAndValuesList = QueryBuilder::buildSetList($colsAndValues);
-
-            $sql = sprintf($sql, $colsAndValuesList, $whereCondition);
-            return Query::runActionQuery($sql);
+            $sql = "UPDATE `$this->name` SET %s %s";
+            $sql = sprintf($sql, $update->getQueryString(), $where->getQueryString());
+            $values = array_merge($update->getOrderedParameters(), $where->getOrderedParameters());
+            $types = $update->getOrderedTypes() . $where->getOrderedTypes();
+            return Query::runActionQuery($sql, $values, $types);
         }
         //Delete a row where $whereCondition is satisfied
-        public function delete($whereCondition) {
-            $sql = "DELETE FROM `$this->name` WHERE %s";
-            return Query::runActionQuery($sql, [$whereCondition]);
+        public function delete(WhereClause $where) {
+            $sql = "DELETE FROM `$this->name` " . $where->getQueryString();
+            return Query::runActionQuery($sql, $where->getOrderedParameters(), $where->getOrderedTypes());
         }
 
         //Truncate (drop) all rows in this table
@@ -177,7 +184,7 @@ namespace MySqlConnector {
                     $sql .= "MODIFY COLUMN %s %s"; 
                     $sql = sprintf($sql, $column->name(), $column->type());
                     break;
-                default: throw new SqlException("Unknown or unsupported column alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
+                default: self::throw("Unknown or unsupported column alter type '$type' for table $this->name. Use ADD, DROP, or MODIFY.");
             }
             $this->tableColumns == null;
             return Query::runActionQuery($sql);
@@ -198,7 +205,7 @@ namespace MySqlConnector {
                     $this->alterIndex(AlterType::DROP, $index);
                     $this->alterIndex(AlterType::ADD, $index);
                     return;
-                default: throw new SqlException("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
+                default: self::throw("Unknown or unsupported index alter type '$type' for table $this->name. Use ADD, DROP.");
             }
             $this->tableIndexes == null;
             return Query::runActionQuery($sql);
@@ -208,7 +215,7 @@ namespace MySqlConnector {
             switch ($structure) {
                 case AlterStructure::COLUMN: $this->alterColumn($type, $withObject); break;
                 case AlterStructure::INDEX: $this->alterIndex($type, $withObject); break;
-                default: throw new SqlException("Unknown or unsupported alter structure '$structure' for table $this->name. Use COLUMN or INDEX.");
+                default: self::throw("Unknown or unsupported alter structure '$structure' for table $this->name. Use COLUMN or INDEX.");
             }
         }
 

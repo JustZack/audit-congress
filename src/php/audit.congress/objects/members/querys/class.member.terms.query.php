@@ -2,6 +2,8 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
+
     class MemberTermsQuery extends AuditCongressQuery {
         use GetByBioguideIdQuery;
         
@@ -15,8 +17,7 @@ namespace AuditCongress {
 
         private static function getSingleTermByBioguideId($bioguideId) {
             $terms = new MemberTermsQuery();
-            $terms->setSearchColumns(["bioguideId"]);
-            $terms->setSearchValues([$bioguideId]);
+            $terms->addSearch("bioguideId", Comparison::EQUALS, $bioguideId);
             $terms->setLimit(1);
             return $terms;
         }
@@ -35,31 +36,29 @@ namespace AuditCongress {
 
         public static function getByBioguideIdByType($bioguideId, $type) {
             $terms = new MemberTermsQuery();
-            $terms->setSearchColumns(["bioguideId", "type"]);
-            $terms->setSearchValues([$bioguideId, $type]);
+            $terms->addSearch("bioguideId", Comparison::EQUALS, $bioguideId);
+            $terms->addSearch("type", Comparison::EQUALS, $type);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByBioguideIdByState($bioguideId, $state) {
             $terms = new MemberTermsQuery();
-            $terms->setSearchColumns(["bioguideId", "state"]);
-            $terms->setSearchValues([$bioguideId, $state]);
+            $terms->addSearch("bioguideId", Comparison::EQUALS, $bioguideId);
+            $terms->addSearch("state", Comparison::EQUALS, $state);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByState($state, $year = null) {
             $terms = new MemberTermsQuery();
-            $terms->setEqualityOperator("like");
-            $terms->setSearchColumns(["state", "start"]);
-            $terms->setSearchValues([$state, $year]);
+            $terms->addSearch("state", Comparison::LIKE, $state);
+            if ($year != null) $terms->addSearch("start", Comparison::LIKE, $year);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByParty($party, $year = null) {
             $terms = new MemberTermsQuery();
-            $terms->setEqualityOperator("like");
-            $terms->setSearchColumns(["party", "start"]);
-            $terms->setSearchValues([$party, $year]);
+            $terms->addSearch("party", Comparison::LIKE, $party);
+            if ($year != null) $terms->addSearch("start", Comparison::LIKE, $year);
             return $terms->selectFromDB()->fetchAllAssoc();
         }
     }

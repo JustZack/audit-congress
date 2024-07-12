@@ -2,7 +2,11 @@
 
 namespace AuditCongress {
 
+    use MySqlConnector\Comparison;
+
     class CongressQuery extends AuditCongressQuery {
+        use TruncateRowsQuery, InsertQueueingQuery;
+
         public function __construct() {
             parent::__construct("Congresses");
         }
@@ -13,22 +17,21 @@ namespace AuditCongress {
 
         public static function getByNumber($congressNumber) {
             $congresses = new CongressQuery();
-            $congresses->setSearchColumns(["number"]);
-            $congresses->setSearchValues([$congressNumber]);
+            $congresses->addSearch("number", Comparison::EQUALS, $congressNumber);
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getByYear($year) {
             $congresses = new CongressQuery();
-            $congresses->setEqualityOperators(["<=", ">="]);
-            $congresses->setSearchColumns(["startYear", "endYear"]);
-            $congresses->setSearchValues([$year, $year]);
+            $congresses->addSearch("startYear", Comparison::LESS_THAN_EQUALS, $year);
+            $congresses->addSearch("endYear", Comparison::GREATER_THAN_EQUALS, $year);
+            $congresses->applyDefaultOrder();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
 
         public static function getAll() {
             $congresses = new CongressQuery();
-            $congresses->setOrderBy(["number"], false);
+            $congresses->applyDefaultOrder();
             return $congresses->selectFromDB()->fetchAllAssoc();
         }
     }

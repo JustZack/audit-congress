@@ -2,35 +2,31 @@
 
 namespace MySqlConnector {
 
-    class Query {
+    class Query extends ExceptionThrower {
         public static $totalQueries = 0;
         public 
-            $params = array(), 
-            $sql_formated = "";
-        public function __construct($sql_string = null, $params = null) {
-            if ($sql_string != null) $this->appendQuery($sql_string, $params);
+            $sql = "",
+            $params = null,
+            $types = null;
+        public function __construct($sql_string = null, $params = null, $types = null) {
+            $this->sql = $sql_string;
+            $this->params = $params;
+            $this->types = $types;
+            $this->parseQuery();  
         }
 
-        //Get a Show Tables query with the where condition
-        public static function showTables($whereCondition = null) {
-            $sql = "SHOW TABLES";
-            if ($whereCondition != null) $sql .= " WHERE $whereCondition";
-            return new Query($sql);
+        public function isPreparable() {
+            return $this->params != null && $this->types != null 
+                && count($this->params) == strlen($this->types);
         }
 
-        //Get a Describe query with the table name
-        public static function describe($tableName) {
-            return new Query("DESCRIBE $tableName");
-        }
-
-        //Append a query to this query
-        public function appendQuery($sql_string, $params = null) {
-            //Always put a semicolon at the end of a query
-            $sql = $sql_string.";\n";
-            if ($params != null) {
-                $this->sql_formated .= sprintf($sql, ...$params);
-                array_merge($this->params, $params);
-            } else $this->sql_formated .= $sql;
+        //Format the query with the given parameters (but only if no types are available)
+        private function parseQuery() {
+            //Only format the query with params when types have not been passed.
+            //Types are required to bind parameters via prepared statements.
+            if (!($this->types != null && strlen($this->types) > 0)
+            && $this->params != null && count($this->params) > 0) 
+                $this->sql = sprintf($this->sql, ...$this->params);
         }
         //Tell the connection to use the given database
         public function useDatabase($database) {
@@ -39,39 +35,41 @@ namespace MySqlConnector {
 
         //Throw the SQL error if the result failed
         private static function throwIfError($result) {
-            if ($result->failure()) throw new SqlException("Query Exception: ".Connection::lastError());
+            if ($result->failure()) self::throw(Connection::lastError());
             return $result;   
+        }
+
+        //Prepare this query into a prepared statement with params when applicable
+        public function prepare() : \mysqli_stmt {
+            $connection = Connection::getConnection();
+            $statement = $connection->prepare($this->sql);
+
+            if (!$statement) self::throw("Could not prepare sql: " . $this->sql);
+            if ($this->isPreparable() && !$statement->bind_param($this->types, ...$this->params))
+                self::throw("Error preparing statement: " . $statement->error);
+            return $statement;
         }
 
         //Run this query
         public function execute() {
             self::$totalQueries += 1;
-            $connection = Connection::getConnection();
-            $result = new Result($connection->query($this->sql_formated), $this->sql_formated);
+            $result = new Result($this);
             return self::throwIfError($result);
         }
-        //Run many queries that have already been appended
-        public function executeMany() {
-            self::$totalQueries += 1;
-            $connection = Connection::getConnection();
-            $result = new Result($connection->multi_query($this->sql_formated), $this->sql_formated);
-            return self::throwIfError($result);
-        }
-
-
 
         //For running queries that should return a result
-        public static function getResult($sql, $params = null) {
-            $query = new Query($sql, $params);
+        public static function getResult($sql, $params = null, $types = null) {
+            $query = new Query($sql, $params, $types);
             return $query->execute();
         }
+     
         //For running  returing true or false (success values)
-        public static function runActionQuery($sql, $params = null) {
-            return self::getResult($sql, $params)->success();
+        public static function runActionQuery($sql, $params = null, $types = null) {
+            return self::getResult($sql, $params, $types)->success();
         }
         //For running queries that return rows
-        public static function runQuery($sql, $params = null) {
-            return self::getResult($sql, $params)->fetchAll();
+        public static function runQuery($sql, $params = null, $types = null) {
+            return self::getResult($sql, $params, $types)->fetchAll();
         }
     }
 }

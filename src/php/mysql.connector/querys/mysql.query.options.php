@@ -1,7 +1,7 @@
 <?php
 
 namespace MySqlConnector {
-    abstract class QueryOptions {
+    abstract class QueryOptions extends ExceptionThrower {
         protected
             $selectColumns = array("*"),
             $searchColumns = array(), 
@@ -13,6 +13,13 @@ namespace MySqlConnector {
             $groupBy = null,
             $limit = null,
             $offset = null;
+
+        protected WhereClause $where;
+        protected $joins = array(); //Array of JoinClause
+
+        public function __construct() {
+            $this->where = new WhereClause();
+        }
 
         //Get the columns used when selecting this object
         public function getSelectColumns() { return $this->selectColumns; }
@@ -28,6 +35,24 @@ namespace MySqlConnector {
         public function getSearchValues() { return $this->searchValues; }
         //Set the values used by this object
         public function setSearchValues(array $newValues) { return $this->searchValues = $newValues; }
+
+        public function addSearch($column, $operator, $value, $logicalOperator = Logical::AND) {
+            return $this->addSearchCondition(new Condition($column, $operator, $value), $logicalOperator);
+        }
+
+        public function addSearchCondition(Condition $c, $logicalOperator = Logical::AND) {
+            return $this->where->addCondition($c, $logicalOperator);
+        }
+
+        public function addSearchConditionGroup(ConditionGroup $cg, $logicalOperator = Logical::AND) {
+            return $this->where->addConditionGroup($cg, $logicalOperator);
+        }
+
+        public function addJoin($onTable, ConditionGroup $cg) {
+            array_push($this->joins, new JoinClause($onTable, $cg));
+        }
+
+        public function getJoins() { return $this->joins; }
 
         //Get the columns provided to this object
         public function getColumns() { return $this->columns; }
@@ -62,14 +87,6 @@ namespace MySqlConnector {
         public function getOffset() { return $this->offset; }
 
         public function setOffset($newOffset) { $this->offset = $newOffset; }
-
-        public function getJoin() { return $this->join; }
-
-        public function setJoin($onTable, $onTableColumns, $thisTableColumns) {
-            $format = "%s ON %s";
-            $joinCondition = QueryBuilder::buildOnCondition($onTableColumns, $thisTableColumns, "=", "AND");
-            $this->join = sprintf($format, $onTable, $joinCondition);
-        }
     }
 }
 

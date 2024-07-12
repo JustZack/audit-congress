@@ -1,11 +1,14 @@
 <?php
 
 namespace AuditCongress {
+
+    use MySqlConnector\Comparison;
+
     trait BillsGetByBillIdQuery {
 
         public static function getByBillId($billid) {
-            $query = self::getWithSearchSelect("billId", "=", $billid);
-            $query->applyDefaultOrder();
+            $query = self::getWithSearchSelect("billId", Comparison::EQUALS, $billid);
+
             $query->applyPagination();
             return $query->selectFromDB()->fetchAllAssoc();
         }
@@ -14,14 +17,11 @@ namespace AuditCongress {
 
         public static function getByFilter($congress = null, $type = null, $number = null) {
             $query = new static();
+            
+            if ($congress != null) $query->addSearch("congress", Comparison::EQUALS, $congress);
+            if ($type != null) $query->addSearch("type", Comparison::EQUALS, $type);
+            if ($number != null) $query->addSearch("number", Comparison::EQUALS, $number);
 
-            $query->setBooleanCondition("AND");
-
-            if ($congress != null) $query->addSearchValue("congress", "=", $congress);
-            if ($type != null) $query->addSearchValue("type", "=", $type);
-            if ($number != null) $query->addSearchValue("number", "=", $number);
-
-            $query->applyDefaultOrder();
             $query->applyPagination();
             return $query->selectFromDB()->fetchAllAssoc();
         }
@@ -31,15 +31,12 @@ namespace AuditCongress {
         public static function getWithFilterPlusOne($congress = null, $type = null, $number = null, $likeSearchColumn = null, $likeSearchValue = null) {
             $query = new static();
 
-            $query->setBooleanCondition("AND");
-
-            if ($congress != null) $query->addSearchValue("congress", "=", $congress);
-            if ($type != null) $query->addSearchValue("type", "=", $type);
-            if ($number != null) $query->addSearchValue("number", "=", $number);
+            if ($congress != null) $query->addSearch("congress", Comparison::EQUALS, $congress);
+            if ($type != null) $query->addSearch("type", Comparison::EQUALS, $type);
+            if ($number != null) $query->addSearch("number", Comparison::EQUALS, $number);
             if ($likeSearchColumn != null && $likeSearchValue != null) 
-                $query->addSearchValue($likeSearchColumn, "like", $likeSearchValue);
+                $query->addSearch($likeSearchColumn, Comparison::LIKE, $likeSearchValue);
 
-            $query->applyDefaultOrder();
             $query->applyPagination();
             return $query;
         }
