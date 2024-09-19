@@ -22,7 +22,8 @@ namespace APIService {
                 //3. Use row with lowest usage. Counted logs are always returned smallest to largest
                 $lowestUseRow = $countedLogsPerToken[0];
                 //4. Ensure this usage is less than ExternalAPILimits.(limit - threshhold)
-                if ($lowestUseRow["count"] >= $limits["limit"] + $limits["threshold"]) 
+                $maxCount = $limits["limit"] + $limits["threshold"];
+                if ($maxCount > 0 && $lowestUseRow["count"] >= $maxCount) 
                     throw new \Exception("ApiService: No tokens available for service: `$service`");
                 //5. Return key
                 $token = self::getToken($lowestUseRow["tokenId"]);
