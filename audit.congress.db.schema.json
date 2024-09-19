@@ -32,6 +32,42 @@
 
 
             {
+                "name": "ExternalAPILimits",
+                "columns": {
+                    "service": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
+                    "limit": { "type": "int", "null": "NO" },
+                    "threshold": { "type": "int", "null": "NO" },
+                    "hoursInterval": { "type": "FLOAT", "null": "NO" },
+                    "added": { "type": "DATETIME", "null": "NO" },
+                    "updated": { "type": "DATETIME", "null": "NO" }
+                }
+            },
+            {
+                "name": "ExternalAPITokens",
+                "columns": {
+                    "id": { "type": "INT", "null": "NO", "primary": true, "extra": "auto_increment"},
+                    "service": { "type": "VARCHAR(50)", "null": "NO" },
+                    "token": { "type": "VARCHAR(50)", "null": "NO" },
+                    "added": { "type": "DATETIME", "null": "NO" },
+                    "updated": { "type": "DATETIME", "null": "NO" },
+                    "isActive": { "type": "TINYINT(1)", "null": "NO" }
+                }
+            },
+            {
+                "name": "ExternalAPITokenLog",
+                "columns": {
+                    "id": { "type": "INT", "null": "NO", "primary": true, "extra": "auto_increment"},
+                    "when": { "type": "DATETIME", "null": "NO" },
+                    "tokenId": { "type": "VARCHAR(50)", "null": "NO" },
+                    "url": { "type": "VARCHAR(255)", "null": "NO" },
+                    "body": { "type": "MEDIUMTEXT", "null": "YES" }
+                }
+            },
+
+
+
+
+            {
                 "name": "Members",
                 "columns": {
                     "bioguideId": { "type": "VARCHAR(50)", "null": "NO", "primary": true },

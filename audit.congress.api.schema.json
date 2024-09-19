@@ -233,6 +233,122 @@
                     "optional": { "congress": "int", "type": "string", "number": "int" }
                 }   
             ]
+        },
+
+
+
+
+
+        {
+            "name": "api-services/token/use",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "getUsableToken", "optional": {"service": "string"} }
+            ]
+        },
+        {
+            "name": "api-services/token/get",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "getTokens", "optional": {"service": "string", "isActive": "bool"} },
+                { "function": "getToken", "required": {"id": "int"} }
+            ]
+        },
+        {
+            "name": "api-services/token/add",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "addToken", "required": {"service": "string", "token": "string"} }
+            ]
+        },
+        {
+            "name": "api-services/token/update",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "updateToken", 
+                    "required": {"id": "int"}, 
+                    "optional": {"service": "string", "token": "string", "isActive": "bool"} 
+                }
+            ]
+        },
+        {
+            "name": "api-services/token/delete",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "deleteToken", "required": {"id": "int"} }
+            ]
+        },
+
+
+
+        {
+            "name": "api-services/limit/get",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "getLimits", "optional": {"service": "string"} }
+            ]
+        },
+        {
+            "name": "api-services/limit/add",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { 
+                    "function": "addLimit", 
+                    "required": {"service": "string", "limit": "int", "threshold": "int", "hoursInterval": "float"} 
+                }
+            ]
+        },
+        {
+            "name": "api-services/limit/update",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { 
+                    "function": "updateLimit", 
+                    "required": {"service": "string"},
+                    "optional": {"limit": "int", "threshold": "int", "hoursInterval": "float"} 
+                }
+            ]
+        },
+        {
+            "name": "api-services/limit/delete",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "deleteLimit", "required": {"service": "string"} }
+            ]
+        },
+
+
+
+        {
+            "name": "api-services/log/get",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { 
+                    "function": "getLogs", 
+                    "optional": {"service": "string", "id": "string", "url": "string", "body": "string", "start": "string", "end": "string"} 
+                }
+            ]
+        },
+        {
+            "name": "api-services/log/add",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { 
+                    "function": "addLog", 
+                    "required": {"id": "int", "url": "string"}, 
+                    "optional": {"body": "string"} 
+                }
+            ]
+        },
+        {
+            "name": "api-services/log/delete",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { 
+                    "function": "deleteLogs", 
+                    "optional": {"start": "string", "end": "string"} 
+                }
+            ]
         }
     ]
 }

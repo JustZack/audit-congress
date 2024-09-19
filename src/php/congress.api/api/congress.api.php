@@ -6,6 +6,7 @@ namespace CongressGov {
     class Api extends \AuditCongress\Api {      
         public static 
             $api_key,
+            $api_key_id,
             $api_item_limit,
             $api_base_url,
             $api_query_args,
@@ -20,7 +21,14 @@ namespace CongressGov {
         //Initialize private members
         public static function init() {
             Api::$api_base_url = "https://api.congress.gov/v3/";
-            Api::$api_key = file_get_contents(CONGRESSGOV_FOLDER."/api.congress.key");
+            
+            //Old way of reading an api key file
+            //Api::$api_key = file_get_contents(CONGRESSGOV_FOLDER."/api.congress.key");
+            //New way of asking for a useable token from the APIService Tracker
+            $token = \APIService\Tracker::getUsableToken("api.congress.gov");
+            Api::$api_key = $token["token"];
+            Api::$api_key_id = $token["id"];
+
             Api::$api_query_args = "?api_key=".Api::$api_key."&format=json";
             Api::$api_url = Api::$api_base_url . "%s" . Api::$api_query_args;
             Api::$api_title = "CongressGov";
@@ -36,7 +44,7 @@ namespace CongressGov {
             if ($additional_args !== null) $url .= "&$additional_args";
             
             $json = Api::createRequest($url)->doRequest();
-            
+            \APIService\Tracker::addLog(Api::$api_key_id, $url);
             return Api::doApiCallReturn($json, $required_field, $url);
         }
 
@@ -56,8 +64,9 @@ namespace CongressGov {
                 //Make the API call with offset and limit arguments appended
                 if (($offset-$startOffset) + $pageLimit > $itemLimit) $pageLimit = $itemLimit - $offset;
                 $args = "&offset=$offset&limit=$pageLimit&$additionalArgs";
-
-                $json = Api::createRequest($url . $args)->doRequest();
+                $nextUrl = $url . $args;
+                $json = Api::createRequest($nextUrl)->doRequest();
+                \APIService\Tracker::addLog(Api::$api_key_id, $nextUrl);
 
                 //Determine which key stores the data in this response, based on expected response having [pagination, request, $data_array]
                 if ($data_array_name == null) $data_array_name = array_values(array_diff(array_keys($json), ["pagination", "request"]))[0];
