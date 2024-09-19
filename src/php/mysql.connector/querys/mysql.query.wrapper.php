@@ -25,7 +25,7 @@ namespace MySqlConnector {
 
         public function insertIntoDB() { return $this->table->insert(new InsertGroup($this->getAsRow())); }
 
-        public function updateInDb() { return $this->table->update(new UpdateGroup($this->getAsRow()), $this->where); }
+        public function updateInDb() { return $this->table->update(new UpdateGroup($this->getAsRow()), $this->whereClause()); }
 
         public function getQueryString($withValues = false) {
             $sql = "";

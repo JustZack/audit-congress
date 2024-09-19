@@ -12,7 +12,6 @@ namespace APIService {
 
         public static function getServiceLimits($service = null) {
             $cache = new LimitsQuery();
-            $cache->setSelectColumns(["*"]);
             if ($service != null) $cache->addSearch("service", Comparison::EQUALS, $service);
             $result = $cache->selectFromDB()->fetchAllAssoc();
             //Return all service limits if one wasn't given

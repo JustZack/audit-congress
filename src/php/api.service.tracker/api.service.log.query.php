@@ -4,6 +4,7 @@ namespace APIService {
 
     use MySqlConnector\Comparison;
     use MySqlConnector\Condition;
+    use MySqlConnector\ConditionGroup;
 
     class LogsQuery extends \MySqlConnector\QueryWrapper {
         public function __construct() {
@@ -16,21 +17,23 @@ namespace APIService {
             return $logs;
         }
  
-        public static function getLogs($tokenId = null, $url = null, $body = null, $start = null, $end = null) {
+        private static function buildGetLogsQuery($service = null, $tokenId = null, $url = null, $body = null, $start = null, $end = null) {
             $logs = new LogsQuery();
-            $logs->setSelectColumns(["*"]);
+            if ($service != null) $logs->addSearch("service", Comparison::EQUALS, $service);
             if ($tokenId != null) $logs->addSearch("tokenId", Comparison::EQUALS, $tokenId);
             if ($url != null) $logs->addSearch("url", Comparison::LIKE, $url);
             if ($body != null) $logs->addSearch("body", Comparison::LIKE, $body);
             $logs = self::setQueryStartEnd($logs, $start, $end);
-            return $logs->selectFromDB()->fetchAllAssoc();
+
+            $joinGroup = new ConditionGroup();
+            $joinGroup->addCondition(new Condition("ExternalAPITokens.id", Comparison::EQUALS, "ExternalAPITokenLog.tokenId", true));
+            $logs->addJoin("ExternalAPITokens", $joinGroup);
+            return $logs;
         }
 
-        public static function getByService($service = null, $start = null, $end = null) {
-            $logs = new LogsQuery();
-            $logs->setSelectColumns(["*"]);
-            if ($service != null) $logs->addSearch("service", Comparison::EQUALS, $service);
-            $logs = self::setQueryStartEnd($logs, $start, $end);
+        public static function getLogs($service = null, $tokenId = null, $url = null, $body = null, $start = null, $end = null) {
+            $logs = self::buildGetLogsQuery($service, $tokenId, $url, $body, $start, $end);
+            $logs->setSelectColumns(["ExternalAPITokenLog.id", "`when`", "tokenId", "ExternalAPITokens.service", "url", "body"]);
             return $logs->selectFromDB()->fetchAllAssoc();
         }
 
@@ -39,14 +42,21 @@ namespace APIService {
             $logs = new LogsQuery();
             $logs->setColumns(["when", "tokenId", "url", "body"]);
             $logs->setValues([$when, $tokenId, $url, $body]);
-            $logs->insertIntoDB();
-            return self::getLogs($tokenId, $url);
+            return $logs->insertIntoDB();
         }
 
         public static function deleteLogs($start = null, $end = null) {
             $logs = new LogsQuery();
             $logs = self::setQueryStartEnd($logs, $start, $end);
             return $logs->deleteFromDb();
+        }
+
+        public static function countLogs($service = null, $tokenId = null,$start = null, $end = null) {
+            $logs = self::buildGetLogsQuery($service, $tokenId, null, null, $start, $end);
+            $logs->setSelectColumns(["count(*) as count", "tokenId", "ExternalAPITokens.service"]);
+            $logs->setOrderBy(["count"], true);
+            $logs->setGroupBy(["tokenId", "service"]);
+            return $logs->selectFromDB()->fetchAllAssoc();
         }
     }
 }

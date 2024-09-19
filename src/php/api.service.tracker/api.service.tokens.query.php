@@ -12,7 +12,6 @@ namespace APIService {
 
         private static function getTokenByIdQuery($id = null) {
             $tokens = new TokensQuery();
-            $tokens->setSelectColumns(["*"]);
             if ($id != null) $tokens->addSearch("id", Comparison::EQUALS, $id);
             return $tokens;
         }
@@ -31,7 +30,6 @@ namespace APIService {
 
         public static function getTokens($service = null, $isActive = null) {
             $tokens = new TokensQuery();
-            $tokens->setSelectColumns(["*"]);
             if ($service == null)   $tokens->addSearch("service", Comparison::EQUALS, $service);
             if (is_bool($isActive)) $tokens->addSearch("isActive", Comparison::EQUALS, $isActive);
             return $tokens->selectFromDB()->fetchAllAssoc();

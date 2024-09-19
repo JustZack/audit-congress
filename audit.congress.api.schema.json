@@ -240,6 +240,13 @@
 
 
         {
+            "name": "api-services/token/use",
+            "class": "\\APIService\\Tracker",
+            "routes": [
+                { "function": "getUsableKey", "optional": {"service": "string"} }
+            ]
+        },
+        {
             "name": "api-services/token/get",
             "class": "\\APIService\\Tracker",
             "routes": [
@@ -318,7 +325,7 @@
             "routes": [
                 { 
                     "function": "getLogs", 
-                    "optional": {"id": "string", "url": "string", "body": "string"} 
+                    "optional": {"service": "string", "id": "string", "url": "string", "body": "string", "start": "string", "end": "string"} 
                 }
             ]
         },
@@ -328,7 +335,7 @@
             "routes": [
                 { 
                     "function": "addLog", 
-                    "required": {"id": "string", "url": "string"}, 
+                    "required": {"id": "int", "url": "string"}, 
                     "optional": {"body": "string"} 
                 }
             ]

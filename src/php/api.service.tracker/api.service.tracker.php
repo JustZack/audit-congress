@@ -9,16 +9,22 @@ namespace APIService {
         }
 
         public static function getUsableKey($service) {
-            //Todo: write this
             //1. Does this service exist in the limits and tokens table?
-
+            $limits = self::getLimits($service);
+            if ($limits == null) throw new \Exception("ApiService: No limits defined for service: `$service`");
             //2. Count rows in log for each API key of service younger than ExternalAPILimits.hoursLimit
-
-            //3. Use row with lowest usage
-
+            //  compute the relevent range of logs we need to pull
+            $serviceOffset = $limits["hoursInterval"] * 60 * 60;
+            $start = \Util\Time::getDateTimeStr(time() - $serviceOffset);
+            $end = \Util\Time::getNowDateTimeStr();
+            $countedLogsPerToken = self::countLogs($service, null, $start, $end);
+            //3. Use row with lowest usage. Counted logs are always returned smallest to largest
+            $lowestUseRow = $countedLogsPerToken[0];
             //4. Ensure this usage is less than ExternalAPILimits.(limit - threshhold)
-
+            if ($lowestUseRow["count"] >= $limits["limit"] + $limits["threshold"]) 
+                throw new \Exception("ApiService: No tokens available for service: `$service`");
             //5. Return key
+            return self::getToken($lowestUseRow["tokenId"]);
         }
 
 
@@ -66,14 +72,17 @@ namespace APIService {
 
 
 
-        public static function getLogs($id = null, $url = null, $start = null, $end = null) {
-            return LogsQuery::getLogs($id, $url, $start, $end);
+        public static function getLogs($service = null, $id = null, $url = null, $body = null, $start = null, $end = null) {
+            return LogsQuery::getLogs($service, $id, $url, $body, $start, $end);
         }
         public static function addLog($id, $url, $body = null) {
             return LogsQuery::insertLog($id, $url, $body);
         }
         public static function deleteLogs($start = null, $end = null) {
             return LogsQuery::deleteLogs($start, $end);
+        }
+        public static function countLogs($service = null, $tokenId = null, $start = null, $end = null) {
+            return LogsQuery::countLogs($service, $tokenId, $start, $end);
         }
 
     }
