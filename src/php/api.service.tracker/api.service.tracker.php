@@ -8,7 +8,7 @@ namespace APIService {
             //Todo: Write as object
         }
 
-        public static function getUsableKey($service) {
+        public static function getUsableToken($service) {
             //1. Does this service exist in the limits and tokens table?
             $limits = self::getLimits($service);
             if ($limits == null) throw new \Exception("ApiService: No limits defined for service: `$service`");
@@ -18,13 +18,22 @@ namespace APIService {
             $start = \Util\Time::getDateTimeStr(time() - $serviceOffset);
             $end = \Util\Time::getNowDateTimeStr();
             $countedLogsPerToken = self::countLogs($service, null, $start, $end);
-            //3. Use row with lowest usage. Counted logs are always returned smallest to largest
-            $lowestUseRow = $countedLogsPerToken[0];
-            //4. Ensure this usage is less than ExternalAPILimits.(limit - threshhold)
-            if ($lowestUseRow["count"] >= $limits["limit"] + $limits["threshold"]) 
-                throw new \Exception("ApiService: No tokens available for service: `$service`");
-            //5. Return key
-            return self::getToken($lowestUseRow["tokenId"]);
+            if (count($countedLogsPerToken) > 0) {
+                //3. Use row with lowest usage. Counted logs are always returned smallest to largest
+                $lowestUseRow = $countedLogsPerToken[0];
+                //4. Ensure this usage is less than ExternalAPILimits.(limit - threshhold)
+                if ($lowestUseRow["count"] >= $limits["limit"] + $limits["threshold"]) 
+                    throw new \Exception("ApiService: No tokens available for service: `$service`");
+                //5. Return key
+                $token = self::getToken($lowestUseRow["tokenId"]);
+            }
+            else {
+                //3 Get the first token for this service if one exists.
+                $tokens = self::getTokens($service);
+                if (count($tokens) > 0) $token = $tokens[0];
+                else throw new \Exception("ApiService: No tokens exist for service: `$service`");
+            }
+            return $token;
         }
 
 

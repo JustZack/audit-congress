@@ -11,6 +11,7 @@ namespace ProPublica {
     class Api extends \AuditCongress\Api {
         public static 
             $api_key,
+            $api_key_id,
             $api_item_limit,
             $api_base_url,
             $api_query_args,
@@ -25,7 +26,14 @@ namespace ProPublica {
         //Initialize private members
         public static function init() {
             Api::$api_base_url = "https://api.propublica.org/congress/v1/";
-            Api::$api_key = file_get_contents(PROPUBLICA_FOLDER."/api.propublica.key");
+            
+            //Old way of reading an api key file
+            //Api::$api_key = file_get_contents(CONGRESSGOV_FOLDER."/api.congress.key");
+            //New way of asking for a useable token from the APIService Tracker
+            $token = \APIService\Tracker::getUsableToken("api.congress.gov");
+            Api::$api_key = $token["token"];
+            Api::$api_key_id = $token["id"];
+            
             $key = Api::$api_key;
             Api::$api_headers = stream_context_create(["http" => ["method" => "GET", "header" => "X-API-Key: $key\r\n"]]);
             Api::$api_url = Api::$api_base_url . "%s";
@@ -42,7 +50,7 @@ namespace ProPublica {
             if ($additional_args !== null) $url .= "&$additional_args";
             
             $json = Api::createRequest($url)->doRequest();
-            
+            \APIService\Tracker::addLog(Api::$api_key_id, $url);
             return Api::doApiCallReturn($json, $required_field, $url, Api::$api_title);
         }
 
@@ -59,8 +67,9 @@ namespace ProPublica {
             do {
                 //Make the API call with offset and limit arguments appended
                 $args = "?offset=$offset";
-                
-                $json = Api::createRequest($url . $args)->doRequest();
+                $nextUrl = $url . $args;
+                $json = Api::createRequest($nextUrl)->doRequest();
+                \APIService\Tracker::addLog(Api::$api_key_id, $nextUrl);
                 
                 //TODO: FIX FOR PROPUBLICA
                 //Determine which key stores the data in this response, based on expected response having [pagination, request, $data_array]

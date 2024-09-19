@@ -243,7 +243,7 @@
             "name": "api-services/token/use",
             "class": "\\APIService\\Tracker",
             "routes": [
-                { "function": "getUsableKey", "optional": {"service": "string"} }
+                { "function": "getUsableToken", "optional": {"service": "string"} }
             ]
         },
         {
