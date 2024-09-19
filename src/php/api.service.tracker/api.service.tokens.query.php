@@ -84,7 +84,8 @@ namespace APIService {
             if ($existing == null) return false;
             
             $updated = \Util\Time::getNowDateTimeStr();
-            $tokens = self::getInsertOrUpdateQuery($id, $service, $token, null, $updated, $isActive);
+            $tokens = self::getInsertOrUpdateQuery(null, $service, $token, null, $updated, $isActive);
+            $tokens->addSearch("id", Comparison::EQUALS, $id);
             $tokens->updateInDb();
             return self::getToken($id);
         }

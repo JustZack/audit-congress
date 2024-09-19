@@ -22,7 +22,7 @@ namespace APIService {
             else return null;
         }
 
-        private static function getSetColsAndVals($service, $limit, $threshold, $hoursInterval) {
+        private static function getSetColsAndVals($service, $limit, $threshold, $hoursInterval, $added, $updated) {
             $colsToSet = []; $valsToSet = [];
             if ($service != null) {
                 array_push($colsToSet, "service"); array_push($valsToSet, $service);
@@ -36,11 +36,17 @@ namespace APIService {
             if ($hoursInterval != null) {
                 array_push($colsToSet, "hoursInterval"); array_push($valsToSet, $hoursInterval);
             }
+            if ($added != null) {
+                array_push($colsToSet, "added"); array_push($valsToSet, $added);
+            }
+            if ($updated != null) {
+                array_push($colsToSet, "updated"); array_push($valsToSet, $updated);
+            }
             return ["columns" => $colsToSet, "values" => $valsToSet];
         }
 
-        private static function getInsertOrUpdateQuery($service, $limit, $threshold, $hoursInterval) {
-            $setItems = self::getSetColsAndVals($service, $limit, $threshold, $hoursInterval);
+        private static function getInsertOrUpdateQuery($service, $limit, $threshold, $hoursInterval, $added, $updated) {
+            $setItems = self::getSetColsAndVals($service, $limit, $threshold, $hoursInterval, $added, $updated);
             list("columns" => $colsToSet, "values" => $valsToSet) = $setItems;
 
             $cache = new LimitsQuery();
@@ -52,8 +58,9 @@ namespace APIService {
         public static function insertService($service, $limit, $threshold, $hoursInterval) {
             $existing = self::getServiceLimits($service);
             if ($existing != null) return false;
-            
-            $cache = self::getInsertOrUpdateQuery($service, $limit, $threshold, $hoursInterval);
+
+            $added = \Util\Time::getNowDateTimeStr();
+            $cache = self::getInsertOrUpdateQuery($service, $limit, $threshold, $hoursInterval, $added, $added);
             return $cache->insertIntoDB();
         }
 
@@ -61,7 +68,9 @@ namespace APIService {
             $existing = self::getServiceLimits($service);
             if ($existing == null) return false;
 
-            $cache = self::getInsertOrUpdateQuery($service, $limit, $threshold, $hoursInterval);
+            $updated = \Util\Time::getNowDateTimeStr();
+            $cache = self::getInsertOrUpdateQuery(null, $limit, $threshold, $hoursInterval, null, $updated);
+            $cache->addSearch("service", Comparison::EQUALS, $service);
             $cache->updateInDb();
             return self::getServiceLimits($service);
         }

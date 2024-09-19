@@ -37,7 +37,9 @@
                     "service": { "type": "VARCHAR(50)", "null": "NO", "primary": true },
                     "limit": { "type": "int", "null": "NO" },
                     "threshold": { "type": "int", "null": "NO" },
-                    "hoursInterval": { "type": "FLOAT", "null": "NO" }
+                    "hoursInterval": { "type": "FLOAT", "null": "NO" },
+                    "added": { "type": "DATETIME", "null": "NO" },
+                    "updated": { "type": "DATETIME", "null": "NO" }
                 }
             },
             {
